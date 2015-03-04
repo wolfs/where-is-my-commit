@@ -11,6 +11,18 @@ var searcher = function() {
 		}]
 	};
 
+	var when = function(deferreds) {
+		if (deferreds.length == 0) {
+			return $.Deferred().resolve([]);
+		} else if (deferreds.length == 1) {
+			return deferreds[0].pipe(function(deferred) {
+				return [deferred]
+			})
+		} else {
+			return $.when.apply($, deferreds)
+		}
+	}
+
 	var width = 960,
 		height = 2000;
 
@@ -79,7 +91,8 @@ var searcher = function() {
 		node.exit().remove();
 	}
 
-	var buildData = function(jobName, callback) {
+	var buildData = function(jobName) {
+		var resultDef = $.Deferred();
 		var findRevision = function(envVars) {
 			for (var i = 0; i < envVars.length; i++) {
 				var env = envVars[i];
@@ -104,48 +117,43 @@ var searcher = function() {
 			for (i = 0; i < actions.length; i++) {
 				action = actions[i];
 				if (action.triggeredProjects) {
-					triggeredProjects = triggeredProjects.concat(action.triggeredProjects)
+					triggeredProjects = triggeredProjects.concat(action.triggeredProjects);
 				}
 			}
 			return triggeredProjects;
 		}
 
-		$.when(jobRequest, envVarsRequest).done(
-			function(jobResult, envVarsResult) {
+		var triggeredProjectRequest = jobRequest.pipe(
+			function(job) {
+				var triggeredProjects = getTriggeredProjects(job.lastBuild)
+				var deferreds = $.map(triggeredProjects, function(job) {
+					return buildData(job.name);
+				})
+				return when(deferreds);
+			}
+		)
+
+		$.when(jobRequest, envVarsRequest, triggeredProjectRequest).done(
+			function(jobResult, envVarsResult, triggeredProjects) {
 				var job = jobResult[0];
 				var envVars = envVarsResult[0];
 				var rev = findRevision(envVars.envVars.envVar)
-				var triggeredProjects = getTriggeredProjects(job.lastBuild)
+					// if (!$.isArray(triggeredProjects)) {
+					// 	triggeredProjects = [triggeredProjects]
+					// }
 
-				var recursiveCallback = function(remainingProjects, result) {
-					if (remainingProjects.length == 0) {
-						return function(childResults) {
-							result.children.push(childResults)
-							callback(result)
-						}
-					} else {
-						return function(childResult) {
-							result.children.push(childResult)
-							buildData(remainingProjects[0].name, recursiveCallback(
-								remainingProjects.slice(1), result))
-						}
-					}
-				}
 				var result = {
 					revision: rev,
 					name: jobName + " - " + rev,
 					jobName: jobName,
 					url: job.lastBuild.url,
-					children: []
+					children: triggeredProjects
 				}
-				if (triggeredProjects.length > 0) {
-					buildData(triggeredProjects[0].name, recursiveCallback(
-						triggeredProjects.slice(1), result))
-				} else {
-					callback(result)
-				}
+				resultDef.resolve(result)
 			}
 		)
+
+		return resultDef;
 	}
 
 	var init = function() {
@@ -157,8 +165,8 @@ var searcher = function() {
 			"name": "build-C"
 		}]
 
-		buildData("chain-start", function(builds) {
-			data = builds;
+		buildData("chain-start").done(function(result) {
+			data = result;
 			renderData();
 		})
 
