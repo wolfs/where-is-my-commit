@@ -1,16 +1,5 @@
-var searcher = function() {
-	var data = {
-		"name": "start",
-		"children": [{
-			"name": "first",
-			"children": [{
-				"name": "build-A"
-			}, {
-				"name": "build-B"
-			}]
-		}]
-	};
-
+var whereIsMyBuild = function() {
+	var data = {};
 	var when = function(deferreds) {
 		if (deferreds.length == 0) {
 			return $.Deferred().resolve([]);
@@ -64,25 +53,37 @@ var searcher = function() {
 			.attr("class", "node");
 		parentNode.append("circle")
 			.attr("r", 4.5);
-		parentNode.append("a")
+		var textNode = parentNode.append("a")
 			.attr("xlink:href", function(d) {
 				return d.url
 			})
-			.append("text")
-			.attr("dy", 3);
+			.append("text");
 
-		node.selectAll("a text").transition()
-			.attr("dx", function(d) {
-				return d.children ? -8 : 8;
-			})
-			.attr("dy", 3)
-			.style("text-anchor", function(d) {
-				return d.children ? "end" : "start";
-			})
+		var dxChildren = function(d) {
+			return 8;
+		}
+
+		textNode
+			.append("tspan")
 			.text(function(d) {
-				return d.name;
+				return d.jobName;
 			});
 
+		textNode
+			.append("tspan")
+			.attr("dy", "1.2em")
+			.text(function(d) {
+				return d.revision
+			})
+
+		node.selectAll("a text tspan")
+			.attr("x", "0")
+			.attr("dx", dxChildren)
+
+
+		node.selectAll("a text").transition()
+			.attr("dy", 0)
+			.style("text-anchor", "start");
 
 		node.transition().attr("transform", function(d) {
 			return "translate(" + d.x + "," + d.y + ")";
@@ -159,34 +160,10 @@ var searcher = function() {
 	var init = function() {
 		d3.select(self.frameElement).style("height", height + "px");
 
-		// renderData()
-
-		data.children[0].children[0].children = [{
-			"name": "build-C"
-		}]
-
 		buildData("chain-start").done(function(result) {
 			data = result;
 			renderData();
 		})
-
-		// setTimeout(renderData, 1000);
-
-		// d3.json(
-		// 	"http://localhost:8080/view/my-chain/job/chain-step-1/4/injectedEnvVars/export",
-		// 	function(error, json) {
-		// 		var envVars = json.envVars.envVar;
-		// 		var rev
-		// 		for (var i = 0; i < envVars.length; i++) {
-		// 			var env = envVars[i];
-		// 			if (env.name == "REV") {
-		// 				rev = env.value
-		// 			}
-		// 		}
-		// 		d3.select("body").append("div").text(rev);
-		// 	}).on("beforesend", function(request) {
-		// 	request.withCredentials = true;
-		// });
 	}
 
 	return {
