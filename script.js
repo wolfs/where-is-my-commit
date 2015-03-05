@@ -1,5 +1,19 @@
 var whereIsMyBuild = function() {
-	var data = {};
+	var baseBuildNode = {
+		getName: function() {
+			return this.jobName + " - " + this.revision
+		}
+	}
+
+	var buildNode = function(jobName, revision) {
+		var n = Object.create(baseBuildNode);
+		n.jobName = jobName;
+		n.revision = revision;
+
+		return n;
+	}
+	var data = buildNode("chain-start", "1234")
+	var toUpdate = [data]
 	var when = function(deferreds) {
 		if (deferreds.length == 0) {
 			return $.Deferred().resolve([]);
@@ -34,7 +48,7 @@ var whereIsMyBuild = function() {
 
 		var link = svg.selectAll(".link")
 			.data(links, function(d) {
-				return d.source.name + d.target.name
+				return d.source.getName() + d.target.getName();
 			})
 
 		link.enter().append("path")
@@ -46,7 +60,7 @@ var whereIsMyBuild = function() {
 
 		var node = svg.selectAll(".node")
 			.data(nodes, function(d) {
-				return d.name
+				return d.getName();
 			});
 
 		var parentNode = node.enter().append("g")
@@ -92,7 +106,8 @@ var whereIsMyBuild = function() {
 		node.exit().remove();
 	}
 
-	var buildData = function(jobName) {
+	var buildData = function(nodeToUpdate) {
+		var jobName = nodeToUpdate.jobName;
 		var resultDef = $.Deferred();
 		var findRevision = function(envVars) {
 			for (var i = 0; i < envVars.length; i++) {
@@ -128,8 +143,9 @@ var whereIsMyBuild = function() {
 			function(job) {
 				var triggeredProjects = getTriggeredProjects(job.lastBuild)
 				var deferreds = $.map(triggeredProjects, function(job) {
-					return buildData(job.name);
-				})
+					return buildData(buildNode(job.name, nodeToUpdate.revision));
+				});
+
 				return when(deferreds);
 			}
 		)
@@ -143,14 +159,10 @@ var whereIsMyBuild = function() {
 					// 	triggeredProjects = [triggeredProjects]
 					// }
 
-				var result = {
-					revision: rev,
-					name: jobName + " - " + rev,
-					jobName: jobName,
-					url: job.lastBuild.url,
-					children: triggeredProjects
-				}
-				resultDef.resolve(result)
+				nodeToUpdate.revision = rev;
+				nodeToUpdate.url = job.lastBuild.url;
+				nodeToUpdate.children = triggeredProjects;
+				resultDef.resolve(nodeToUpdate)
 			}
 		)
 
@@ -160,14 +172,14 @@ var whereIsMyBuild = function() {
 	var init = function() {
 		d3.select(self.frameElement).style("height", height + "px");
 
-		buildData("chain-start").done(function(result) {
-			data = result;
+		buildData(toUpdate[0]).done(function(result) {
 			renderData();
 		})
 	}
 
 	return {
-		init: init
+		init: init,
+		buildNode: buildNode
 	}
 
 }().init();
