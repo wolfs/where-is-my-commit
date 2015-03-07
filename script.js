@@ -21,6 +21,7 @@ var whereIsMyBuild = function() {
 		var n = Object.create(baseBuildNode);
 		n.jobName = jobName;
 		n.revision = revision;
+		n.status = "pending";
 
 		return n;
 	}
@@ -216,7 +217,6 @@ var whereIsMyBuild = function() {
 
 		buildForRevision(buildDef).then(function(build) {
 			if (build == undefined) {
-				nodeToUpdate.status = "pending";
 				toUpdate.push(nodeToUpdate);
 				resultDef.resolve(nodeToUpdate);
 			} else {
