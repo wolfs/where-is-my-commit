@@ -80,13 +80,14 @@ var whereIsMyBuild = function() {
 			.innerRadius(10)
 			.outerRadius(20)
 			.startAngle(0)
-			.endAngle(6.28)
+			.endAngle(Math.PI * 2)
 
 		var parentNode = node.enter().append("g")
 			.attr("class", "node");
 		parentNode.append("path")
 			.attr("class", "pending")
 			.attr("d", arc);
+
 		var textNode = parentNode.append("a")
 			.attr("xlink:href", function(d) {
 				return d.url
@@ -115,10 +116,31 @@ var whereIsMyBuild = function() {
 			.attr("x", "0")
 			.attr("dx", dxChildren)
 
-		node.selectAll("path")
+		var fadeIn
+
+		var circles = node.selectAll("path")
 			.attr("class", function(d) {
 				return d.status;
 			})
+
+		var blink = function() {
+			circles.transition()
+				.duration(1000)
+				.style("opacity", function(d) {
+					return d.status === "pending" ? 0 : 1;
+				})
+				.each("end", function(d) {
+					d3.select(this)
+						.transition()
+						.duration(1000)
+						.style("opacity", 1)
+						.each("end", blink)
+				})
+		}
+
+		blink();
+
+
 
 		node.selectAll("a text").transition()
 			.attr("dy", 0)
