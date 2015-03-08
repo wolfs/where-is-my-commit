@@ -1,5 +1,12 @@
 var whereIsMyBuild = function() {
 	var my = {};
+	my.width = 960;
+	my.height = 2000;
+	my.jenkinsUrl = "http://localhost:8080";
+	my.startJob = "chain-start"
+	my.updateInterval = 2000;
+	my.renderInterval = 2000;
+
 
 	var getQueryVariable = function(variable) {
 		var query = window.location.search.substring(1);
@@ -27,7 +34,7 @@ var whereIsMyBuild = function() {
 
 		return n;
 	}
-	var data = buildNode("chain-start", parseInt(getQueryVariable("revision"), 10))
+	var data = buildNode(my.startJob, parseInt(getQueryVariable("revision"), 10))
 	var toUpdate = [data]
 	var when = function(deferreds) {
 		if (deferreds.length == 0) {
@@ -43,18 +50,17 @@ var whereIsMyBuild = function() {
 		}
 	}
 
-	my.width = 960;
-	my.height = 2000;
-	my.jenkinsUrl = "http://localhost:8080";
-
 	var cluster = d3.layout.tree().nodeSize([200, 200]);
 	var diagonal = d3.svg.diagonal()
 		.projection(function(d) {
 			return [d.x, d.y];
 		});
-	var svg = d3.select("body").append("svg")
+
+	var canvas = d3.select("body").append("svg")
 		.attr("width", my.width)
 		.attr("height", my.height)
+
+	var svg = canvas
 		.append("g")
 		.attr("transform", "translate(500,300)");
 
@@ -83,13 +89,14 @@ var whereIsMyBuild = function() {
 			.innerRadius(10)
 			.outerRadius(20)
 			.startAngle(0)
-			.endAngle(Math.PI * 2)
+			.endAngle(Math.PI * 2);
 
 		var parentNode = node.enter().append("g")
 			.attr("class", "node");
 		parentNode.append("path")
 			.attr("class", "pending")
 			.attr("d", arc);
+
 		parentNode.append("circle")
 			.attr("r", 10);
 
@@ -281,9 +288,9 @@ var whereIsMyBuild = function() {
 		updateNext();
 		renderData();
 
-		setInterval(updateNext, 2000)
+		setInterval(updateNext, my.updateInterval)
 
-		setInterval(renderData, 2000)
+		setInterval(renderData, my.renderInterval)
 	}
 
 	return my;
