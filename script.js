@@ -1,4 +1,6 @@
 var whereIsMyBuild = function() {
+	var my = {};
+
 	var getQueryVariable = function(variable) {
 		var query = window.location.search.substring(1);
 		var vars = query.split("&");
@@ -41,8 +43,9 @@ var whereIsMyBuild = function() {
 		}
 	}
 
-	var width = 960,
-		height = 2000;
+	my.width = 960;
+	my.height = 2000;
+	my.jenkinsUrl = "http://localhost:8080";
 
 	var cluster = d3.layout.tree().nodeSize([200, 200]);
 	var diagonal = d3.svg.diagonal()
@@ -50,8 +53,8 @@ var whereIsMyBuild = function() {
 			return [d.x, d.y];
 		});
 	var svg = d3.select("body").append("svg")
-		.attr("width", width)
-		.attr("height", height)
+		.attr("width", my.width)
+		.attr("height", my.height)
 		.append("g")
 		.attr("transform", "translate(500,300)");
 
@@ -64,7 +67,7 @@ var whereIsMyBuild = function() {
 				return d.source.getName() + d.target.getName();
 			})
 
-		link.enter().append("path")
+		link.enter().insert("path", ".node")
 			.attr("class", "link");
 
 		link.transition().attr("d", diagonal)
@@ -87,6 +90,8 @@ var whereIsMyBuild = function() {
 		parentNode.append("path")
 			.attr("class", "pending")
 			.attr("d", arc);
+		parentNode.append("circle")
+			.attr("r", 10);
 
 		var textNode = parentNode.append("a")
 			.attr("xlink:href", function(d) {
@@ -173,7 +178,7 @@ var whereIsMyBuild = function() {
 		var buildKeys = "number,url,result,actions[triggeredProjects[name]]";
 
 		var jobRequest = $.getJSON(
-			"http://localhost:8080/job/" + jobName +
+			my.jenkinsUrl + "/job/" + jobName +
 			"/api/json?tree=lastCompletedBuild[" + buildKeys + "]"
 		);
 
@@ -208,7 +213,7 @@ var whereIsMyBuild = function() {
 						return build;
 					} else {
 						return buildForRevision($.getJSON(
-								"http://localhost:8080/job/" + jobName + "/" + (build.number - 1) +
+								my.jenkinsUrl + "/job/" + jobName + "/" + (build.number - 1) +
 								"/api/json?tree=" + buildKeys)
 							.then(function(build) {
 								return build;
@@ -270,8 +275,8 @@ var whereIsMyBuild = function() {
 		}
 	}
 
-	var init = function() {
-		d3.select(self.frameElement).style("height", height + "px");
+	my.init = function() {
+		d3.select(self.frameElement).style("height", my.height + "px");
 
 		updateNext();
 		renderData();
@@ -281,9 +286,6 @@ var whereIsMyBuild = function() {
 		setInterval(renderData, 2000)
 	}
 
-	return {
-		init: init,
-		buildNode: buildNode
-	}
+	return my;
 
 }().init();
