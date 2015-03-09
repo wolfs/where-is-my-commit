@@ -8,6 +8,7 @@ var whereIsMyBuild = function() {
 		renderInterval: 2000
 	};
 
+	var data;
 
 	var getQueryVariable = function(variable) {
 		var query = window.location.search.substring(1);
@@ -51,8 +52,7 @@ var whereIsMyBuild = function() {
 		return n;
 	}
 
-	var data = buildNode(my.startJob, parseInt(getQueryVariable("revision"), 10))
-	var toUpdate = [data]
+	var toUpdate = []
 
 	var renderer = function(conf, data) {
 		var my = {};
@@ -195,7 +195,8 @@ var whereIsMyBuild = function() {
 			}
 		}
 
-		var buildKeys = "number,url,result,actions[triggeredProjects[name,url]]";
+		var buildKeys =
+			"number,url,result,actions[triggeredProjects[name,url],failCount,skipCount,totalCount,urlName],changeSet[items[commitId,author,msg]]";
 
 		var jobRequest = $.getJSON(
 			my.jenkinsUrl + "/job/" + jobName +
@@ -262,6 +263,23 @@ var whereIsMyBuild = function() {
 			return triggeredProjects;
 		}
 
+		var getTestResults = function(build) {
+			var actions = build.actions;
+			var i;
+			var action;
+			for (i = 0; i < actions.length; i++) {
+				action = actions[i];
+				if (action.urlName === "testReport") {
+					return action;
+				}
+			}
+			return {
+				failCount: 0,
+				skipCount: 0,
+				totalCount: 0
+			};
+		}
+
 		buildForRevision(buildDef).then(function(build) {
 			if (build == undefined) {
 				toUpdate.push(nodeToUpdate);
@@ -298,6 +316,9 @@ var whereIsMyBuild = function() {
 	}
 
 	my.init = function() {
+		data = buildNode(my.startJob, parseInt(getQueryVariable("revision"), 10));
+		toUpdate.push(data);
+
 		var r = renderer(this, data);
 
 		updateNext();

@@ -1,42 +1,8 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
-<style>
-
-.node path.success {
-  fill: #729FCF;
-}
-
-.node path.unstable {
-  fill: #FCE94F;
-}
-
-.node path.failure {
-  fill: #EF2929;
-}
-
-.node path.aborted {
-  fill: #ABABAB;
-}
-
-.node path.pending {
-  fill: #ABABAB;
-}
-
-.node circle {
-  fill: white;
-}
-
-.node {
-  font: 15px sans-serif;
-}
-
-.link {
-  fill: none;
-  stroke: #ccc;
-  stroke-width: 1.5px;
-}
-
-</style>
+<head>
+  <link href="styles.css" rel="stylesheet" />
+</head>
 <body>
 <!-- <script src="http://d3js.org/d3.v3.min.js"></script> -->
 <script src="d3.v3.min.js"></script>
@@ -45,5 +11,6 @@
 <script>
 whereIsMyBuild.width = 1800;
 whereIsMyBuild.jenkinsUrl = "http://localhost:8080";
+// whereIsMyBuild.startJob = "property-loader";
 whereIsMyBuild.init();
 </script>
