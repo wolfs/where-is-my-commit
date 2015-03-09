@@ -41,10 +41,11 @@ var whereIsMyBuild = function() {
 		}
 	}
 
-	var buildNode = function(jobName, revision) {
+	var buildNode = function(jobName, revision, url) {
 		var n = Object.create(baseBuildNode);
 		n.jobName = jobName;
 		n.revision = revision;
+		n.url = url;
 		n.status = "pending";
 
 		return n;
@@ -272,7 +273,7 @@ var whereIsMyBuild = function() {
 
 				var triggeredProjects = getTriggeredProjects(build);
 				var children = $.map(triggeredProjects, function(job) {
-					return buildNode(job.name, nodeToUpdate.revision);
+					return buildNode(job.name, nodeToUpdate.revision, job.url);
 				});
 				var deferreds = $.map(children, function(buildNode) {
 					return buildData(buildNode);
