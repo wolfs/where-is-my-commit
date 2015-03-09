@@ -1,11 +1,12 @@
 var whereIsMyBuild = function() {
-	var my = {};
-	my.width = 960;
-	my.height = 2000;
-	my.jenkinsUrl = "http://localhost:8080";
-	my.startJob = "chain-start"
-	my.updateInterval = 2000;
-	my.renderInterval = 2000;
+	var my = {
+		width: 960,
+		height: 2000,
+		jenkinsUrl: "http://localhost:8080",
+		startJob: "chain-start",
+		updateInterval: 2000,
+		renderInterval: 2000
+	};
 
 
 	var getQueryVariable = function(variable) {
@@ -18,6 +19,20 @@ var whereIsMyBuild = function() {
 			}
 		}
 		return (false);
+	}
+
+	var when = function(deferreds) {
+		if (deferreds.length == 0) {
+			return $.Deferred().resolve([]);
+		} else if (deferreds.length == 1) {
+			return deferreds[0].then(function(deferred) {
+				return [deferred]
+			})
+		} else {
+			return $.when.apply($, deferreds).then(function() {
+				return $.makeArray(arguments);
+			})
+		}
 	}
 
 	var baseBuildNode = {
@@ -34,141 +49,138 @@ var whereIsMyBuild = function() {
 
 		return n;
 	}
+
 	var data = buildNode(my.startJob, parseInt(getQueryVariable("revision"), 10))
 	var toUpdate = [data]
-	var when = function(deferreds) {
-		if (deferreds.length == 0) {
-			return $.Deferred().resolve([]);
-		} else if (deferreds.length == 1) {
-			return deferreds[0].then(function(deferred) {
-				return [deferred]
-			})
-		} else {
-			return $.when.apply($, deferreds).then(function() {
-				return $.makeArray(arguments);
-			})
-		}
-	}
 
-	var cluster = d3.layout.tree().nodeSize([200, 200]);
-	var diagonal = d3.svg.diagonal()
-		.projection(function(d) {
-			return [d.x, d.y];
-		});
+	var renderer = function(conf, data) {
+		var my = {};
 
-	var canvas = d3.select("body").append("svg")
-		.attr("width", my.width)
-		.attr("height", my.height)
-
-	var svg = canvas
-		.append("g")
-		.attr("transform", "translate(500,300)");
-
-	var renderData = function() {
-		var nodes = cluster.nodes(data),
-			links = cluster.links(nodes);
-
-		var link = svg.selectAll(".link")
-			.data(links, function(d) {
-				return d.source.getName() + d.target.getName();
-			})
-
-		link.enter().insert("path", ".node")
-			.attr("class", "link");
-
-		link.transition().attr("d", diagonal)
-
-		link.exit().remove();
-
-		var node = svg.selectAll(".node")
-			.data(nodes, function(d) {
-				return d.getName();
+		var cluster = d3.layout.tree().nodeSize([200, 200]);
+		var diagonal = d3.svg.diagonal()
+			.projection(function(d) {
+				return [d.x, d.y];
 			});
 
-		var arc = d3.svg.arc()
-			.innerRadius(10)
-			.outerRadius(20)
-			.startAngle(0)
-			.endAngle(Math.PI * 2);
+		var canvas = d3.select("body").append("svg")
+			.attr("width", conf.width)
+			.attr("height", conf.height)
 
-		var parentNode = node.enter().append("g")
-			.attr("class", "node");
-		parentNode.append("path")
-			.attr("class", "pending")
-			.attr("d", arc);
+		var svg = canvas
+			.append("g")
+			.attr("transform", "translate(500,300)");
 
-		parentNode.append("circle")
-			.attr("r", 10);
+		d3.select(self.frameElement).style("height", conf.height + "px");
 
-		var textNode = parentNode.append("a")
-			.attr("xlink:href", function(d) {
-				return d.url
+		my.renderData = function() {
+			var nodes = cluster.nodes(data);
+			var links = cluster.links(nodes);
+
+			var link = svg.selectAll(".link")
+				.data(links, function(d) {
+					return d.source.getName() + d.target.getName();
+				})
+
+			link.enter().insert("path", ".node")
+				.attr("class", "link");
+
+			link.transition().attr("d", diagonal)
+
+			link.exit().remove();
+
+			var node = svg.selectAll(".node")
+				.data(nodes, function(d) {
+					return d.getName();
+				});
+
+			var arc = d3.svg.arc()
+				.innerRadius(10)
+				.outerRadius(20)
+				.startAngle(0)
+				.endAngle(Math.PI * 2);
+
+			var parentNode = node.enter().append("g")
+				.attr("class", "node");
+			parentNode.append("path")
+				.attr("class", "pending")
+				.attr("d", arc);
+
+			parentNode.append("circle")
+				.attr("r", 10);
+
+			var textNode = parentNode.append("a")
+				.attr("transform", "rotate(10)")
+				.append("text");
+
+			var dxChildren = function(d) {
+				return 40;
+			}
+
+			textNode
+				.append("tspan")
+				.text(function(d) {
+					return d.jobName;
+				});
+
+			textNode
+				.append("tspan")
+				.attr("class", "revision")
+				.attr("dy", "1.2em")
+				.text(function(d) {
+					return d.revision
+				})
+
+			node.selectAll("a")
+				.attr("xlink:href", function(d) {
+					return d.url
+				})
+
+
+			node.selectAll("a text tspan")
+				.attr("x", "0")
+				.attr("dx", dxChildren)
+
+			var circles = node.selectAll("path")
+				.attr("class", function(d) {
+					return d.status;
+				})
+
+			var blink = function() {
+				circles.transition()
+					.duration(1000)
+					.style("opacity", function(d) {
+						return d.status === "pending" ? 0 : 1;
+					})
+					.each("end", function(d) {
+						d3.select(this)
+							.transition()
+							.duration(1000)
+							.style("opacity", 1)
+							.each("end", blink)
+					})
+			}
+
+			blink();
+
+			node.selectAll("a text").transition()
+				.attr("dy", 0)
+				.style("text-anchor", "start");
+
+			node.selectAll("a text tspan.revision").transition()
+				.text(function(d) {
+					return d.revision;
+				})
+
+			node.transition().attr("transform", function(d) {
+				return "translate(" + d.x + "," + d.y + ")";
 			})
-			.append("text");
 
-		var dxChildren = function(d) {
-			return 40;
+			node.exit().remove();
 		}
 
-		textNode
-			.append("tspan")
-			.text(function(d) {
-				return d.jobName;
-			});
-
-		textNode
-			.append("tspan")
-			.attr("class", "revision")
-			.attr("dy", "1.2em")
-			.text(function(d) {
-				return d.revision
-			})
-
-		node.selectAll("a text tspan")
-			.attr("x", "0")
-			.attr("dx", dxChildren)
-
-		var fadeIn
-
-		var circles = node.selectAll("path")
-			.attr("class", function(d) {
-				return d.status;
-			})
-
-		var blink = function() {
-			circles.transition()
-				.duration(1000)
-				.style("opacity", function(d) {
-					return d.status === "pending" ? 0 : 1;
-				})
-				.each("end", function(d) {
-					d3.select(this)
-						.transition()
-						.duration(1000)
-						.style("opacity", 1)
-						.each("end", blink)
-				})
-		}
-
-		blink();
-
-
-
-		node.selectAll("a text").transition()
-			.attr("dy", 0)
-			.style("text-anchor", "start");
-
-		node.selectAll("a text tspan.revision").transition()
-			.text(function(d) {
-				return d.revision;
-			})
-
-		node.transition().attr("transform", function(d) {
-			return "translate(" + d.x + "," + d.y + ")";
-		})
-
-		node.exit().remove();
+		return my;
 	}
+
 
 	var buildData = function(nodeToUpdate) {
 		var jobName = nodeToUpdate.jobName;
@@ -176,13 +188,13 @@ var whereIsMyBuild = function() {
 		var findRevision = function(envVars) {
 			for (var i = 0; i < envVars.length; i++) {
 				var env = envVars[i];
-				if (env.name == "REV") {
+				if (env.name === "REV") {
 					return parseInt(env.value, 10);
 				}
 			}
 		}
 
-		var buildKeys = "number,url,result,actions[triggeredProjects[name]]";
+		var buildKeys = "number,url,result,actions[triggeredProjects[name,url]]";
 
 		var jobRequest = $.getJSON(
 			my.jenkinsUrl + "/job/" + jobName +
@@ -194,11 +206,11 @@ var whereIsMyBuild = function() {
 		});
 
 		var getEnvVars = function(build) {
-			return build == undefined ? undefined : $.getJSON(build.url +
+			return build === undefined ? undefined : $.getJSON(build.url +
 				"injectedEnvVars/export");
 		}
 		var getRevision = function(build) {
-			if (build == undefined) {
+			if (build === undefined) {
 				return undefined;
 			}
 			return getEnvVars(build).then(function(envVars) {
@@ -210,13 +222,13 @@ var whereIsMyBuild = function() {
 		var buildForRevision = function(buildDef) {
 			return $.when(buildDef, buildDef.then(getRevision)).then(
 				function(build, revision) {
-					if (build == undefined) {
+					if (build === undefined) {
 						return undefined;
 					}
 					build.revision = revision;
 					if (revision < nodeToUpdate.revision) {
 						return undefined;
-					} else if (revision == nodeToUpdate.revision) {
+					} else if (revision === nodeToUpdate.revision) {
 						return build;
 					} else {
 						return buildForRevision($.getJSON(
@@ -259,14 +271,16 @@ var whereIsMyBuild = function() {
 				nodeToUpdate.url = build.url;
 
 				var triggeredProjects = getTriggeredProjects(build);
-				var deferreds = $.map(triggeredProjects, function(job) {
-					return buildData(buildNode(job.name, nodeToUpdate.revision));
+				var children = $.map(triggeredProjects, function(job) {
+					return buildNode(job.name, nodeToUpdate.revision);
+				});
+				var deferreds = $.map(children, function(buildNode) {
+					return buildData(buildNode);
 				});
 
-				when(deferreds).then(function(triggeredBuilds) {
-					nodeToUpdate.children = triggeredBuilds;
-					resultDef.resolve(nodeToUpdate);
-				})
+				nodeToUpdate.children = children;
+
+				resultDef.resolve(nodeToUpdate);
 			}
 		}, function() {
 			toUpdate.push(nodeToUpdate);
@@ -283,16 +297,16 @@ var whereIsMyBuild = function() {
 	}
 
 	my.init = function() {
-		d3.select(self.frameElement).style("height", my.height + "px");
+		var r = renderer(this, data);
 
 		updateNext();
-		renderData();
+		r.renderData();
 
 		setInterval(updateNext, my.updateInterval)
 
-		setInterval(renderData, my.renderInterval)
+		setInterval(r.renderData, my.renderInterval)
 	}
 
 	return my;
 
-}().init();
+}();
