@@ -102,12 +102,12 @@ var whereIsMyBuild = function() {
 
 			var parentNode = node.enter().append("g")
 				.attr("class", "node");
+			parentNode.append("circle")
+				.attr("r", 20);
 			parentNode.append("path")
 				.attr("class", "pending")
 				.attr("d", arc);
 
-			parentNode.append("circle")
-				.attr("r", 10);
 
 			var textNode = parentNode.append("a")
 				.attr("transform", "rotate(10)")
