@@ -8,6 +8,7 @@ var whereIsMyBuild = function () {
         renderInterval: 2000
     };
 
+
     var data;
 
     var getQueryVariable = function (variable) {
@@ -15,9 +16,9 @@ var whereIsMyBuild = function () {
             results = query.split("&").map(function (el) {
                 return el.split("=")
             }).filter(function (el) {
-                if (el[0] == variable) {
-                    return el[1];
-                }
+                return (el[0] == variable);
+            }).map(function (el) {
+                return el[1];
             });
         return results.length == 0 ? false : results[0];
     };
@@ -195,7 +196,7 @@ var whereIsMyBuild = function () {
 
         var getEnvVars = function (build) {
             return build === undefined ? undefined : $.getJSON(build.url +
-            "injectedEnvVars/export");
+                "injectedEnvVars/export");
         };
         var getRevision = function (build) {
             if (build === undefined) {
@@ -220,8 +221,8 @@ var whereIsMyBuild = function () {
                         return build;
                     } else {
                         return buildForRevision($.getJSON(
-                            my.jenkinsUrl + "/job/" + jobName + "/" + (build.number - 1) +
-                            "/api/json?tree=" + buildKeys)
+                                my.jenkinsUrl + "/job/" + jobName + "/" + (build.number - 1) +
+                                "/api/json?tree=" + buildKeys)
                             .then(function (build) {
                                 return build;
                             })).then(function (previousBuild) {
@@ -236,13 +237,13 @@ var whereIsMyBuild = function () {
         };
 
         var getTriggeredProjects = function (build) {
-            return build.actions.filter(function(el) {
+            return build.actions.filter(function (el) {
                 return el.triggeredProjects;
-            }).map(function() {
+            }).map(function (el) {
                 return el.triggeredProjects;
-            }).reduce(function(a, b) {
+            }).reduce(function (a, b) {
                 return a.concat(b);
-            });
+            }, []);
         };
 
         var getTestResults = function (build) {
