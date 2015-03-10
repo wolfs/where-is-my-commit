@@ -187,10 +187,13 @@ var whereIsMyBuild = function () {
 
         var jobRequest = $.getJSON(
             my.jenkinsUrl + "/job/" + jobName +
-            "/api/json?tree=lastCompletedBuild[" + buildKeys + "]"
+            "/api/json?tree=url,lastCompletedBuild[" + buildKeys + "]"
         );
 
         var buildDef = jobRequest.then(function (job) {
+            if (nodeToUpdate.url === undefined) {
+                nodeToUpdate.url = job.url;
+            }
             return job.lastCompletedBuild;
         });
 
