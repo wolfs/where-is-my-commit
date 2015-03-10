@@ -276,10 +276,10 @@ var whereIsMyBuild = function () {
                 nodeToUpdate.url = build.url;
 
                 var triggeredProjects = getTriggeredProjects(build);
-                var children = $.map(triggeredProjects, function (job) {
+                var children = triggeredProjects.map(function (job) {
                     return buildNode(job.name, nodeToUpdate.revision, job.url);
                 });
-                var deferreds = $.map(children, function (buildNode) {
+                var deferreds = children.map(function (buildNode) {
                     return buildData(buildNode);
                 });
 
