@@ -16,11 +16,11 @@ var whereIsMyBuild = function () {
             results = query.split("&").map(function (el) {
                 return el.split("=")
             }).filter(function (el) {
-                return (el[0] == variable);
+                return (el[0] === variable);
             }).map(function (el) {
                 return el[1];
             });
-        return results.length == 0 ? false : results[0];
+        return results.length === 0 ? false : results[0];
     };
 
     var baseBuildNode = {
@@ -229,7 +229,7 @@ var whereIsMyBuild = function () {
                             .then(function (build) {
                                 return build;
                             })).then(function (previousBuild) {
-                            if (previousBuild == undefined) {
+                            if (previousBuild === undefined) {
                                 return build;
                             } else {
                                 return previousBuild;
@@ -267,7 +267,7 @@ var whereIsMyBuild = function () {
         };
 
         buildForRevision(buildDef).then(function (build) {
-            if (build == undefined) {
+            if (build === undefined) {
                 toUpdate.push(nodeToUpdate);
                 resultDef.resolve(nodeToUpdate);
             } else {
