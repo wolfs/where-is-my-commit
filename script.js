@@ -56,7 +56,7 @@ var whereIsMyBuild = function () {
 
         var svg = canvas
             .append("g")
-            .attr("transform", "translate(500,300)");
+            .attr("transform", "translate(" + (conf.width/2) + ",300)");
 
         d3.select(self.frameElement).style("height", conf.height + "px");
 
@@ -66,7 +66,7 @@ var whereIsMyBuild = function () {
 
             var link = svg.selectAll(".link")
                 .data(links, function (d) {
-                    return d.source.getName() + d.target.getName();
+                    return d.source.jobName + d.target.jobName;
                 });
 
             link.enter().insert("path", ".node")
@@ -78,7 +78,7 @@ var whereIsMyBuild = function () {
 
             var node = svg.selectAll(".node")
                 .data(nodes, function (d) {
-                    return d.getName();
+                    return d.jobName;
                 });
 
             var arc = d3.svg.arc()
