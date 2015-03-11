@@ -5,7 +5,6 @@ var whereIsMyBuild = function () {
         jenkinsUrl: "http://localhost:8080",
         startJob: "chain-start",
         updateInterval: 2000,
-        renderInterval: 2000
     };
 
 
@@ -193,6 +192,7 @@ var whereIsMyBuild = function () {
         var buildDef = jobRequest.then(function (job) {
             if (nodeToUpdate.url === undefined) {
                 nodeToUpdate.url = job.url;
+                $(data).trigger("change");
             }
             return job.lastCompletedBuild;
         });
@@ -285,6 +285,8 @@ var whereIsMyBuild = function () {
 
                 nodeToUpdate.children = children;
 
+                $(data).trigger("change");
+
                 resultDef.resolve(nodeToUpdate);
             }
         }, function () {
@@ -307,12 +309,12 @@ var whereIsMyBuild = function () {
 
         var r = renderer(this, data);
 
+        $(data).bind("change", r.renderData);
+        $(data).trigger("change");
+
         updateNext();
-        r.renderData();
 
         setInterval(updateNext, my.updateInterval);
-
-        setInterval(r.renderData, my.renderInterval)
     };
 
     return my;
