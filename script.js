@@ -207,8 +207,10 @@ var whereIsMyBuild = function ($, d3) {
 
         var jobRequest = $.getJSON(
             my.jenkinsUrl + "/job/" + jobName +
-            "/api/json?tree=url,lastCompletedBuild[" + buildKeys + "]"
-        );
+            "/api/json?tree=url,downstreamProjects[url,name],lastCompletedBuild[" + buildKeys + "]"
+        ).then(function (job) {
+                return job;
+            });
 
         var buildDef = jobRequest.then(function (job) {
             if (nodeToUpdate.url === undefined) {
@@ -301,7 +303,7 @@ var whereIsMyBuild = function ($, d3) {
         });
 
 
-        $.when(foundBuildDef, previousBuildDef).then(function (build, previousBuild) {
+        $.when(foundBuildDef, previousBuildDef, jobRequest).then(function (build, previousBuild, job) {
             if (build === undefined) {
                 toUpdate.push(nodeToUpdate);
                 resultDef.resolve(nodeToUpdate);
@@ -319,6 +321,9 @@ var whereIsMyBuild = function ($, d3) {
                 var children = triggeredProjects.map(function (job) {
                     return buildNode(job.name, nodeToUpdate.revision, job.url);
                 });
+                children = children.concat(job.downstreamProjects.map(function (project) {
+                    return buildNode(project.name, nodeToUpdate.revision, project.url);
+                }));
                 children.map(function (buildNode) {
                     return buildData(buildNode);
                 });
