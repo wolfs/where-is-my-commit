@@ -1,10 +1,10 @@
-var whereIsMyBuild = function () {
+var whereIsMyBuild = function ($, d3) {
     var my = {
         width: 960,
         height: 2000,
         jenkinsUrl: "http://localhost:8080",
         startJob: "chain-start",
-        updateInterval: 2000,
+        updateInterval: 2000
     };
 
 
@@ -24,9 +24,6 @@ var whereIsMyBuild = function () {
     };
 
     var baseBuildNode = {
-        getName: function () {
-            return this.jobName + " - " + this.revision
-        },
         getNewFailCount: function () {
             if (this.newFailCount) {
                 return this.newFailCount;
@@ -238,13 +235,13 @@ var whereIsMyBuild = function () {
         var buildUrl = function (buildNumber) {
             return my.jenkinsUrl + "/job/" + nodeToUpdate.jobName + "/" + buildNumber +
                                 "/api/json?tree=" + buildKeys;
-        }
+        };
 
         var getBuildDef = function (buildNumber) {
             return $.getJSON(buildUrl(buildNumber)).then(function (build) {
                 return build;
             });
-        }
+        };
 
         var buildForRevision = function (buildDef) {
             return $.when(buildDef, buildDef.then(getRevision)).then(
@@ -284,6 +281,7 @@ var whereIsMyBuild = function () {
             var actions = build.actions;
             var i;
             var action;
+
             for (i = 0; i < actions.length; i++) {
                 action = actions[i];
                 if (action.urlName === "testReport") {
@@ -370,4 +368,4 @@ var whereIsMyBuild = function () {
 
     return my;
 
-}();
+}($, d3);
