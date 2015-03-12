@@ -279,14 +279,13 @@ var whereIsMyBuild = function ($, d3) {
 
         var getTestResult = function (build) {
             var actions = build.actions;
-            var i;
-            var action;
 
-            for (i = 0; i < actions.length; i++) {
-                action = actions[i];
-                if (action.urlName === "testReport") {
-                    return action;
-                }
+            var testReports = actions.filter(function (action) {
+                return action.urlName === "testReport";
+            });
+
+            if (testReports.length > 0) {
+                return testReports[0];
             }
             return {
                 failCount: 0,
@@ -298,7 +297,7 @@ var whereIsMyBuild = function ($, d3) {
         var foundBuildDef = buildForRevision(buildDef);
 
         var previousBuildDef = foundBuildDef.then(function (build) {
-            return build ? getBuildDef(build.number - 1) : undefined;
+            return build ? (build.number > 1 ? getBuildDef(build.number - 1) : undefined) : undefined;
         });
 
 
