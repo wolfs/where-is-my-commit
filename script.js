@@ -9,6 +9,7 @@ var whereIsMyBuild = function () {
 
 
     var data;
+    var needsUpdate = true;
 
     var getQueryVariable = function (variable) {
         var query = window.location.search.substring(1),
@@ -25,7 +26,14 @@ var whereIsMyBuild = function () {
     var baseBuildNode = {
         getName: function () {
             return this.jobName + " - " + this.revision
+        },
+        getNewFailCount: function () {
+            if (this.newFailCount) {
+                return this.newFailCount;
+            }
+            return 0;
         }
+        
     };
 
     var buildNode = function (jobName, revision, url) {
@@ -93,6 +101,10 @@ var whereIsMyBuild = function () {
             parentNode.append("path")
                 .attr("class", "pending")
                 .attr("d", arc);
+            parentNode.append("text")
+                .style("text-anchor", "middle")
+                .attr("dy", "0.3em")
+                .attr("class", "testcount");
 
 
             var textNode = parentNode.append("a")
@@ -126,6 +138,18 @@ var whereIsMyBuild = function () {
             node.selectAll("a text tspan")
                 .attr("x", "0")
                 .attr("dx", dxChildren);
+
+            node.selectAll("text.testcount")
+                .text(function (d) {
+                    var newFailCount = d.getNewFailCount();
+                    return newFailCount === 0 ? undefined : (newFailCount > 0 ? '+' + newFailCount : newFailCount);
+                })
+                .classed('worse', function (d) {
+                    return d.getNewFailCount() > 0;
+                })
+                .classed('better', function (d) {
+                    return d.getNewFailCount() < 0;
+                });
 
             var circles = node.selectAll("path")
                 .attr("class", function (d) {
@@ -211,6 +235,17 @@ var whereIsMyBuild = function () {
         };
         buildDef.then(getEnvVars);
 
+        var buildUrl = function (buildNumber) {
+            return my.jenkinsUrl + "/job/" + nodeToUpdate.jobName + "/" + buildNumber +
+                                "/api/json?tree=" + buildKeys;
+        }
+
+        var getBuildDef = function (buildNumber) {
+            return $.getJSON(buildUrl(buildNumber)).then(function (build) {
+                return build;
+            });
+        }
+
         var buildForRevision = function (buildDef) {
             return $.when(buildDef, buildDef.then(getRevision)).then(
                 function (build, revision) {
@@ -223,12 +258,8 @@ var whereIsMyBuild = function () {
                     } else if (revision === nodeToUpdate.revision) {
                         return build;
                     } else {
-                        return buildForRevision($.getJSON(
-                                my.jenkinsUrl + "/job/" + jobName + "/" + (build.number - 1) +
-                                "/api/json?tree=" + buildKeys)
-                            .then(function (build) {
-                                return build;
-                            })).then(function (previousBuild) {
+                        return buildForRevision(getBuildDef(build.number - 1))
+                            .then(function (previousBuild) {
                             if (previousBuild === undefined) {
                                 return build;
                             } else {
@@ -249,7 +280,7 @@ var whereIsMyBuild = function () {
             }, []);
         };
 
-        var getTestResults = function (build) {
+        var getTestResult = function (build) {
             var actions = build.actions;
             var i;
             var action;
@@ -266,7 +297,14 @@ var whereIsMyBuild = function () {
             };
         };
 
-        buildForRevision(buildDef).then(function (build) {
+        var foundBuildDef = buildForRevision(buildDef);
+
+        var previousBuildDef = foundBuildDef.then(function (build) {
+            return build ? getBuildDef(build.number - 1) : undefined;
+        });
+
+
+        $.when(foundBuildDef, previousBuildDef).then(function (build, previousBuild) {
             if (build === undefined) {
                 toUpdate.push(nodeToUpdate);
                 resultDef.resolve(nodeToUpdate);
@@ -274,12 +312,17 @@ var whereIsMyBuild = function () {
                 nodeToUpdate.status = build.result.toLowerCase();
                 nodeToUpdate.revision = build.revision;
                 nodeToUpdate.url = build.url;
+                nodeToUpdate.testResult = getTestResult(build);
+                if (previousBuild !== undefined) {
+                    var previousTestResult = getTestResult(previousBuild);
+                    nodeToUpdate.newFailCount = nodeToUpdate.testResult.failCount - previousTestResult.failCount;
+                }
 
                 var triggeredProjects = getTriggeredProjects(build);
                 var children = triggeredProjects.map(function (job) {
                     return buildNode(job.name, nodeToUpdate.revision, job.url);
                 });
-                var deferreds = children.map(function (buildNode) {
+                children.map(function (buildNode) {
                     return buildData(buildNode);
                 });
 
@@ -309,7 +352,15 @@ var whereIsMyBuild = function () {
 
         var r = renderer(this, data);
 
-        $(data).bind("change", r.renderData);
+        $(data).bind("change", function () {
+            needsUpdate = true;
+            setTimeout(function () {
+                if (needsUpdate) {
+                    r.renderData();
+                    needsUpdate = false;
+                }
+            }, 0);
+        });
         $(data).trigger("change");
 
         updateNext();

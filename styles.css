@@ -18,6 +18,14 @@
   fill: #ABABAB;
 }
 
+.node text.better {
+  fill: #29EF29;
+}
+
+.node text.worse {
+  fill: #EF2929;
+}
+
 .node circle {
   fill: white;
 }
