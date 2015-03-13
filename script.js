@@ -39,6 +39,7 @@ var whereIsMyBuild = function ($, d3) {
         n.revision = revision;
         n.url = url;
         n.status = "pending";
+        n.downstreamProjects = [];
 
         return n;
     };
@@ -103,6 +104,24 @@ var whereIsMyBuild = function ($, d3) {
                 .attr("dy", "0.3em")
                 .attr("class", "testcount");
 
+            parentNode.each(function (d) {
+                d3.select(this).selectAll(".downstream")
+                    .data(d.downstreamProjects, function (d) {
+                        return d.jobName;
+                    }).enter()
+                    .append("a")
+                    .attr("xlink:href", function (d) {
+                        return d.url;
+                    })
+                    .append("circle")
+                    .attr("transform", function (d, i) {
+                        return "rotate(" + (-60 + 35 * i) + ")translate(-40,0)";
+                    })
+                    .attr("r", 8)
+                    .style("fill", "#fff")
+                    .style("stroke", "#729FCF")
+                    .style("stroke-width", "3px");
+            });
 
             var textNode = parentNode.append("a")
                 .attr("transform", "rotate(10)")
@@ -202,8 +221,12 @@ var whereIsMyBuild = function ($, d3) {
             }
         };
 
+        var nodeFromProject = function(project) {
+            return buildNode(project.name, nodeToUpdate.revision, project.url);
+        };
+
         var buildKeys =
-            "number,url,result,actions[triggeredProjects[name,url],failCount,skipCount,totalCount,urlName],changeSet[items[commitId,author,msg]]";
+            "number,url,result,actions[triggeredProjects[name,url,downstreamProjects[url,name]],failCount,skipCount,totalCount,urlName],changeSet[items[commitId,author,msg]]";
 
         var jobRequest = $.getJSON(
             my.jenkinsUrl + "/job/" + jobName +
@@ -217,6 +240,7 @@ var whereIsMyBuild = function ($, d3) {
                 nodeToUpdate.url = job.url;
                 $(data).trigger("change");
             }
+            nodeToUpdate.downstreamProjects = job.downstreamProjects.map(nodeFromProject);
             return job.lastCompletedBuild;
         });
 
@@ -302,8 +326,7 @@ var whereIsMyBuild = function ($, d3) {
             return build ? (build.number > 1 ? getBuildDef(build.number - 1) : undefined) : undefined;
         });
 
-
-        $.when(foundBuildDef, previousBuildDef, jobRequest).then(function (build, previousBuild, job) {
+        $.when(foundBuildDef, previousBuildDef).then(function (build, previousBuild) {
             if (build === undefined) {
                 toUpdate.push(nodeToUpdate);
                 resultDef.resolve(nodeToUpdate);
@@ -318,12 +341,12 @@ var whereIsMyBuild = function ($, d3) {
                 }
 
                 var triggeredProjects = getTriggeredProjects(build);
-                var children = triggeredProjects.map(function (job) {
-                    return buildNode(job.name, nodeToUpdate.revision, job.url);
+                var children = triggeredProjects.map(function (project) {
+                    var node = nodeFromProject(project);
+                    node.downstreamProjects = project.downstreamProjects.map(nodeFromProject);
+                    return node;
                 });
-                children = children.concat(job.downstreamProjects.map(function (project) {
-                    return buildNode(project.name, nodeToUpdate.revision, project.url);
-                }));
+
                 children.map(function (buildNode) {
                     return buildData(buildNode);
                 });
