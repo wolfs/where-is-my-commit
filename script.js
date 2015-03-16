@@ -86,42 +86,51 @@ var whereIsMyBuild = function ($, d3) {
                     return d.jobName;
                 });
 
-            var arc = d3.svg.arc()
-                .innerRadius(10)
-                .outerRadius(20)
-                .startAngle(0)
-                .endAngle(Math.PI * 2);
+            var addBuildNode = function(node, radius) {
+                var arc = d3.svg.arc()
+                    .innerRadius(radius / 2)
+                    .outerRadius(radius)
+                    .startAngle(0)
+                    .endAngle(Math.PI * 2);
+
+                node.append("circle")
+                    .attr("r", radius);
+                node.append("path")
+                    .attr("d", arc);
+                node.append("text")
+                    .style("text-anchor", "middle")
+                    .attr("dy", "0.3em")
+                    .attr("class", "testcount");
+            };
 
             var parentNode = node.enter().append("g")
                 .attr("class", "node");
-            parentNode.append("circle")
-                .attr("r", 20);
-            parentNode.append("path")
-                .attr("class", "pending")
-                .attr("d", arc);
-            parentNode.append("text")
-                .style("text-anchor", "middle")
-                .attr("dy", "0.3em")
-                .attr("class", "testcount");
 
-            parentNode.each(function (d) {
-                d3.select(this).selectAll(".downstream")
-                    .data(d.downstreamProjects, function (d) {
-                        return d.jobName;
-                    }).enter()
-                    .append("a")
-                    .attr("xlink:href", function (d) {
-                        return d.url;
-                    })
-                    .append("circle")
-                    .attr("transform", function (d, i) {
-                        return "rotate(" + (-60 + 35 * i) + ")translate(-40,0)";
-                    })
-                    .attr("r", 8)
-                    .style("fill", "#fff")
-                    .style("stroke", "#729FCF")
-                    .style("stroke-width", "3px");
+            addBuildNode(parentNode, 20);
+
+            var downstreamNodes = node.selectAll(".downstream").data(function (coreNode) {
+                return coreNode.downstreamProjects;
+            }, function (project) {
+                return project.jobName;
             });
+
+            var downstreamContainer = downstreamNodes.enter()
+                .append("a")
+                .attr("class", "downstream")
+                .attr("xlink:href", function (d) {
+                    return d.url;
+                })
+                .attr("transform", function (d, i) {
+                    return "rotate(" + (-60 + 35 * i) + ")translate(-40,0)";
+                });
+            addBuildNode(downstreamContainer, 10);
+
+            var downstream = downstreamNodes.selectAll("path")
+                .attr("class", function (d) {
+                    return d.status;
+                });
+
+            downstreamNodes.exit().remove();
 
             var textNode = parentNode.append("a")
                 .attr("transform", "rotate(10)")
@@ -240,7 +249,6 @@ var whereIsMyBuild = function ($, d3) {
                 nodeToUpdate.url = job.url;
                 $(data).trigger("change");
             }
-            nodeToUpdate.downstreamProjects = job.downstreamProjects.map(nodeFromProject);
             return job.lastCompletedBuild;
         });
 
@@ -347,9 +355,8 @@ var whereIsMyBuild = function ($, d3) {
                     return node;
                 });
 
-                children.map(function (buildNode) {
-                    return buildData(buildNode);
-                });
+                children.map(buildData);
+                nodeToUpdate.downstreamProjects.map(buildData);
 
                 nodeToUpdate.children = children;
 
