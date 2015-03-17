@@ -65,13 +65,39 @@ var whereIsMyBuild = function ($, d3) {
 
         d3.select(self.frameElement).style("height", conf.height + "px");
 
+        var jobName = function (job) {
+            return job.jobName;
+        };
+
+        var jobUrl = function (job) {
+            return job.url;
+        };
+
+        var addBuildNode = function(node, radius, cssClass) {
+            var arc = d3.svg.arc()
+                .innerRadius(radius / 2)
+                .outerRadius(radius)
+                .startAngle(0)
+                .endAngle(Math.PI * 2);
+
+            node.append("circle")
+                .attr("r", radius);
+            node.append("path")
+                .attr("class", cssClass)
+                .attr("d", arc);
+            node.append("text")
+                .style("text-anchor", "middle")
+                .attr("dy", "0.3em")
+                .attr("class", "testcount");
+        };
+
         my.renderData = function () {
             var nodes = cluster.nodes(data);
             var links = cluster.links(nodes);
 
             var link = svg.selectAll(".link")
                 .data(links, function (d) {
-                    return d.source.jobName + d.target.jobName;
+                    return d.source.jobName + "->" +d.target.jobName;
                 });
 
             link.enter().insert("path", ".node")
@@ -82,63 +108,18 @@ var whereIsMyBuild = function ($, d3) {
             link.exit().remove();
 
             var node = svg.selectAll(".node")
-                .data(nodes, function (d) {
-                    return d.jobName;
-                });
+                .data(nodes, jobName);
 
-            var addBuildNode = function(node, radius) {
-                var arc = d3.svg.arc()
-                    .innerRadius(radius / 2)
-                    .outerRadius(radius)
-                    .startAngle(0)
-                    .endAngle(Math.PI * 2);
-
-                node.append("circle")
-                    .attr("r", radius);
-                node.append("path")
-                    .attr("d", arc);
-                node.append("text")
-                    .style("text-anchor", "middle")
-                    .attr("dy", "0.3em")
-                    .attr("class", "testcount");
-            };
 
             var parentNode = node.enter().append("g")
                 .attr("class", "node");
 
-            addBuildNode(parentNode, 20);
-
-            var downstreamNodes = node.selectAll(".downstream").data(function (coreNode) {
-                return coreNode.downstreamProjects;
-            }, function (project) {
-                return project.jobName;
-            });
-
-            var downstreamContainer = downstreamNodes.enter()
-                .append("a")
-                .attr("class", "downstream")
-                .attr("xlink:href", function (d) {
-                    return d.url;
-                })
-                .attr("transform", function (d, i) {
-                    return "rotate(" + (-10 + 35 * i) + ")translate(-40,0)";
-                });
-            addBuildNode(downstreamContainer, 10);
-            downstreamContainer.append("text").text(function (d) {
-                var parentData = d3.select(this.parentNode.parentNode).datum();
-                return d.jobName.replace(new RegExp(parentData.jobName + '(-|~~)*'), '').split('-').map(function (s) { return s[0] }).join('');
-            }).attr("text-anchor", "end").attr("dx", "-15");
-
-            var downstream = downstreamNodes.selectAll("path")
-                .attr("class", function (d) {
-                    return d.status;
-                });
-
-            downstreamNodes.exit().remove();
+            addBuildNode(parentNode, 20, "core");
 
             var textNode = parentNode.append("a")
                 .attr("transform", "rotate(10)")
-                .append("text");
+                .append("text")
+                .attr("class", "core");
 
             var dxChildren = function () {
                 return 40;
@@ -146,9 +127,7 @@ var whereIsMyBuild = function ($, d3) {
 
             textNode
                 .append("tspan")
-                .text(function (d) {
-                    return d.jobName;
-                });
+                .text(jobName);
 
             textNode
                 .append("tspan")
@@ -158,10 +137,38 @@ var whereIsMyBuild = function ($, d3) {
                     return d.revision
                 });
 
-            node.selectAll("a")
-                .attr("xlink:href", function (d) {
-                    return d.url
+            var downstreamNodes = node.selectAll(".downstream").data(function (coreNode) {
+                return coreNode.downstreamProjects;
+            }, jobName);
+
+            var downstreamContainer = downstreamNodes.enter()
+                .append("a")
+                .attr("class", "downstream")
+                .attr("transform", function (d, i) {
+                    return "rotate(" + (-10 + 35 * i) + ")translate(-40,0)";
                 });
+
+            addBuildNode(downstreamContainer, 10, "downstream");
+
+            downstreamContainer
+                .append("text")
+                .text(function (d) {
+                    var parentData = d3.select(this.parentNode.parentNode).datum();
+                    return d.jobName.replace(new RegExp(parentData.jobName + '(-|~~)*'), '')
+                        .split('-')
+                        .map(function (s) {
+                            return s[0]
+                        })
+                        .join('');
+                })
+                .attr("text-anchor", "end")
+                .attr("dx", "-15")
+                .attr("dy", "0.3em");
+
+            downstreamNodes.exit().remove();
+
+            node.selectAll("a")
+                .attr("xlink:href", jobUrl);
 
 
             node.selectAll("a text tspan")
@@ -185,10 +192,8 @@ var whereIsMyBuild = function ($, d3) {
                     return d.status;
                 });
 
-            node.selectAll("a text").transition()
+            node.selectAll("a text.core").transition()
                 .attr("dy", 0);
-
-            downstreamNodes.selectAll("text").style("text-anchor", "end").attr("dy", "0.5em");
 
             node.selectAll("a text tspan.revision").transition()
                 .text(function (d) {
