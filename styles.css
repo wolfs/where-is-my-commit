@@ -34,8 +34,20 @@
   font: 15px sans-serif;
 }
 
+@-webkit-keyframes blink {
+    from { opacity: 1.0 }
+    to { opacity: 0.0 }
+ }
+
+.node path.pending {
+    -webkit-animation-name: blink;
+    -webkit-animation-duration: 1s;
+    -webkit-animation-iteration-count: infinite;
+    -webkit-animation-direction: alternate;
+}
+
 .link {
   fill: none;
   stroke: #ccc;
-  stroke-width: 1.5px;
+  stroke-width: 1.5;
 }

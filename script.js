@@ -121,9 +121,13 @@ var whereIsMyBuild = function ($, d3) {
                     return d.url;
                 })
                 .attr("transform", function (d, i) {
-                    return "rotate(" + (-60 + 35 * i) + ")translate(-40,0)";
+                    return "rotate(" + (-10 + 35 * i) + ")translate(-40,0)";
                 });
             addBuildNode(downstreamContainer, 10);
+            downstreamContainer.append("text").text(function (d) {
+                var parentData = d3.select(this.parentNode.parentNode).datum();
+                return d.jobName.replace(new RegExp(parentData.jobName + '(-|~~)*'), '').split('-').map(function (s) { return s[0] }).join('');
+            }).attr("text-anchor", "end").attr("dx", "-15");
 
             var downstream = downstreamNodes.selectAll("path")
                 .attr("class", function (d) {
@@ -176,31 +180,15 @@ var whereIsMyBuild = function ($, d3) {
                     return d.getNewFailCount() < 0;
                 });
 
-            var circles = node.selectAll("path")
+            node.selectAll("path")
                 .attr("class", function (d) {
                     return d.status;
                 });
 
-            var blink = function () {
-                circles.transition()
-                    .duration(1000)
-                    .style("opacity", function (d) {
-                        return d.status === "pending" ? 0 : 1;
-                    })
-                    .each("end", function () {
-                        d3.select(this)
-                            .transition()
-                            .duration(1000)
-                            .style("opacity", 1)
-                            .each("end", blink)
-                    })
-            };
-
-            blink();
-
             node.selectAll("a text").transition()
-                .attr("dy", 0)
-                .style("text-anchor", "start");
+                .attr("dy", 0);
+
+            downstreamNodes.selectAll("text").style("text-anchor", "end").attr("dy", "0.5em");
 
             node.selectAll("a text tspan.revision").transition()
                 .text(function (d) {
@@ -373,8 +361,9 @@ var whereIsMyBuild = function ($, d3) {
 
     var updateNext = function () {
         if (toUpdate.length > 0) {
-            var current = toUpdate.shift();
-            buildData(current);
+            var toUpdateNow = toUpdate.slice(0, 4);
+            toUpdate = toUpdate.slice(5);
+            toUpdateNow.map(buildData);
         }
     };
 
