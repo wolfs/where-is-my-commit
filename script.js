@@ -114,13 +114,16 @@ var whereIsMyBuild = function ($, d3) {
             var parentNode = node.enter().append("g")
                 .attr("class", "node");
 
-            addBuildNode(parentNode, 20, "core");
+            var coreNode = parentNode
+                .append("a");
 
-            var textNode = parentNode.append("a")
-                .attr("transform", "rotate(10)")
+            var textNode = coreNode
                 .append("text")
+                .attr("transform", "rotate(10)")
                 .attr("class", "core");
 
+
+            addBuildNode(coreNode, 20, "core");
             var dxChildren = function () {
                 return 40;
             };
