@@ -4,7 +4,9 @@ var whereIsMyBuild = function ($, d3) {
         height: 2000,
         jenkinsUrl: "http://localhost:8080",
         startJob: "chain-start",
-        updateInterval: 2000
+        updateInterval: 2000,
+        commitUpdateInterval: 20000,
+        bulkUpdateSize: 10
     };
 
 
@@ -279,7 +281,6 @@ var whereIsMyBuild = function ($, d3) {
                 return findRevision(envVars.envVars.envVar)
             })
         };
-        buildDef.then(getEnvVars);
 
         var buildUrl = function (buildNumber) {
             return my.jenkinsUrl + "/job/" + nodeToUpdate.jobName + "/" + buildNumber +
@@ -388,8 +389,8 @@ var whereIsMyBuild = function ($, d3) {
 
     var updateNext = function () {
         if (toUpdate.length > 0) {
-            var toUpdateNow = toUpdate.slice(0, 4);
-            toUpdate = toUpdate.slice(5);
+            var toUpdateNow = toUpdate.slice(0, my.bulkUpdateSize);
+            toUpdate = toUpdate.slice(my.bulkUpdateSize);
             toUpdateNow.map(buildData);
         }
     };
@@ -414,7 +415,7 @@ var whereIsMyBuild = function ($, d3) {
         updateNext();
         updateLinks();
 
-        setInterval(updateLinks, 5000);
+        setInterval(updateLinks, my.commitUpdateInterval);
         setInterval(updateNext, my.updateInterval);
     };
 
