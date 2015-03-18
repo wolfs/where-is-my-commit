@@ -23,22 +23,44 @@ var whereIsMyBuild = function ($, d3) {
         });
     };
 
+    //var changes = [
+    //    {
+    //        commitId: "1234660",
+    //        user: "wolfs",
+    //        msg: "Some commit"
+    //    },
+    //    {
+    //        commitId: "1234661",
+    //        user: "wolfs",
+    //        msg: "Some other commit"
+    //    }
+    //];
+    //
     var updateLinks = function() {
         var jobRequest = getJSON(
-            my.jenkinsUrl + "/job/" + my.startJob + "/api/json?tree=allBuilds[changeSet[*[*]]]"
+            my.jenkinsUrl + "/job/" + my.startJob + "/api/json?tree=builds[changeSet[*[*]]]{,10}"
         );
         jobRequest.then(function(job) {
-            var builds = job.allBuilds,
-                revs = $("#revs");
+            var builds = job.builds;
 
-            revs.empty();
-            builds.map(function(build) {
+            var changes = builds.map(function(build) {
                 return build.changeSet.items;
             }).reduce(function(a, b) {
                 return a.concat(b);
-            }).forEach(function(el) {
-                revs.append("<li><a href='?revision=" + el.commitId + "'>" + el.commitId + " - " + el.user + "</a><br />" + el.msg.replace("\n", "<br />") + "</li>");
             });
+
+            var revisions = d3.select("#revs").selectAll(".revision").data(changes, function (d) { return d.commitId });
+
+            revisions.enter()
+                .append("li")
+                .attr("class", "revision")
+                .html(function (el) {
+                      return "<a href='?revision=" + el.commitId + "'>" + el.commitId + " - " + el.user + "</a><br />" + el.msg.replace("\n", "<br />");
+                });
+
+            revisions.order();
+
+            revisions.exit().remove();
         });
     };
 
@@ -433,6 +455,17 @@ var whereIsMyBuild = function ($, d3) {
 
         setInterval(updateLinks, my.commitUpdateInterval);
         setInterval(updateNext, my.updateInterval);
+        //
+        //setTimeout(function () {
+        //    changes.splice(0, 0,
+        //        {
+        //            commitId: "1234663",
+        //            user: "wolfs",
+        //            msg: "Some third commit"
+        //        }
+        //);
+        //    changes.pop();
+        //}, 5000);
     };
 
     return my;
