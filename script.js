@@ -82,7 +82,7 @@ var whereIsMyBuild = function ($, d3) {
 
         var svg = canvas
             .append("g")
-            .attr("transform", "translate(" + (conf.width/2) + ",300)");
+            .attr("transform", "translate(" + (conf.width/2) + ",200)");
 
         d3.select(self.frameElement).style("height", conf.height + "px");
 
@@ -114,6 +114,13 @@ var whereIsMyBuild = function ($, d3) {
 
         my.renderData = function () {
             var nodes = cluster.nodes(data);
+
+            var maxY = nodes.reduce(function (acc, current) {
+                return Math.max(acc, current.y);
+            }, 400);
+
+            canvas.attr("height", (maxY + 400) + "px");
+
             var links = cluster.links(nodes);
 
             var link = svg.selectAll(".link")
