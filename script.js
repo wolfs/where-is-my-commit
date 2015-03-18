@@ -11,6 +11,25 @@ var whereIsMyBuild = function ($, d3) {
     var data;
     var needsUpdate = true;
 
+    var updateLinks = function() {
+        var jobRequest = $.getJSON(
+            my.jenkinsUrl + "/job/" + my.startJob + "/api/json?tree=allBuilds[changeSet[*[*]]]"
+        );
+        jobRequest.then(function(job) {
+            var builds = job.allBuilds,
+                revs = $("#revs");
+
+            revs.empty();
+            builds.map(function(build) {
+                return build.changeSet.items;
+            }).reduce(function(a, b) {
+                return a.concat(b);
+            }).forEach(function(el) {
+                revs.append("<li><a href='?revision=" + el.commitId + "'>" + el.commitId + " - " + el.user + "</a><br />" + el.msg.replace("\n", "<br />") + "</li>");
+            });
+        });
+    };
+
     var getQueryVariable = function (variable) {
         var query = window.location.search.substring(1),
             results = query.split("&").map(function (el) {
@@ -393,7 +412,9 @@ var whereIsMyBuild = function ($, d3) {
         $(data).trigger("change");
 
         updateNext();
+        updateLinks();
 
+        setInterval(updateLinks, 5000);
         setInterval(updateNext, my.updateInterval);
     };
 
