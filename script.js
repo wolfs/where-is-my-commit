@@ -332,193 +332,203 @@ var whereIsMyBuild = function ($, d3) {
       node.exit().remove();
     };
 
-    my.renderChanges = function() {
-      var revisions = d3.select("#commits").selectAll(".revision").data(changes.commits, function (d) {
-        return d.commitId;
-      });
-
-      revisions.enter()
-        .append("li")
-        .attr("class", "revision")
-        .html(function (el) {
-          return "<a href='?revision=" + el.commitId + "'>" + el.commitId + " - " + el.user + "</a><br />" + el.msg.replace("\n", "<br />");
-        });
-
-      revisions.order();
-
-      revisions.exit().remove();
-
-      d3.selectAll(".loading").remove();
-    };
 
     return my;
   };
 
-  var buildData = function (nodeToUpdate) {
-    var jobName = nodeToUpdate.jobName;
-    var resultDef = $.Deferred();
-    var findRevision = function (envVars) {
-      for (var i = 0; i < envVars.length; i++) {
-        var env = envVars[i];
-        if (env.name === "REV") {
-          return parseInt(env.value, 10);
-        }
-      }
-    };
-
-    var nodeFromProject = function (project) {
-      return buildNode(project.name, nodeToUpdate.revision, project.url);
-    };
-
-    var buildKeys =
-      "number,url,result,actions[triggeredProjects[name,url,downstreamProjects[url,name]],failCount,skipCount,totalCount,urlName],changeSet[items[commitId,author,msg]]";
-
-    var jobRequest = $.getJSON(
-      my.jenkinsUrl + "/job/" + jobName +
-      "/api/json?tree=url,downstreamProjects[url,name],lastCompletedBuild[" + buildKeys + "]"
-    ).then(function (job) {
-        return job;
-      });
-
-    var buildDef = jobRequest.then(function (job) {
-      if (nodeToUpdate.url === undefined) {
-        nodeToUpdate.url = job.url;
-        $(data).trigger("change");
-      }
-      return job.lastCompletedBuild;
-    });
-
-    var getEnvVars = function (build) {
-      return build === undefined ? undefined : getJSONMaskingBackslash(build.url +
-      "injectedEnvVars/export");
-    };
-    var getRevision = function (build) {
-      if (build === undefined) {
-        return undefined;
-      }
-      return getEnvVars(build).then(function (envVars) {
-        return findRevision(envVars.envVars.envVar)
-      })
-    };
-
-    var buildUrl = function (buildNumber) {
-      return my.jenkinsUrl + "/job/" + nodeToUpdate.jobName + "/" + buildNumber +
-        "/api/json?tree=" + buildKeys;
-    };
-
-    var getBuildDef = function (buildNumber) {
-      return $.getJSON(buildUrl(buildNumber)).then(function (build) {
-        return build;
-      });
-    };
-
-    var buildForRevision = function (buildDef) {
-      return $.when(buildDef, buildDef.then(getRevision)).then(
-        function (build, revision) {
-          if (build === undefined) {
-            return undefined;
-          }
-          build.revision = revision;
-          if (revision < nodeToUpdate.revision) {
-            return undefined;
-          } else if (revision === nodeToUpdate.revision) {
-            return build;
-          } else {
-            return buildForRevision(getBuildDef(build.number - 1))
-              .then(function (previousBuild) {
-                if (previousBuild === undefined) {
-                  return build;
-                } else {
-                  return previousBuild;
-                }
-              })
-          }
-        })
-    };
-
-    var getTriggeredProjects = function (build) {
-      return build.actions.filter(function (el) {
-        return el.triggeredProjects;
-      }).map(function (el) {
-        return el.triggeredProjects;
-      }).reduce(function (a, b) {
-        return a.concat(b);
-      }, []);
-    };
-
-    var getTestResult = function (build) {
-      var actions = build.actions;
-
-      var testReports = actions.filter(function (action) {
-        return action.urlName === "testReport";
-      });
-
-      if (testReports.length > 0) {
-        return testReports[0];
-      }
-      return {
-        failCount: 0,
-        skipCount: 0,
-        totalCount: 0
-      };
-    };
-
-    var foundBuildDef = buildForRevision(buildDef);
-
-    var previousBuildDef = foundBuildDef.then(function (build) {
-      return build ? (build.number > 1 ? getBuildDef(build.number - 1) : undefined) : undefined;
-    });
-
-    $.when(foundBuildDef, previousBuildDef).then(function (build, previousBuild) {
-      if (build === undefined) {
-        toUpdate.push(nodeToUpdate);
-        resultDef.resolve(nodeToUpdate);
-      } else {
-        nodeToUpdate.status = build.result.toLowerCase();
-        nodeToUpdate.revision = build.revision;
-        nodeToUpdate.url = build.url;
-        nodeToUpdate.testResult = getTestResult(build);
-        if (previousBuild !== undefined) {
-          var previousTestResult = getTestResult(previousBuild);
-          nodeToUpdate.newFailCount = nodeToUpdate.testResult.failCount - previousTestResult.failCount;
-        }
-
-        var triggeredProjects = getTriggeredProjects(build);
-        var children = triggeredProjects.map(function (project) {
-          var node = nodeFromProject(project);
-          node.downstreamProjects = project.downstreamProjects.map(nodeFromProject);
-          return node;
+  var changesRenderer = function(changes) {
+    return {
+      renderChanges: function() {
+        var revisions = d3.select("#commits").selectAll(".revision").data(changes.commits, function (d) {
+          return d.commitId;
         });
 
-        children.map(buildData);
-        nodeToUpdate.downstreamProjects.map(buildData);
+        revisions.enter()
+          .append("li")
+          .attr("class", "revision")
+          .html(function (el) {
+            return "<a href='?revision=" + el.commitId + "'>" + el.commitId + " - " + el.user + "</a><br />" + el.msg.replace("\n", "<br />");
+          });
 
-        nodeToUpdate.children = children;
+        revisions.order();
 
-        $(data).trigger("change");
+        revisions.exit().remove();
 
-        resultDef.resolve(nodeToUpdate);
+        d3.selectAll(".loading").remove();
       }
-    }, function () {
-      toUpdate.push(nodeToUpdate);
-    });
+  }
+};
 
-    return resultDef;
-  };
-
-  var updateNext = function () {
-    if (toUpdate.length > 0) {
-      var toUpdateNow = toUpdate.slice(0, my.bulkUpdateSize);
-      toUpdate = toUpdate.slice(my.bulkUpdateSize);
-      toUpdateNow.map(buildData);
+var buildData = function (nodeToUpdate) {
+  var jobName = nodeToUpdate.jobName;
+  var resultDef = $.Deferred();
+  var findRevision = function (envVars) {
+    for (var i = 0; i < envVars.length; i++) {
+      var env = envVars[i];
+      if (env.name === "REV") {
+        return parseInt(env.value, 10);
+      }
     }
   };
 
-  my.init = function () {
-    data = buildNode(my.startJob, parseInt(getQueryVariable("revision"), 10));
+  var nodeFromProject = function (project) {
+    return buildNode(project.name, nodeToUpdate.revision, project.url);
+  };
+
+  var buildKeys =
+    "number,url,result,actions[triggeredProjects[name,url,downstreamProjects[url,name]],failCount,skipCount,totalCount,urlName],changeSet[items[commitId,author,msg]]";
+
+  var jobRequest = $.getJSON(
+    my.jenkinsUrl + "/job/" + jobName +
+    "/api/json?tree=url,downstreamProjects[url,name],lastCompletedBuild[" + buildKeys + "]"
+  ).then(function (job) {
+      return job;
+    });
+
+  var buildDef = jobRequest.then(function (job) {
+    if (nodeToUpdate.url === undefined) {
+      nodeToUpdate.url = job.url;
+      $(data).trigger("change");
+    }
+    return job.lastCompletedBuild;
+  });
+
+  var getEnvVars = function (build) {
+    return build === undefined ? undefined : getJSONMaskingBackslash(build.url +
+    "injectedEnvVars/export");
+  };
+  var getRevision = function (build) {
+    if (build === undefined) {
+      return undefined;
+    }
+    return getEnvVars(build).then(function (envVars) {
+      return findRevision(envVars.envVars.envVar)
+    })
+  };
+
+  var buildUrl = function (buildNumber) {
+    return my.jenkinsUrl + "/job/" + nodeToUpdate.jobName + "/" + buildNumber +
+      "/api/json?tree=" + buildKeys;
+  };
+
+  var getBuildDef = function (buildNumber) {
+    return $.getJSON(buildUrl(buildNumber)).then(function (build) {
+      return build;
+    });
+  };
+
+  var buildForRevision = function (buildDef) {
+    return $.when(buildDef, buildDef.then(getRevision)).then(
+      function (build, revision) {
+        if (build === undefined) {
+          return undefined;
+        }
+        build.revision = revision;
+        if (revision < nodeToUpdate.revision) {
+          return undefined;
+        } else if (revision === nodeToUpdate.revision) {
+          return build;
+        } else {
+          return buildForRevision(getBuildDef(build.number - 1))
+            .then(function (previousBuild) {
+              if (previousBuild === undefined) {
+                return build;
+              } else {
+                return previousBuild;
+              }
+            })
+        }
+      })
+  };
+
+  var getTriggeredProjects = function (build) {
+    return build.actions.filter(function (el) {
+      return el.triggeredProjects;
+    }).map(function (el) {
+      return el.triggeredProjects;
+    }).reduce(function (a, b) {
+      return a.concat(b);
+    }, []);
+  };
+
+  var getTestResult = function (build) {
+    var actions = build.actions;
+
+    var testReports = actions.filter(function (action) {
+      return action.urlName === "testReport";
+    });
+
+    if (testReports.length > 0) {
+      return testReports[0];
+    }
+    return {
+      failCount: 0,
+      skipCount: 0,
+      totalCount: 0
+    };
+  };
+
+  var foundBuildDef = buildForRevision(buildDef);
+
+  var previousBuildDef = foundBuildDef.then(function (build) {
+    return build ? (build.number > 1 ? getBuildDef(build.number - 1) : undefined) : undefined;
+  });
+
+  $.when(foundBuildDef, previousBuildDef).then(function (build, previousBuild) {
+    if (build === undefined) {
+      toUpdate.push(nodeToUpdate);
+      resultDef.resolve(nodeToUpdate);
+    } else {
+      nodeToUpdate.status = build.result.toLowerCase();
+      nodeToUpdate.revision = build.revision;
+      nodeToUpdate.url = build.url;
+      nodeToUpdate.testResult = getTestResult(build);
+      if (previousBuild !== undefined) {
+        var previousTestResult = getTestResult(previousBuild);
+        nodeToUpdate.newFailCount = nodeToUpdate.testResult.failCount - previousTestResult.failCount;
+      }
+
+      var triggeredProjects = getTriggeredProjects(build);
+      var children = triggeredProjects.map(function (project) {
+        var node = nodeFromProject(project);
+        node.downstreamProjects = project.downstreamProjects.map(nodeFromProject);
+        return node;
+      });
+
+      children.map(buildData);
+      nodeToUpdate.downstreamProjects.map(buildData);
+
+      nodeToUpdate.children = children;
+
+      $(data).trigger("change");
+
+      resultDef.resolve(nodeToUpdate);
+    }
+  }, function () {
+    toUpdate.push(nodeToUpdate);
+  });
+
+  return resultDef;
+};
+
+var updateNext = function () {
+  if (toUpdate.length > 0) {
+    var toUpdateNow = toUpdate.slice(0, my.bulkUpdateSize);
+    toUpdate = toUpdate.slice(my.bulkUpdateSize);
+    toUpdateNow.map(buildData);
+  }
+};
+
+my.init = function () {
+  var revisionString = getQueryVariable("revision"),
+    r,
+    changesR = changesRenderer(changes);
+
+  if (revisionString) {
+    data = buildNode(my.startJob, parseInt(revisionString, 10));
+    r = renderer(this, data);
     toUpdate.push(data);
 
-    var r = renderer(this, data);
 
     $(data).bind("change", function () {
       needsUpdate = true;
@@ -530,27 +540,32 @@ var whereIsMyBuild = function ($, d3) {
       }, 0);
     });
     $(data).trigger("change");
-
-    $(changes).bind("change", r.renderChanges);
-
     updateNext();
-    updateChanges();
-
-    setInterval(updateChanges, my.commitUpdateInterval);
     setInterval(updateNext, my.updateInterval);
+  }
 
-  //  setTimeout(function () {
-  //      changes.commits.splice(0, 0,
-  //          {
-  //              commitId: "1234663",
-  //              user: "wolfs",
-  //              msg: "Some third commit"
-  //          }
+
+  $(changes).bind("change", changesR.renderChanges);
+  updateChanges();
+  setInterval(updateChanges, my.commitUpdateInterval);
+
+  //setTimeout(function () {
+  //  changes.commits.splice(0, 0,
+  //    {
+  //      commitId: "1234664",
+  //      user: "wolfs",
+  //      msg: "Some third commit"
+  //    },
+  //    {
+  //      commitId: "1234663",
+  //      user: "wolfs",
+  //      msg: "Some third commit"
+  //    }
   //  );
-  //      changes.commits.pop();
-  //  }, 5000);
-  };
+  //  //changes.commits.pop();
+  //}, 5000);
+};
 
-  return my;
+return my;
 
 }($, d3);
