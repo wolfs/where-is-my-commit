@@ -61,6 +61,7 @@ var whereIsMyBuild = function ($, d3) {
             revisions.order();
 
             revisions.exit().remove();
+            d3.selectAll(".loading").remove();
         });
     };
 

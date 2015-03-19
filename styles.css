@@ -1,3 +1,7 @@
+body {
+  font: 15px sans-serif;
+}
+
 .node path.success {
   fill: #729FCF;
 }
@@ -28,10 +32,6 @@
 
 .node circle {
   fill: white;
-}
-
-.node {
-  font: 15px sans-serif;
 }
 
 @-webkit-keyframes blink {
@@ -68,4 +68,28 @@
   fill: none;
   stroke: #ccc;
   stroke-width: 1.5;
+}
+
+#revs {
+  position: fixed;
+  left: 2%;
+  top: 2%;
+  height: 50%;
+}
+
+#commits {
+  overflow-x: hidden;
+  overflow-y: auto;
+  word-wrap: break-word;
+  width: 30%;
+  height:50%;
+}
+
+#commits ul {
+  padding-left: 10px;
+}
+
+#commits ul li {
+  list-style: none;
+  margin-bottom: 8px;
 }
