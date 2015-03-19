@@ -13,7 +13,7 @@ var whereIsMyBuild = function ($, d3) {
   var data;
   var needsUpdate = true;
 
-  var getJSON = function (url) {
+  var getJSONMaskingBackslash = function (url) {
     return $.ajax({
       dataType: "json",
       dataFilter: function (data) {
@@ -37,7 +37,7 @@ var whereIsMyBuild = function ($, d3) {
   //];
   //
   var updateLinks = function () {
-    var jobRequest = getJSON(
+    var jobRequest = $.getJSON(
       my.jenkinsUrl + "/job/" + my.startJob + "/api/json?tree=builds[changeSet[*[*]]]{,10}"
     );
     jobRequest.then(function (job) {
@@ -295,7 +295,7 @@ var whereIsMyBuild = function ($, d3) {
     var buildKeys =
       "number,url,result,actions[triggeredProjects[name,url,downstreamProjects[url,name]],failCount,skipCount,totalCount,urlName],changeSet[items[commitId,author,msg]]";
 
-    var jobRequest = getJSON(
+    var jobRequest = $.getJSON(
       my.jenkinsUrl + "/job/" + jobName +
       "/api/json?tree=url,downstreamProjects[url,name],lastCompletedBuild[" + buildKeys + "]"
     ).then(function (job) {
@@ -311,7 +311,7 @@ var whereIsMyBuild = function ($, d3) {
     });
 
     var getEnvVars = function (build) {
-      return build === undefined ? undefined : getJSON(build.url +
+      return build === undefined ? undefined : getJSONMaskingBackslash(build.url +
       "injectedEnvVars/export");
     };
     var getRevision = function (build) {
@@ -329,7 +329,7 @@ var whereIsMyBuild = function ($, d3) {
     };
 
     var getBuildDef = function (buildNumber) {
-      return getJSON(buildUrl(buildNumber)).then(function (build) {
+      return $.getJSON(buildUrl(buildNumber)).then(function (build) {
         return build;
       });
     };
