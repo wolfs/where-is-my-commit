@@ -33,9 +33,79 @@ var whereIsMyBuild = function ($, d3) {
   //        commitId: "1234661",
   //        user: "wolfs",
   //        msg: "Some other commit"
-  //    }
+  //    },
+  //    {
+  //        commitId: "1234662",
+  //        user: "wolfs",
+  //        msg: "Some other commit"
+  //    },
+  //    {
+  //        commitId: "1234663",
+  //        user: "wolfs",
+  //        msg: "Some other commit"
+  //    },
+  //    {
+  //        commitId: "1234664",
+  //        user: "wolfs",
+  //        msg: "Some other commit"
+  //    },
+  //    {
+  //        commitId: "1234665",
+  //        user: "wolfs",
+  //        msg: "Some other commit"
+  //    },
+  //    {
+  //        commitId: "1234666",
+  //        user: "wolfs",
+  //        msg: "Some other commit"
+  //    },
+  //    {
+  //        commitId: "1234667",
+  //        user: "wolfs",
+  //        msg: "Some other commit"
+  //    },
+  //    {
+  //        commitId: "1234668",
+  //        user: "wolfs",
+  //        msg: "Some other commit"
+  //    },
+  //    {
+  //        commitId: "1234669",
+  //        user: "wolfs",
+  //        msg: "Some other commit"
+  //    },
+  //    {
+  //        commitId: "1234670",
+  //        user: "wolfs",
+  //        msg: "Some other commit"
+  //    },
+  //    {
+  //        commitId: "1234671",
+  //        user: "wolfs",
+  //        msg: "Some other commit"
+  //    },
+  //    {
+  //        commitId: "1234672",
+  //        user: "wolfs",
+  //        msg: "Some other commit"
+  //    },
+  //    {
+  //        commitId: "1234671",
+  //        user: "wolfs",
+  //        msg: "Some other commit"
+  //    },
+  //    {
+  //        commitId: "1234673",
+  //        user: "wolfs",
+  //        msg: "Some other commit"
+  //    },
+  //    {
+  //        commitId: "1234674",
+  //        user: "wolfs",
+  //        msg: "Some other commit"
+  //    },
   //];
-  //
+
   var updateLinks = function () {
     var jobRequest = $.getJSON(
       my.jenkinsUrl + "/job/" + my.startJob + "/api/json?tree=builds[changeSet[*[*]]]{,10}"
@@ -49,7 +119,7 @@ var whereIsMyBuild = function ($, d3) {
         return a.concat(b);
       });
 
-      var revisions = d3.select("#revs").selectAll(".revision").data(changes, function (d) {
+      var revisions = d3.select("#commits").selectAll(".revision").data(changes, function (d) {
         return d.commitId
       });
 
@@ -458,7 +528,7 @@ var whereIsMyBuild = function ($, d3) {
 
     setInterval(updateLinks, my.commitUpdateInterval);
     setInterval(updateNext, my.updateInterval);
-    //
+
     //setTimeout(function () {
     //    changes.splice(0, 0,
     //        {
