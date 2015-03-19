@@ -11,6 +11,9 @@ var whereIsMyBuild = function ($, d3) {
 
 
   var data;
+  var changes = {
+    commits: []
+  };
   var needsUpdate = true;
 
   var getJSONMaskingBackslash = function (url) {
@@ -23,7 +26,7 @@ var whereIsMyBuild = function ($, d3) {
     });
   };
 
-  //var changes = [
+  //changes.commits = [
   //    {
   //        commitId: "1234660",
   //        user: "wolfs",
@@ -106,34 +109,20 @@ var whereIsMyBuild = function ($, d3) {
   //    },
   //];
 
-  var updateLinks = function () {
+  var updateChanges = function () {
     var jobRequest = $.getJSON(
       my.jenkinsUrl + "/job/" + my.startJob + "/api/json?tree=builds[changeSet[*[*]]]{,10}"
     );
     jobRequest.then(function (job) {
       var builds = job.builds;
 
-      var changes = builds.map(function (build) {
+      changes.commits = builds.map(function (build) {
         return build.changeSet.items;
       }).reduce(function (a, b) {
         return a.concat(b);
       });
 
-      var revisions = d3.select("#commits").selectAll(".revision").data(changes, function (d) {
-        return d.commitId
-      });
-
-      revisions.enter()
-        .append("li")
-        .attr("class", "revision")
-        .html(function (el) {
-          return "<a href='?revision=" + el.commitId + "'>" + el.commitId + " - " + el.user + "</a><br />" + el.msg.replace("\n", "<br />");
-        });
-
-      revisions.order();
-
-      revisions.exit().remove();
-      d3.selectAll(".loading").remove();
+      $(changes).trigger("change");
     });
   };
 
@@ -343,6 +332,25 @@ var whereIsMyBuild = function ($, d3) {
       node.exit().remove();
     };
 
+    my.renderChanges = function() {
+      var revisions = d3.select("#commits").selectAll(".revision").data(changes.commits, function (d) {
+        return d.commitId;
+      });
+
+      revisions.enter()
+        .append("li")
+        .attr("class", "revision")
+        .html(function (el) {
+          return "<a href='?revision=" + el.commitId + "'>" + el.commitId + " - " + el.user + "</a><br />" + el.msg.replace("\n", "<br />");
+        });
+
+      revisions.order();
+
+      revisions.exit().remove();
+
+      d3.selectAll(".loading").remove();
+    };
+
     return my;
   };
 
@@ -523,22 +531,24 @@ var whereIsMyBuild = function ($, d3) {
     });
     $(data).trigger("change");
 
-    updateNext();
-    updateLinks();
+    $(changes).bind("change", r.renderChanges);
 
-    setInterval(updateLinks, my.commitUpdateInterval);
+    updateNext();
+    updateChanges();
+
+    setInterval(updateChanges, my.commitUpdateInterval);
     setInterval(updateNext, my.updateInterval);
 
-    //setTimeout(function () {
-    //    changes.splice(0, 0,
-    //        {
-    //            commitId: "1234663",
-    //            user: "wolfs",
-    //            msg: "Some third commit"
-    //        }
-    //);
-    //    changes.pop();
-    //}, 5000);
+  //  setTimeout(function () {
+  //      changes.commits.splice(0, 0,
+  //          {
+  //              commitId: "1234663",
+  //              user: "wolfs",
+  //              msg: "Some third commit"
+  //          }
+  //  );
+  //      changes.commits.pop();
+  //  }, 5000);
   };
 
   return my;
