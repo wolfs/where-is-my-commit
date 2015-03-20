@@ -1,6 +1,6 @@
 var whereIsMyBuild = function ($, d3) {
   var my = {
-    width: 960,
+    width: $(window).width() - 25,
     height: 2000,
     jenkinsUrl: "http://localhost:8080",
     startJob: "chain-start",
