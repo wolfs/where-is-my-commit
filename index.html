@@ -2,6 +2,7 @@
 <html>
 <meta charset="utf-8">
 <head>
+  <link href="bootstrap.min.css" rel="stylesheet" />
   <link href="styles.css" rel="stylesheet" />
 </head>
 <body>
@@ -12,14 +13,11 @@
 
 <div id="revs">
   <h2>Commits</h2>
-  <div id="commits">
-    <ul><li class="loading">Loading...</li></ul>
+  <div id="commits_div">
+    <ul id="commits" class="list-group"><li class="loading">Loading...</li></ul>
   </div>
 </div>
-<script>
-  whereIsMyBuild.jenkinsUrl = "http://localhost:8080";
-  whereIsMyBuild.init();
-</script>
+<script src="config.js"></script>
 
 </body>
 </html>
