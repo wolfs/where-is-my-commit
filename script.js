@@ -17,86 +17,102 @@ var whereIsMyBuild = function ($, d3) {
   var needsUpdate = true;
 
   //changes.commits = [
-  //    {
-  //        commitId: "1234660",
-  //        user: "wolfs",
-  //        msg: "Some commit"
-  //    },
-  //    {
-  //        commitId: "1234661",
-  //        user: "wolfs",
-  //        msg: "Some other commit"
-  //    },
-  //    {
-  //        commitId: "1234662",
-  //        user: "wolfs",
-  //        msg: "Some other commit"
-  //    },
-  //    {
-  //        commitId: "1234663",
-  //        user: "wolfs",
-  //        msg: "Some other commit"
-  //    },
-  //    {
-  //        commitId: "1234664",
-  //        user: "wolfs",
-  //        msg: "Some other commit"
-  //    },
-  //    {
-  //        commitId: "1234665",
-  //        user: "wolfs",
-  //        msg: "Some other commit"
-  //    },
-  //    {
-  //        commitId: "1234666",
-  //        user: "wolfs",
-  //        msg: "Some other commit"
-  //    },
-  //    {
-  //        commitId: "1234667",
-  //        user: "wolfs",
-  //        msg: "Some other commit"
-  //    },
-  //    {
-  //        commitId: "1234668",
-  //        user: "wolfs",
-  //        msg: "Some other commit"
-  //    },
-  //    {
-  //        commitId: "1234669",
-  //        user: "wolfs",
-  //        msg: "Some other commit"
-  //    },
-  //    {
-  //        commitId: "1234670",
-  //        user: "wolfs",
-  //        msg: "Some other commit"
-  //    },
-  //    {
-  //        commitId: "1234671",
-  //        user: "wolfs",
-  //        msg: "Some other commit"
-  //    },
-  //    {
-  //        commitId: "1234672",
-  //        user: "wolfs",
-  //        msg: "Some other commit"
-  //    },
-  //    {
-  //        commitId: "1234671",
-  //        user: "wolfs",
-  //        msg: "Some other commit"
-  //    },
-  //    {
-  //        commitId: "1234673",
-  //        user: "wolfs",
-  //        msg: "Some other commit"
-  //    },
-  //    {
-  //        commitId: "1234674",
-  //        user: "wolfs",
-  //        msg: "Some other commit"
-  //    },
+  //  {
+  //    commitId: "1234660",
+  //    user: "Menninger Alexander, GF Öffentliche Sicherheit & Ordnung",
+  //    msg: "Some commit",
+  //    master_revision: "1234660"
+  //  },
+  //  {
+  //    commitId: "1234661",
+  //    user: "wolfs",
+  //    msg: "Some other commit",
+  //    master_revision: "1234670"
+  //  },
+  //  {
+  //    commitId: "1234662",
+  //    user: "wolfs",
+  //    msg: "Some other commit",
+  //    master_revision: "1234670"
+  //  },
+  //  {
+  //    commitId: "1234663",
+  //    user: "wolfs",
+  //    msg: "Some other commit",
+  //    master_revision: "1234670"
+  //  },
+  //  {
+  //    commitId: "1234664",
+  //    user: "wolfs",
+  //    msg: "Some other commit",
+  //    master_revision: "1234670"
+  //  },
+  //  {
+  //    commitId: "1234665",
+  //    user: "wolfs",
+  //    msg: "Some other commit",
+  //    master_revision: "1234670"
+  //  },
+  //  {
+  //    commitId: "1234666",
+  //    user: "wolfs",
+  //    msg: "Some other commit",
+  //    master_revision: "1234670"
+  //  },
+  //  {
+  //    commitId: "1234667",
+  //    user: "wolfs",
+  //    msg: "Some other commit",
+  //    master_revision: "1234670"
+  //  },
+  //  {
+  //    commitId: "1234668",
+  //    user: "wolfs",
+  //    msg: "Some other commit",
+  //    master_revision: "1234670"
+  //  },
+  //  {
+  //    commitId: "1234669",
+  //    user: "wolfs",
+  //    msg: "Some other commit",
+  //    master_revision: "1234670"
+  //  },
+  //  {
+  //    commitId: "1234670",
+  //    user: "wolfs",
+  //    msg: "Some other commit",
+  //    master_revision: "1234670"
+  //  },
+  //  {
+  //    commitId: "1234671",
+  //    user: "wolfs",
+  //    msg: "Some other commit",
+  //    master_revision: "1234680"
+  //  },
+  //  {
+  //    commitId: "1234672",
+  //    user: "wolfs",
+  //    msg: "Some other commit",
+  //    master_revision: "1234680"
+  //  },
+  //  {
+  //    commitId: "1234671",
+  //    user: "wolfs",
+  //    msg: "Some other commit",
+  //    master_revision: "1234680"
+  //  },
+  //  {
+  //    commitId: "1234673",
+  //    user: "wolfs",
+  //    msg: "Some other commit",
+  //    master_revision: "1234680"
+  //  },
+  //  {
+  //    commitId: "1234674",
+  //    user: "wolfs",
+  //    msg: "Some other commit",
+  //    master_revision: "1234680"
+  //  }
   //];
 
   var updateChanges = function () {
@@ -107,6 +123,12 @@ var whereIsMyBuild = function ($, d3) {
       var builds = job.builds;
 
       changes.commits = builds.map(function (build) {
+        var master_revision = build.changeSet.items[0].revision;
+        build.changeSet.items.map(function (item) {
+          item.master_revision = master_revision;
+          return item;
+        });
+
         return build.changeSet.items;
       }).reduce(function (a, b) {
         return a.concat(b);
@@ -326,18 +348,24 @@ var whereIsMyBuild = function ($, d3) {
     return my;
   };
 
-  var changesRenderer = function(changes) {
+  var changesRenderer = function (changes) {
     return {
-      renderChanges: function() {
+      renderChanges: function () {
         var revisions = d3.select("#commits").selectAll(".revision").data(changes.commits, function (d) {
           return d.commitId;
         });
 
         revisions.enter()
-          .append("li")
-          .attr("class", "revision")
+          .append("a")
+          .attr("href", function (el) {
+            return "?revision=" + el.commitId
+          })
+          .attr("name", function (el) {
+            return el.commitId
+          })
+          .attr("class", "revision list-group-item")
           .html(function (el) {
-            return "<a href='?revision=" + el.commitId + "'>" + el.commitId + " - " + el.user + "</a><br />" + el.msg.replace("\n", "<br />");
+            return "<h4 class='list-group-item-heading'>" + el.commitId + " - " + el.user + "</h4><p class='list-group-item-text'>" + el.msg.replace("\n", "<br />") + "</p>";
           });
 
         revisions.order();
@@ -362,7 +390,7 @@ var whereIsMyBuild = function ($, d3) {
     };
 
     var buildKeys =
-      "number,url,result,actions[triggeredProjects[name,url,downstreamProjects[url,name]],failCount,skipCount,totalCount,urlName],changeSet[items[commitId,author,msg]]";
+      "number,url,result,actions[triggeredProjects[name,url,downstreamProjects[url,name]],failCount,skipCount,totalCount,urlName]";
 
     var jobRequest = $.getJSON(
       my.jenkinsUrl + "/job/" + jobName +
@@ -530,7 +558,6 @@ var whereIsMyBuild = function ($, d3) {
       setInterval(updateNext, my.updateInterval);
     }
 
-
     $(changes).bind("change", changesR.renderChanges);
     updateChanges();
     setInterval(updateChanges, my.commitUpdateInterval);
@@ -555,3 +582,24 @@ var whereIsMyBuild = function ($, d3) {
   return my;
 
 }($, d3);
+
+$(document).ready(function () {
+  $(document).on("mouseenter", ".node a", function (event) {
+    event.stopPropagation();
+    var revision = $(event.target).parents(".node").find("a").find(".revision").html();
+    var revisions = d3
+      .select("#commits")
+      .selectAll(".revision")
+      .classed("active", function (d) {
+        return d.master_revision == revision;
+      });
+
+  });
+
+  $(document).on("mouseleave", ".node a", function (event) {
+    var revisions = d3
+      .select("#commits")
+      .selectAll(".revision")
+      .classed("active", false);
+  });
+});

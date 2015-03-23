@@ -74,8 +74,12 @@ body {
   position: fixed;
   left: 2%;
   top: 2%;
-  height: 70%;
+  height: 100%;
   width: 20%;
+}
+
+#commits_div {
+  height: 95%;
 }
 
 #commits {
@@ -86,11 +90,7 @@ body {
   height: 90%;
 }
 
-#commits ul {
-  padding-left: 10px;
-}
-
-#commits ul li {
-  list-style: none;
-  margin-bottom: 8px;
+#commits h4 {
+  font-size: 13px;
+  font-weight: bold;
 }
