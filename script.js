@@ -16,88 +16,88 @@ var whereIsMyBuild = function ($, d3) {
   };
   var needsUpdate = true;
 
-  changes.commits = [
-    {
-      commitId: "1234660",
-      user: "Menninger Alexander, GF Öffentliche Sicherheit & Ordnung",
-      msg: "Some commit"
-    },
-    {
-      commitId: "1234661",
-      user: "wolfs",
-      msg: "Some other commit"
-    },
-    {
-      commitId: "1234662",
-      user: "wolfs",
-      msg: "Some other commit"
-    },
-    {
-      commitId: "1234663",
-      user: "wolfs",
-      msg: "Some other commit"
-    },
-    {
-      commitId: "1234664",
-      user: "wolfs",
-      msg: "Some other commit"
-    },
-    {
-      commitId: "1234665",
-      user: "wolfs",
-      msg: "Some other commit"
-    },
-    {
-      commitId: "1234666",
-      user: "wolfs",
-      msg: "Some other commit"
-    },
-    {
-      commitId: "1234667",
-      user: "wolfs",
-      msg: "Some other commit"
-    },
-    {
-      commitId: "1234668",
-      user: "wolfs",
-      msg: "Some other commit"
-    },
-    {
-      commitId: "1234669",
-      user: "wolfs",
-      msg: "Some other commit"
-    },
-    {
-      commitId: "1234670",
-      user: "wolfs",
-      msg: "Some other commit"
-    },
-    {
-      commitId: "1234671",
-      user: "wolfs",
-      msg: "Some other commit"
-    },
-    {
-      commitId: "1234672",
-      user: "wolfs",
-      msg: "Some other commit"
-    },
-    {
-      commitId: "1234671",
-      user: "wolfs",
-      msg: "Some other commit"
-    },
-    {
-      commitId: "1234673",
-      user: "wolfs",
-      msg: "Some other commit"
-    },
-    {
-      commitId: "1234674",
-      user: "wolfs",
-      msg: "Some other commit"
-    }
-  ];
+  //changes.commits = [
+  //  {
+  //    commitId: "1234660",
+  //    user: "Menninger Alexander, GF Öffentliche Sicherheit & Ordnung",
+  //    msg: "Some commit"
+  //  },
+  //  {
+  //    commitId: "1234661",
+  //    user: "wolfs",
+  //    msg: "Some other commit"
+  //  },
+  //  {
+  //    commitId: "1234662",
+  //    user: "wolfs",
+  //    msg: "Some other commit"
+  //  },
+  //  {
+  //    commitId: "1234663",
+  //    user: "wolfs",
+  //    msg: "Some other commit"
+  //  },
+  //  {
+  //    commitId: "1234664",
+  //    user: "wolfs",
+  //    msg: "Some other commit"
+  //  },
+  //  {
+  //    commitId: "1234665",
+  //    user: "wolfs",
+  //    msg: "Some other commit"
+  //  },
+  //  {
+  //    commitId: "1234666",
+  //    user: "wolfs",
+  //    msg: "Some other commit"
+  //  },
+  //  {
+  //    commitId: "1234667",
+  //    user: "wolfs",
+  //    msg: "Some other commit"
+  //  },
+  //  {
+  //    commitId: "1234668",
+  //    user: "wolfs",
+  //    msg: "Some other commit"
+  //  },
+  //  {
+  //    commitId: "1234669",
+  //    user: "wolfs",
+  //    msg: "Some other commit"
+  //  },
+  //  {
+  //    commitId: "1234670",
+  //    user: "wolfs",
+  //    msg: "Some other commit"
+  //  },
+  //  {
+  //    commitId: "1234671",
+  //    user: "wolfs",
+  //    msg: "Some other commit"
+  //  },
+  //  {
+  //    commitId: "1234672",
+  //    user: "wolfs",
+  //    msg: "Some other commit"
+  //  },
+  //  {
+  //    commitId: "1234671",
+  //    user: "wolfs",
+  //    msg: "Some other commit"
+  //  },
+  //  {
+  //    commitId: "1234673",
+  //    user: "wolfs",
+  //    msg: "Some other commit"
+  //  },
+  //  {
+  //    commitId: "1234674",
+  //    user: "wolfs",
+  //    msg: "Some other commit"
+  //  }
+  //];
 
   var updateChanges = function () {
     var jobRequest = $.getJSON(
@@ -106,11 +106,11 @@ var whereIsMyBuild = function ($, d3) {
     jobRequest.then(function (job) {
       var builds = job.builds;
 
-      //changes.commits = builds.map(function (build) {
-      //    return build.changeSet.items;
-      //}).reduce(function (a, b) {
-      //    return a.concat(b);
-      //});
+      changes.commits = builds.map(function (build) {
+          return build.changeSet.items;
+      }).reduce(function (a, b) {
+          return a.concat(b);
+      });
 
       $(changes).trigger("change");
     });
