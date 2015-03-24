@@ -166,7 +166,7 @@ var whereIsMyBuild = function ($, d3) {
 
     var svg = canvas
       .append("g")
-      .attr("transform", "translate(" + (conf.width / 2) + ",200)");
+      .attr("transform", "translate(" + ((conf.width + $("#revs").width()) / 2 )   + ",200)");
 
     d3.select(self.frameElement).style("height", conf.height + "px");
 
@@ -434,7 +434,7 @@ var whereIsMyBuild = function ($, d3) {
             return undefined;
           }
           if (prevBuild === undefined) {
-            build = prevBuild;
+            prevBuild = build;
           }
           build.revision = revision;
           prevBuild.revision = prevRevision;
