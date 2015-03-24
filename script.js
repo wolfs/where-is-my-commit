@@ -439,17 +439,26 @@ var whereIsMyBuild = function ($, d3) {
           build.revision = revision;
           prevBuild.revision = prevRevision;
 
-          build.prevBuild = prevBuild;
           if (revision < nodeToUpdate.revision) {
+            if(build.result == "ABORTED") {
+              build.prevBuild = prevBuild;
+              return build;
+            }
             return undefined;
-          } else if (revision >= nodeToUpdate.revision && nodeToUpdate.revision > prevRevision) {
-            return build;
+          } else if (revision >= nodeToUpdate.revision && nodeToUpdate.revision > prevRevision && prevBuild.result != "ABORTED") {
+              build.prevBuild = prevBuild;
+              return build;
           } else {
             return buildForRevision(prevBuildDef, prevRevisionDef)
               .then(function (previousBuild) {
                 if (previousBuild === undefined) {
                   return build;
                 } else {
+                  if(previousBuild.result == "ABORTED")
+                  {
+                    build.prevBuild = previousBuild.prevBuild;
+                    return build;
+                  }
                   return previousBuild;
                 }
               })
