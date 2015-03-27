@@ -20,98 +20,82 @@ var whereIsMyBuild = function ($, d3) {
   //  {
   //    commitId: "1234660",
   //    user: "Menninger Alexander, GF Öffentliche Sicherheit & Ordnung",
-  //    msg: "Some commit",
-  //    master_revision: "1234660"
+  //    msg: "Some commit"
   //  },
   //  {
   //    commitId: "1234661",
   //    user: "wolfs",
-  //    msg: "Some other commit",
-  //    master_revision: "1234670"
+  //    msg: "Some other commit"
   //  },
   //  {
   //    commitId: "1234662",
   //    user: "wolfs",
-  //    msg: "Some other commit",
-  //    master_revision: "1234670"
+  //    msg: "Some other commit"
   //  },
   //  {
   //    commitId: "1234663",
   //    user: "wolfs",
-  //    msg: "Some other commit",
-  //    master_revision: "1234670"
+  //    msg: "Some other commit"
   //  },
   //  {
   //    commitId: "1234664",
   //    user: "wolfs",
-  //    msg: "Some other commit",
-  //    master_revision: "1234670"
+  //    msg: "Some other commit"
   //  },
   //  {
   //    commitId: "1234665",
   //    user: "wolfs",
-  //    msg: "Some other commit",
-  //    master_revision: "1234670"
+  //    msg: "Some other commit"
   //  },
   //  {
   //    commitId: "1234666",
   //    user: "wolfs",
-  //    msg: "Some other commit",
-  //    master_revision: "1234670"
+  //    msg: "Some other commit"
   //  },
   //  {
   //    commitId: "1234667",
   //    user: "wolfs",
-  //    msg: "Some other commit",
-  //    master_revision: "1234670"
+  //    msg: "Some other commit"
   //  },
   //  {
   //    commitId: "1234668",
   //    user: "wolfs",
-  //    msg: "Some other commit",
-  //    master_revision: "1234670"
+  //    msg: "Some other commit"
   //  },
   //  {
   //    commitId: "1234669",
   //    user: "wolfs",
-  //    msg: "Some other commit",
-  //    master_revision: "1234670"
+  //    msg: "Some other commit"
   //  },
   //  {
   //    commitId: "1234670",
   //    user: "wolfs",
-  //    msg: "Some other commit",
-  //    master_revision: "1234670"
+  //    msg: "Some other commit"
   //  },
   //  {
   //    commitId: "1234671",
   //    user: "wolfs",
-  //    msg: "Some other commit",
-  //    master_revision: "1234680"
+  //    msg: "Some other commit"
   //  },
   //  {
   //    commitId: "1234672",
   //    user: "wolfs",
-  //    msg: "Some other commit",
-  //    master_revision: "1234680"
+  //    msg: "Some other commit"
   //  },
   //  {
   //    commitId: "1234671",
   //    user: "wolfs",
-  //    msg: "Some other commit",
-  //    master_revision: "1234680"
+  //    msg: "Some other commit"
   //  },
   //  {
   //    commitId: "1234673",
   //    user: "wolfs",
-  //    msg: "Some other commit",
-  //    master_revision: "1234680"
+  //    msg: "Some other commit"
   //  },
   //  {
   //    commitId: "1234674",
   //    user: "wolfs",
-  //    msg: "Some other commit",
-  //    master_revision: "1234680"
+  //    msg: "Some other commit"
   //  }
   //];
 
@@ -123,15 +107,9 @@ var whereIsMyBuild = function ($, d3) {
       var builds = job.builds;
 
       changes.commits = builds.map(function (build) {
-        var master_revision = build.changeSet.items[0].revision;
-        build.changeSet.items.map(function (item) {
-          item.master_revision = master_revision;
-          return item;
-        });
-
-        return build.changeSet.items;
+          return build.changeSet.items;
       }).reduce(function (a, b) {
-        return a.concat(b);
+          return a.concat(b);
       });
 
       $(changes).trigger("change");
@@ -188,7 +166,7 @@ var whereIsMyBuild = function ($, d3) {
 
     var svg = canvas
       .append("g")
-      .attr("transform", "translate(" + (conf.width / 2) + ",200)");
+      .attr("transform", "translate(" + ((conf.width + $("#revs").width()) / 2 )   + ",200)");
 
     d3.select(self.frameElement).style("height", conf.height + "px");
 
@@ -337,6 +315,15 @@ var whereIsMyBuild = function ($, d3) {
           return d.revision;
         });
 
+      node.selectAll("a").on("mouseenter", function (node) {
+        d3.select("#commits").selectAll(".revision").classed("active", function (commit) {
+          return node.revision >= commit.commitId && commit.commitId > node.previousRevision;
+        });
+      });
+      node.selectAll("a").on("mouseleave", function () {
+        d3.select("#commits").selectAll(".revision").classed("active", false);
+      });
+
       node.transition().attr("transform", function (d) {
         return "translate(" + d.x + "," + d.y + ")";
       });
@@ -431,28 +418,52 @@ var whereIsMyBuild = function ($, d3) {
       });
     };
 
-    var buildForRevision = function (buildDef) {
-      return $.when(buildDef, buildDef.then(getRevision)).then(
-        function (build, revision) {
+    var getPreviousBuildDef = function (build) {
+      if (build === undefined) {
+        return undefined;
+      }
+      return build ? (build.number > 1 ? getBuildDef(build.number - 1) : undefined) : undefined;
+    };
+
+    var buildForRevision = function (buildDef, revisionDef) {
+      var prevBuildDef = buildDef.then(getPreviousBuildDef);
+      var prevRevisionDef = prevBuildDef.then(getRevision);
+      return $.when(buildDef, revisionDef, prevBuildDef, prevRevisionDef)
+        .then(function (build, revision, prevBuild, prevRevision) {
           if (build === undefined) {
             return undefined;
           }
+          if (prevBuild === undefined) {
+            prevBuild = build;
+          }
           build.revision = revision;
+          prevBuild.revision = prevRevision;
+
           if (revision < nodeToUpdate.revision) {
+            if(build.result == "ABORTED") {
+              build.prevBuild = prevBuild;
+              return build;
+            }
             return undefined;
-          } else if (revision === nodeToUpdate.revision) {
-            return build;
+          } else if (revision >= nodeToUpdate.revision && nodeToUpdate.revision > prevRevision && prevBuild.result != "ABORTED") {
+              build.prevBuild = prevBuild;
+              return build;
           } else {
-            return buildForRevision(getBuildDef(build.number - 1))
+            return buildForRevision(prevBuildDef, prevRevisionDef)
               .then(function (previousBuild) {
                 if (previousBuild === undefined) {
                   return build;
                 } else {
+                  if(previousBuild.result == "ABORTED")
+                  {
+                    build.prevBuild = previousBuild.prevBuild;
+                    return build;
+                  }
                   return previousBuild;
                 }
               })
           }
-        })
+        });
     };
 
     var getTriggeredProjects = function (build) {
@@ -482,23 +493,20 @@ var whereIsMyBuild = function ($, d3) {
       };
     };
 
-    var foundBuildDef = buildForRevision(buildDef);
+    var foundBuildDef = buildForRevision(buildDef, buildDef.then(getRevision));
 
-    var previousBuildDef = foundBuildDef.then(function (build) {
-      return build ? (build.number > 1 ? getBuildDef(build.number - 1) : undefined) : undefined;
-    });
-
-    $.when(foundBuildDef, previousBuildDef).then(function (build, previousBuild) {
+    $.when(foundBuildDef).then(function (build) {
       if (build === undefined) {
         toUpdate.push(nodeToUpdate);
         resultDef.resolve(nodeToUpdate);
       } else {
         nodeToUpdate.status = build.result.toLowerCase();
         nodeToUpdate.revision = build.revision;
+        nodeToUpdate.previousRevision = build.prevBuild.revision;
         nodeToUpdate.url = build.url;
         nodeToUpdate.testResult = getTestResult(build);
-        if (previousBuild !== undefined) {
-          var previousTestResult = getTestResult(previousBuild);
+        if (build.prevBuild !== undefined) {
+          var previousTestResult = getTestResult(build.prevBuild);
           nodeToUpdate.newFailCount = nodeToUpdate.testResult.failCount - previousTestResult.failCount;
         }
 
@@ -582,24 +590,3 @@ var whereIsMyBuild = function ($, d3) {
   return my;
 
 }($, d3);
-
-$(document).ready(function () {
-  $(document).on("mouseenter", ".node a", function (event) {
-    event.stopPropagation();
-    var revision = $(event.target).parents(".node").find("a").find(".revision").html();
-    var revisions = d3
-      .select("#commits")
-      .selectAll(".revision")
-      .classed("active", function (d) {
-        return d.master_revision == revision;
-      });
-
-  });
-
-  $(document).on("mouseleave", ".node a", function (event) {
-    var revisions = d3
-      .select("#commits")
-      .selectAll(".revision")
-      .classed("active", false);
-  });
-});
