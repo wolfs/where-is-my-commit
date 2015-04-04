@@ -1,4 +1,4 @@
-define(['app/nodesData', 'app/nodesRenderer', 'app/nodeUpdater', 'app/config', 'jquery'],
+define(['builds/nodesData', 'builds/nodesRenderer', 'builds/nodeUpdater', 'app-config', 'jquery'],
   function (data, renderer, updater, config, $) {
     var viewNeedsUpdate = true,
       my = {};

@@ -1,4 +1,4 @@
-define(['app/changes', 'jquery'], function(changes, $) {
+define(['changes/changes', 'jquery'], function(changes, $) {
   var firstCall = true,
     my = {};
 

@@ -1,4 +1,4 @@
-define(['app/changes', 'app/config', 'jquery'], function (changes, config, $) {
+define(['changes/changes', 'app-config', 'jquery'], function (changes, config, $) {
   var my = {};
 
   my.update = function () {

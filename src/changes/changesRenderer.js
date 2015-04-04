@@ -1,4 +1,4 @@
-define(['app/changes', 'd3', 'jquery'], function (changes, d3) {
+define(['changes/changes', 'd3', 'jquery'], function (changes, d3) {
   var my = {};
 
   my.render = function () {

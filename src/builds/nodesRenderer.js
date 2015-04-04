@@ -1,4 +1,4 @@
-define(['app/config', 'app/nodesData', 'd3'], function (conf, nodesData, d3) {
+define(['app-config', 'builds/nodesData', 'd3'], function (conf, nodesData, d3) {
   var my = {};
 
   var cluster = d3.layout.tree().nodeSize([200, 200]);

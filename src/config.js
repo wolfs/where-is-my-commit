@@ -1,5 +1,5 @@
 require.config({
-  baseUrl: 'js',
+  baseUrl: 'src',
   paths: {
     // the left side is the module ID,
     // the right side is the path to
@@ -9,8 +9,8 @@ require.config({
     // is using jQuery 1.9.0 located at
     // js/lib/jquery-1.9.0.js, relative to
     // the HTML page.
-    jquery: 'lib/jquery-2.1.3',
-    d3: 'lib/d3.v3'
+    jquery: '../bower_components/jquery/dist/jquery.min',
+    d3: '../bower_components/d3/d3.min'
   },
-  deps: ['app/entry']
+  deps: ['main']
 });

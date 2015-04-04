@@ -1,4 +1,4 @@
-define(['jquery', 'app/node', 'app/config', 'app/nodesData'], function ($, node, config, nodes) {
+define(['jquery', 'builds/node', 'app-config', 'builds/nodesData'], function ($, node, config, nodes) {
   var my = {};
   my.update = function (nodeToUpdate) {
     var jobName = nodeToUpdate.jobName;

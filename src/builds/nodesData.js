@@ -1,4 +1,4 @@
-define(['app/node', 'app/config', 'app/util'], function (node, config, util) {
+define(['builds/node', 'app-config', 'util'], function (node, config, util) {
   var my = {};
 
   var toUpdate = [];
