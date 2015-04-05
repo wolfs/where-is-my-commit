@@ -9,6 +9,7 @@ require.config(function () {
       jasmine: '../bower_components/jasmine/lib/jasmine-core/jasmine',
       jasmineBoot: '../bower_components/jasmine/lib/jasmine-core/boot',
       jasmineHtml: '../bower_components/jasmine/lib/jasmine-core/jasmine-html',
+      jasmineAjax: '../bower_components/jasmine-ajax/lib/mock-ajax',
       squire: '../bower_components/squire/src/Squire',
       spec: '../test/spec'
     },
@@ -18,6 +19,9 @@ require.config(function () {
       },
       'jasmineBoot': {
         deps : ['jasmine', 'jasmineHtml']
+      },
+      'jasmineAjax': {
+        deps: ['jasmine', 'jasmineBoot']
       }
     },
     deps: [logic]

@@ -1,3 +1,4 @@
 define([
-  'spec/utilSpec'
+  'spec/utilSpec',
+  'spec/nodesUpdaterSpec'
 ]);
