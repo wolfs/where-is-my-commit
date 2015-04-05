@@ -1,10 +1,11 @@
 define(['builds/nodesData', 'builds/nodesRenderer', 'builds/nodeUpdater', 'app-config', 'jquery'],
   function (data, renderer, updater, config, $) {
+  'use strict';
     var viewNeedsUpdate = true,
       my = {};
 
     var updateNext = function () {
-      data.updateNextNodes(updater.update)
+      data.updateNextNodes(updater.update);
     };
 
     my.init = function () {
@@ -26,7 +27,6 @@ define(['builds/nodesData', 'builds/nodesRenderer', 'builds/nodeUpdater', 'app-c
       }
 
     };
-
     return my;
   }
 );

@@ -1,5 +1,5 @@
-
 require.config(function () {
+  'use strict';
   var logic = document.querySelector('script[data-id="requirejs"]').getAttribute("data-logic");
   return {
     baseUrl: '../src',
@@ -15,15 +15,15 @@ require.config(function () {
     },
     shim: {
       'jasmineHtml': {
-        deps : ['jasmine']
+        deps: ['jasmine']
       },
       'jasmineBoot': {
-        deps : ['jasmine', 'jasmineHtml']
+        deps: ['jasmine', 'jasmineHtml']
       },
       'jasmineAjax': {
         deps: ['jasmine', 'jasmineBoot']
       }
     },
     deps: [logic]
-  }
+  };
 }());

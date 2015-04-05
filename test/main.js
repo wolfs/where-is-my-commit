@@ -1,4 +1,5 @@
 require(['squire'], function (Squire) {
+  'use strict';
   var injector = new Squire();
 
   var changes = {};
@@ -103,7 +104,7 @@ require(['squire'], function (Squire) {
               commitId: "1234700",
               user: "wolfs",
               msg: "Some third commit"
-            })
+            });
         }
 
         firstCall = false;

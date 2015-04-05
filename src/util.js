@@ -1,13 +1,15 @@
 define({
   getQueryVariable: function (variable) {
+    'use strict';
     var search = window.location.search;
-    return this.getQueryVariableFromSearch(variable, search)
+    return this.getQueryVariableFromSearch(variable, search);
   },
 
   getQueryVariableFromSearch: function(variable, search) {
+    'use strict';
     var query = search.substring(1);
     var results = query.split("&").map(function (el) {
-      return el.split("=")
+      return el.split("=");
     }).filter(function (el) {
       return (el[0] === variable);
     }).map(function (el) {

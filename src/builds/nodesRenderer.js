@@ -1,4 +1,5 @@
-define(['app-config', 'builds/nodesData', 'd3'], function (conf, nodesData, d3) {
+define(['app-config', 'builds/nodesData', 'd3', 'jquery'], function (conf, nodesData, d3, $) {
+  'use strict';
   var my = {};
 
   var cluster = d3.layout.tree().nodeSize([200, 200]);
@@ -96,7 +97,7 @@ define(['app-config', 'builds/nodesData', 'd3'], function (conf, nodesData, d3) 
       .attr("class", "revision")
       .attr("dy", "1.2em")
       .text(function (d) {
-        return d.revision
+        return d.revision;
       });
 
     var downstreamNodes = node.selectAll(".downstream").data(function (coreNode) {
@@ -119,7 +120,7 @@ define(['app-config', 'builds/nodesData', 'd3'], function (conf, nodesData, d3) 
         return d.jobName.replace(new RegExp(parentData.jobName + '(-|~~)*'), '')
           .split('-')
           .map(function (s) {
-            return s[0]
+            return s[0];
           })
           .join('');
       })

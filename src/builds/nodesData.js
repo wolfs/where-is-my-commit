@@ -1,4 +1,5 @@
 define(['builds/node', 'app-config', 'util'], function (node, config, util) {
+  'use strict';
   var my = {};
 
   var toUpdate = [];

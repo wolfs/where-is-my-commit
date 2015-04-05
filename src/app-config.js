@@ -1,4 +1,5 @@
 define(['jquery'], function ($) {
+  'use strict';
   return {
     width: $(window).width() - 25,
     height: 2000,
@@ -7,5 +8,5 @@ define(['jquery'], function ($) {
     updateInterval: 2000,
     commitUpdateInterval: 20000,
     bulkUpdateSize: 10
-  }
+  };
 });

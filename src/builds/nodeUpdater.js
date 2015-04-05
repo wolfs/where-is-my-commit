@@ -1,10 +1,11 @@
 define(['jquery', 'builds/node', 'app-config', 'builds/nodesData'], function ($, node, config, nodes) {
+  'use strict';
   var my = {};
   my.update = function (nodeToUpdate) {
     var jobName = nodeToUpdate.jobName;
     var resultDef = $.Deferred();
     var findRevision = function (envVars) {
-      var revision = envVars["REV"];
+      var revision = envVars.REV;
       return revision === undefined ? undefined : parseInt(revision, 10);
     };
 
@@ -39,8 +40,8 @@ define(['jquery', 'builds/node', 'app-config', 'builds/nodesData'], function ($,
         return undefined;
       }
       return getEnvVars(build).then(function (envVars) {
-        return findRevision(envVars.envMap)
-      })
+        return findRevision(envVars.envMap);
+      });
     };
 
     var buildUrl = function (buildNumber) {
@@ -76,12 +77,12 @@ define(['jquery', 'builds/node', 'app-config', 'builds/nodesData'], function ($,
           prevBuild.revision = prevRevision;
 
           if (revision < nodeToUpdate.revision) {
-            if(build.result == "ABORTED") {
+            if(build.result === "ABORTED") {
               build.prevBuild = prevBuild;
               return build;
             }
             return undefined;
-          } else if (revision >= nodeToUpdate.revision && nodeToUpdate.revision > prevRevision && prevBuild.result != "ABORTED") {
+          } else if (revision >= nodeToUpdate.revision && nodeToUpdate.revision > prevRevision && prevBuild.result !== "ABORTED") {
             build.prevBuild = prevBuild;
             return build;
           } else {
@@ -90,14 +91,14 @@ define(['jquery', 'builds/node', 'app-config', 'builds/nodesData'], function ($,
                 if (previousBuild === undefined) {
                   return build;
                 } else {
-                  if(previousBuild.result == "ABORTED")
+                  if(previousBuild.result === "ABORTED")
                   {
                     build.prevBuild = previousBuild.prevBuild;
                     return build;
                   }
                   return previousBuild;
                 }
-              })
+              });
           }
         });
     };

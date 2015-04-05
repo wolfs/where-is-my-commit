@@ -1,4 +1,5 @@
-define(['changes/changes', 'd3', 'jquery'], function (changes, d3) {
+define(['changes/changes', 'd3'], function (changes, d3) {
+  'use strict';
   var my = {};
 
   my.render = function () {
@@ -9,10 +10,10 @@ define(['changes/changes', 'd3', 'jquery'], function (changes, d3) {
     revisions.enter()
       .append("a")
       .attr("href", function (el) {
-        return "?revision=" + el.commitId
+        return "?revision=" + el.commitId;
       })
       .attr("name", function (el) {
-        return el.commitId
+        return el.commitId;
       })
       .attr("class", "revision list-group-item")
       .html(function (el) {

@@ -1,4 +1,5 @@
 define(['changes/changes', 'changes/changesRenderer', 'changes/changesUpdater', 'app-config', 'jquery'], function (changes, renderer, updater, config, $) {
+  'use strict';
   var my = {};
 
   my.init = function () {
