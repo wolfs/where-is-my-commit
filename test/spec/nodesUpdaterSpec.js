@@ -125,15 +125,16 @@ define(['builds/nodeUpdater', 'builds/node', 'app-config'], function (updater, n
       expect(nodeToUpdate.revision).toBe(1235);
     });
 
-    var setupBuilds = function (statuses) {
-      var builds = statuses.map(function (result, idx) {
+    var setupBuilds = function (results, revisionFun) {
+      revisionFun = revisionFun || function (buildNumber) { return buildNumber; };
+      var builds = results.map(function (result, idx) {
         var buildNumber = idx + 1;
         var build = buildJson(buildNumber, result);
         ajax.stubRequest(buildApiUrl(buildNumber)).andReturn(jsonResponse(build));
-        ajax.stubRequest(envVarsApiUrl(buildNumber)).andReturn(jsonResponse(envVarsJson(buildNumber)));
+        ajax.stubRequest(envVarsApiUrl(buildNumber)).andReturn(jsonResponse(envVarsJson(revisionFun(buildNumber, result))));
         return build;
       });
-      ajax.stubRequest(jobApiUrl()).andReturn(jsonResponse(jobJson(builds[statuses.length - 1])));
+      ajax.stubRequest(jobApiUrl()).andReturn(jsonResponse(jobJson(builds[results.length - 1])));
       return builds;
     };
 
@@ -177,6 +178,18 @@ define(['builds/nodeUpdater', 'builds/node', 'app-config'], function (updater, n
       updater.update(nodeToUpdate);
 
       expect(nodeToUpdate.url).toBe(jobUrl());
+    });
+
+    it("should change the revision to the real built version", function () {
+      setupBuilds([success, success], function (number) {
+        return number === 1 ? 1 : 5;
+      });
+      nodeToUpdate.revision = 3;
+
+      updater.update(nodeToUpdate);
+
+      expect(nodeToUpdate.revision).toBe(5);
+      expect(nodeToUpdate.previousRevision).toBe(1);
     });
   });
 });
