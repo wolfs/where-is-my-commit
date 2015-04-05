@@ -33,7 +33,7 @@ define(['jquery', 'builds/node', 'app-config', 'builds/nodesData'], function ($,
 
     var getEnvVars = function (build) {
       return build === undefined ? undefined : $.getJSON(build.url +
-      "injectedEnvVars/api/json?tree=envMap[*]");
+      "injectedEnvVars/api/json?tree=envMap[REV]");
     };
     var getRevision = function (build) {
       if (build === undefined) {

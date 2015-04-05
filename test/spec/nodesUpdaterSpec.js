@@ -38,7 +38,7 @@ define(['builds/nodeUpdater', 'builds/node', 'app-config'], function (updater, n
   };
 
   var envVarsApiUrl = function (number) {
-    return buildUrl(number) + "injectedEnvVars/api/json?tree=envMap[*]";
+    return buildUrl(number) + "injectedEnvVars/api/json?tree=envMap[REV]";
   };
 
   var envVarsJson = function (revision) {
