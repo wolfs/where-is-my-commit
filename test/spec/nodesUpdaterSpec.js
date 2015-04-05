@@ -125,8 +125,8 @@ define(['builds/nodeUpdater', 'builds/node', 'app-config'], function (updater, n
       expect(nodeToUpdate.revision).toBe(1235);
     });
 
-    var setupBuilds = function (results, revisionFun) {
-      revisionFun = revisionFun || function (buildNumber) { return buildNumber; };
+    var setupBuilds = function (results, givenRevisionFun) {
+      var revisionFun = givenRevisionFun || function (buildNumber) { return buildNumber; };
       var builds = results.map(function (result, idx) {
         var buildNumber = idx + 1;
         var build = buildJson(buildNumber, result);
