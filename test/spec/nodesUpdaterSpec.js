@@ -171,7 +171,7 @@ define(['builds/nodeUpdater', 'builds/node', 'app-config'], function (updater, n
       expect(nodeToUpdate.url).toBe(buildUrl(3));
     });
 
-    xit("should not stop if the build with the correct revision is aborted", function () {
+    it("should not stop if the build with the correct revision is aborted", function () {
       setupBuilds([success, success, aborted]);
       nodeToUpdate.revision = 3;
 

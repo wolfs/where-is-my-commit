@@ -77,7 +77,7 @@ define(['jquery', 'builds/node', 'app-config', 'builds/nodesData'], function ($,
           prevBuild.revision = prevRevision;
 
           if (revision < nodeToUpdate.revision) {
-            if(build.result === "ABORTED") {
+            if (build.result === "ABORTED") {
               build.prevBuild = prevBuild;
               return build;
             }
@@ -91,8 +91,7 @@ define(['jquery', 'builds/node', 'app-config', 'builds/nodesData'], function ($,
                 if (previousBuild === undefined) {
                   return build;
                 } else {
-                  if(previousBuild.result === "ABORTED")
-                  {
+                  if (previousBuild.result === "ABORTED") {
                     build.prevBuild = previousBuild.prevBuild;
                     return build;
                   }
@@ -130,22 +129,26 @@ define(['jquery', 'builds/node', 'app-config', 'builds/nodesData'], function ($,
       };
     };
 
+    var updateNodeToUpdateFromBuild = function (nodeToUpdate, build) {
+      nodeToUpdate.status = build.result.toLowerCase();
+      nodeToUpdate.revision = build.revision;
+      nodeToUpdate.previousRevision = build.prevBuild.revision;
+      nodeToUpdate.url = build.url;
+      nodeToUpdate.testResult = getTestResult(build);
+      if (build.prevBuild !== undefined) {
+        var previousTestResult = getTestResult(build.prevBuild);
+        nodeToUpdate.newFailCount = nodeToUpdate.testResult.failCount - previousTestResult.failCount;
+      }
+    };
+
     var foundBuildDef = buildForRevision(buildDef, buildDef.then(getRevision));
 
     $.when(foundBuildDef).then(function (build) {
-      if (build === undefined) {
+      var isBuildUndefined = build === undefined || build.result.toLowerCase() == "aborted";
+      if (isBuildUndefined) {
         nodes.scheduleUpdate(nodeToUpdate);
-        resultDef.resolve(nodeToUpdate);
       } else {
-        nodeToUpdate.status = build.result.toLowerCase();
-        nodeToUpdate.revision = build.revision;
-        nodeToUpdate.previousRevision = build.prevBuild.revision;
-        nodeToUpdate.url = build.url;
-        nodeToUpdate.testResult = getTestResult(build);
-        if (build.prevBuild !== undefined) {
-          var previousTestResult = getTestResult(build.prevBuild);
-          nodeToUpdate.newFailCount = nodeToUpdate.testResult.failCount - previousTestResult.failCount;
-        }
+        updateNodeToUpdateFromBuild(nodeToUpdate, build);
 
         var triggeredProjects = getTriggeredProjects(build);
         var children = triggeredProjects.map(function (project) {
@@ -161,8 +164,8 @@ define(['jquery', 'builds/node', 'app-config', 'builds/nodesData'], function ($,
 
         $(nodes.data).trigger("change");
 
-        resultDef.resolve(nodeToUpdate);
       }
+      resultDef.resolve(nodeToUpdate);
     }, function () {
       nodes.scheduleUpdate(nodeToUpdate);
     });

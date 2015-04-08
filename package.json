@@ -1,0 +1,32 @@
+{
+  "name": "where-is-my-commit",
+  "version": "1.0.0",
+  "description": "Find out where the commit in a Jenkins build pipeline is. Powered by D3 and jQuery.",
+  "main": "index.html",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "jasmine-core": "^2.2.0",
+    "karma": "^0.12.31",
+    "karma-chrome-launcher": "^0.1.7",
+    "karma-jasmine": "^0.3.5",
+    "karma-jasmine-ajax": "^0.1.12",
+    "karma-requirejs": "^0.2.2",
+    "requirejs": "^2.1.17"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wolfs/where-is-my-commit.git"
+  },
+  "author": "Stefan Wolf",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/wolfs/where-is-my-commit/issues"
+  },
+  "homepage": "https://github.com/wolfs/where-is-my-commit"
+}
