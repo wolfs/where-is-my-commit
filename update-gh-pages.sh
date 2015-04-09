@@ -1,6 +1,9 @@
 if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
   echo -e "Starting to update gh-pages\n"
 
+  GH_REPO="@github.com/greimela/where-is-my-commit.git"
+  FULL_REPO="https://$TOKEN$GH_REPO"
+  
   #copy data we're interested in to other place
   cp -R dist $HOME/dist
 
@@ -10,7 +13,7 @@ if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
   git config --global user.name "Travis"
 
   #using token clone gh-pages branch
-  git clone --quiet --branch=gh-pages https://$TOKEN@github.com/greimela/where-is-my-commit.git  gh-pages > /dev/null
+  git clone --quiet --branch=gh-pages $FULL_REPO gh-pages > /dev/null
 
   #go into diractory and copy data we're interested in to that directory
   cd gh-pages
