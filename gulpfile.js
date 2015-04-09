@@ -28,7 +28,7 @@ gulp.task('minify-css', function () {
   return gulp.src(['src/styles.css', 'bower_components/bootstrap/dist/css/bootstrap.min.css'])
     .pipe(minifyCSS({keepBreaks: true}))
     .pipe(concat("styles.css"))
-    .pipe(gulp.dest('dist'))
+    .pipe(gulp.dest('dist'));
 });
 
 gulp.task('build', ['scripts', 'lib', 'minify-css'], function () {
