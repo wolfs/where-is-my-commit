@@ -1,7 +1,7 @@
 if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
   echo -e "Starting to update gh-pages\n"
 
-  GH_REPO="@github.com/greimela/where-is-my-commit.git"
+  GH_REPO="@github.com/$TRAVIS_REPO_SLUG.git"
   FULL_REPO="https://$TOKEN$GH_REPO"
   
   #copy data we're interested in to other place
