@@ -14,7 +14,6 @@ Object.keys(window.__karma__.files).forEach(function(file) {
 
 require.config(function () {
   'use strict';
-  //var logic = document.querySelector('script[data-id="requirejs"]').getAttribute("data-logic");
   return {
     baseUrl: '/base/src',
     paths: {

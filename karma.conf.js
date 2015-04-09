@@ -26,8 +26,9 @@ module.exports = function(config) {
 
     // list of files to exclude
     exclude: [
-      'src/config.js',
-      '**/main.js',
+      'src/main.js',
+      'src/init.js',
+      'test/main.js',
       'test/boot.js',
       'test/specs.js',
       'test/test-config.js'
@@ -70,6 +71,6 @@ module.exports = function(config) {
 
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
-    singleRun: false
+    singleRun: true
   });
 };
