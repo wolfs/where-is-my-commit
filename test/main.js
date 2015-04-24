@@ -89,32 +89,32 @@ require(['squire'], function (Squire) {
   injector
     .mock({
       'changes/changes': changes,
-    'changes/changesUpdater': function () {
-      var my = {};
-      var firstCall = true;
-      my.update = function () {
-        if (!firstCall) {
-          changes.commits.splice(0,0,
-            {
-              commitId: "1234710",
-              user: "wolfs",
-              msg: "Some third commit"
-            },
-            {
-              commitId: "1234700",
-              user: "wolfs",
-              msg: "Some third commit"
-            });
-        }
+      'changes/changesUpdater': function () {
+        var my = {};
+        var firstCall = true;
+        my.update = function () {
+          if (!firstCall) {
+            changes.commits.splice(0,0,
+              {
+                commitId: "1234710",
+                user: "wolfs",
+                msg: "Some third commit"
+              },
+              {
+                commitId: "1234700",
+                user: "wolfs",
+                msg: "Some third commit"
+              });
+          }
 
-        firstCall = false;
+          firstCall = false;
 
-        $(changes).trigger("change");
-      };
-      return my;
-    }()});
+          $(changes).trigger("change");
+        };
+        return my;
+      }()});
   injector.require(["changes/changesController", 'builds/nodesController'], function (changes, nodes) {
-      changes.init();
-      nodes.init();
-    });
+    changes.init();
+    nodes.init();
+  });
 });
