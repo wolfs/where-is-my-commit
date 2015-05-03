@@ -44,6 +44,51 @@ define(['app-config', 'builds/nodesData', 'd3', 'jquery'], function (conf, nodes
       .attr("class", "testcount");
   };
 
+  var renderFailedTests = function (nodes) {
+    var unstableNodes = nodes.reduce(function (acc, node) {
+      return acc.concat([node], node.downstreamProjects);
+    }, [])
+      .filter(function (node) {
+        return (node.status === "unstable" && node.testResult.failedTests !== undefined);
+      });
+
+    var unstableProjects = d3.select("#projects").selectAll(".unstableProject").data(unstableNodes, jobName);
+
+    unstableProjects.enter()
+      .append("a")
+      .attr("class", "list-group-item unstableProject")
+      .attr("href", function (el) {
+        return el.url;
+      })
+      .attr("name", function (el) {
+        return el.projectName;
+      })
+      .html(function (el) {
+        return "<h3 class='list-group-item-heading'>" + el.jobName + "</h3><div class='testResults'></div>";
+      });
+
+    unstableProjects.order();
+
+    unstableProjects.exit().remove();
+
+    var testResults = unstableProjects.select(".testResults").selectAll(".testResult").data(function (node) {
+      return node.testResult.failedTests;
+    }, function (test) {
+      return test.name + "-" + test.className;
+    });
+
+    testResults.enter()
+      .append("div")
+      .attr("class", "testResult")
+      .html(function (test) {
+         return "<div class='list-group-item'><h4 class='list-group-item-heading'>" + test.className + "." + test.name + "</h4>" +
+           (test.errorDetails !== null ? "<small>" + test.errorDetails + "</small>" : "") +
+         "</div>";
+      });
+
+    d3.selectAll("#projects .loading").remove();
+  };
+
   my.renderData = function () {
     var nodes = cluster.nodes(nodesData.data);
 
@@ -177,6 +222,8 @@ define(['app-config', 'builds/nodesData', 'd3', 'jquery'], function (conf, nodes
     });
 
     node.exit().remove();
+
+    renderFailedTests(nodes);
   };
 
 

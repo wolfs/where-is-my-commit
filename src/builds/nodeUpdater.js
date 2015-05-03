@@ -139,6 +139,21 @@ define(['jquery', 'builds/node', 'app-config', 'builds/nodesData'], function ($,
         var previousTestResult = getTestResult(build.prevBuild);
         nodeToUpdate.newFailCount = nodeToUpdate.testResult.failCount - previousTestResult.failCount;
       }
+      if (nodeToUpdate.status === "unstable") {
+        addTestResult();
+      }
+    };
+
+    var addTestResult = function () {
+      $.getJSON(nodeToUpdate.url + "testReport/api/json?tree=suites[cases[age,className,name,status,errorDetails]]")
+        .then(function (testReport) {
+          nodeToUpdate.testResult.failedTests = Array.prototype.concat.apply([], testReport.suites.map(function (suite) {
+            return suite.cases.filter(function (test) {
+              return test.status === 'FAILED';
+            });
+          }));
+          $(nodes.data).trigger("change");
+        });
     };
 
     var foundBuildDef = buildForRevision(buildDef, buildDef.then(getRevision));

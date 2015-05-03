@@ -23,7 +23,12 @@ gulp.task("scripts", function () {
 });
 
 gulp.task("lib", function () {
-  return gulp.src(['bower_components/requirejs/require.js', 'bower_components/jquery/dist/jquery.min.js', 'bower_components/d3/d3.min.js'])
+  return gulp.src([
+    'bower_components/requirejs/require.js',
+    'bower_components/jquery/dist/jquery.min.js',
+    'bower_components/d3/d3.min.js',
+    'bower_components/bootstrap/dist/js/bootstrap.min.js'
+  ])
     .pipe(gulp.dest("dist"));
 });
 
@@ -41,7 +46,8 @@ gulp.task('build', ['scripts', 'lib', 'minify-css'], function () {
       js: {
         src: [['main', 'require.js']],
         tpl: '<script data-main="%s" src="%s"></script>'
-      }
+      },
+      libjs: ['jquery.min.js', 'bootstrap.min.js']
     }))
     .pipe(gulp.dest('dist'));
 });

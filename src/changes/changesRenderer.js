@@ -24,7 +24,7 @@ define(['changes/changes', 'd3'], function (changes, d3) {
 
     revisions.exit().remove();
 
-    d3.selectAll(".loading").remove();
+    d3.selectAll("#commits .loading").remove();
   };
 
   return my;
