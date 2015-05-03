@@ -18,7 +18,7 @@ define('changes/changesRenderer', [
         });
         revisions.order();
         revisions.exit().remove();
-        d3.selectAll('.loading').remove();
+        d3.selectAll('#commits .loading').remove();
     };
     return my;
 });
@@ -169,6 +169,32 @@ define('builds/nodesRenderer', [
         node.append('path').attr('class', cssClass).attr('d', arc);
         node.append('text').style('text-anchor', 'middle').attr('dy', '0.3em').attr('class', 'testcount');
     };
+    var renderFailedTests = function (nodes) {
+        var unstableNodes = nodes.reduce(function (acc, node) {
+            return acc.concat([node], node.downstreamProjects);
+        }, []).filter(function (node) {
+            return node.status === 'unstable' && node.testResult.failedTests !== undefined;
+        });
+        var unstableProjects = d3.select('#projects').selectAll('.unstableProject').data(unstableNodes, jobName);
+        unstableProjects.enter().append('a').attr('class', 'list-group-item unstableProject').attr('href', function (el) {
+            return el.url;
+        }).attr('name', function (el) {
+            return el.projectName;
+        }).html(function (el) {
+            return '<h3 class=\'list-group-item-heading\'>' + el.jobName + '</h3><div class=\'testResults\'></div>';
+        });
+        unstableProjects.order();
+        unstableProjects.exit().remove();
+        var testResults = unstableProjects.select('.testResults').selectAll('.testResult').data(function (node) {
+            return node.testResult.failedTests;
+        }, function (test) {
+            return test.name + '-' + test.className;
+        });
+        testResults.enter().append('div').attr('class', 'testResult').html(function (test) {
+            return '<div class=\'list-group-item\'><h4 class=\'list-group-item-heading\'>' + test.className + '.' + test.name + '</h4>' + (test.errorDetails !== null ? '<small>' + test.errorDetails + '</small>' : '') + '</div>';
+        });
+        d3.selectAll('#projects .loading').remove();
+    };
     my.renderData = function () {
         var nodes = cluster.nodes(nodesData.data);
         var maxY = nodes.reduce(function (acc, current) {
@@ -237,6 +263,7 @@ define('builds/nodesRenderer', [
             return 'translate(' + d.x + ',' + d.y + ')';
         });
         node.exit().remove();
+        renderFailedTests(nodes);
     };
     return my;
 });
@@ -363,6 +390,19 @@ define('builds/nodeUpdater', [
                 var previousTestResult = getTestResult(build.prevBuild);
                 nodeToUpdate.newFailCount = nodeToUpdate.testResult.failCount - previousTestResult.failCount;
             }
+            if (nodeToUpdate.status === 'unstable') {
+                addTestResult();
+            }
+        };
+        var addTestResult = function () {
+            $.getJSON(nodeToUpdate.url + 'testReport/api/json?tree=suites[cases[age,className,name,status,errorDetails]]').then(function (testReport) {
+                nodeToUpdate.testResult.failedTests = Array.prototype.concat.apply([], testReport.suites.map(function (suite) {
+                    return suite.cases.filter(function (test) {
+                        return test.status === 'FAILED';
+                    });
+                }));
+                $(nodes.data).trigger('change');
+            });
         };
         var foundBuildDef = buildForRevision(buildDef, buildDef.then(getRevision));
         $.when(foundBuildDef).then(function (build) {
