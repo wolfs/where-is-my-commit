@@ -173,7 +173,7 @@ define('builds/nodesRenderer', [
         var unstableNodes = nodes.reduce(function (acc, node) {
             return acc.concat([node], node.downstreamProjects);
         }, []).filter(function (node) {
-            return node.status === 'unstable' && node.testResult.failedTests !== undefined;
+            return node.status === 'unstable';
         });
         var unstableProjects = d3.select('#projects').selectAll('.unstableProject').data(unstableNodes, jobName);
         unstableProjects.enter().append('a').attr('class', 'list-group-item unstableProject').attr('href', function (el) {
@@ -186,12 +186,18 @@ define('builds/nodesRenderer', [
         unstableProjects.order();
         unstableProjects.exit().remove();
         var testResults = unstableProjects.select('.testResults').selectAll('.testResult').data(function (node) {
-            return node.testResult.failedTests;
+            return node.testResult.failedTests || [];
         }, function (test) {
             return test.name + '-' + test.className;
         });
         testResults.enter().append('div').attr('class', 'testResult').html(function (test) {
-            return '<div class=\'list-group-item\'><h4 class=\'list-group-item-heading\'>' + test.className + '.' + test.name + '</h4>' + (test.errorDetails !== null ? '<small>' + test.errorDetails + '</small>' : '') + '</div>';
+            return '<div class=\'list-group-item\'><h5 class=\'list-group-item-heading\'>' + test.className + '.' + test.name + '</h5>' + (test.errorDetails !== null ? '<small>' + test.errorDetails + '</small>' : '') + '</div>';
+        });
+        var warnings = unstableProjects.select('.testResults').selectAll('.warning').data(function (node) {
+            return node.warnings || [];
+        });
+        warnings.enter().append('div').attr('class', 'warning').html(function (warning) {
+            return '<div class=\'list-group-item\'><h5 class=\'list-group-item-heading\'>' + warning + '</h5>' + '</div>';
         });
         d3.selectAll('#projects .loading').remove();
     };
@@ -285,7 +291,7 @@ define('builds/nodeUpdater', [
         var nodeFromProject = function (project) {
             return node.create(project.name, nodeToUpdate.revision, project.url);
         };
-        var buildKeys = 'number,url,result,actions[triggeredProjects[name,url,downstreamProjects[url,name]],failCount,skipCount,totalCount,urlName]';
+        var buildKeys = 'number,url,result,actions[triggeredProjects[name,url,downstreamProjects[url,name]],failCount,skipCount,totalCount,urlName,name,result[warnings[message]]]';
         var jobRequest = $.getJSON(config.jenkinsUrl + '/job/' + jobName + '/api/json?tree=url,downstreamProjects[url,name],lastCompletedBuild[' + buildKeys + ']').then(function (job) {
             return job;
         });
@@ -380,12 +386,24 @@ define('builds/nodeUpdater', [
                 totalCount: 0
             };
         };
+        var getWarnings = function (build) {
+            var actions = build.actions;
+            var warningsActions = actions.filter(function (action) {
+                return action.name === 'findbugs';
+            });
+            return Array.prototype.concat.apply([], warningsActions.map(function (action) {
+                return action.result.warnings.map(function (warning) {
+                    return warning.message;
+                });
+            }));
+        };
         var updateNodeToUpdateFromBuild = function (nodeToUpdate, build) {
             nodeToUpdate.status = build.result.toLowerCase();
             nodeToUpdate.revision = build.revision;
             nodeToUpdate.previousRevision = build.prevBuild.revision;
             nodeToUpdate.url = build.url;
             nodeToUpdate.testResult = getTestResult(build);
+            nodeToUpdate.warnings = getWarnings(build);
             if (build.prevBuild !== undefined) {
                 var previousTestResult = getTestResult(build.prevBuild);
                 nodeToUpdate.newFailCount = nodeToUpdate.testResult.failCount - previousTestResult.failCount;
@@ -398,7 +416,7 @@ define('builds/nodeUpdater', [
             $.getJSON(nodeToUpdate.url + 'testReport/api/json?tree=suites[cases[age,className,name,status,errorDetails]]').then(function (testReport) {
                 nodeToUpdate.testResult.failedTests = Array.prototype.concat.apply([], testReport.suites.map(function (suite) {
                     return suite.cases.filter(function (test) {
-                        return test.status === 'FAILED';
+                        return test.status !== 'PASSED' && test.status !== 'SKIPPED';
                     });
                 }));
                 $(nodes.data).trigger('change');
