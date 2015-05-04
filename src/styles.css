@@ -94,3 +94,9 @@ body {
   font-size: 13px;
   font-weight: bold;
 }
+
+@media (min-width: 1200px) {
+  .modal-lg {
+    width: 90%;
+  }
+}

@@ -14,7 +14,7 @@ define(['jquery', 'builds/node', 'app-config', 'builds/nodesData'], function ($,
     };
 
     var buildKeys =
-      "number,url,result,actions[triggeredProjects[name,url,downstreamProjects[url,name]],failCount,skipCount,totalCount,urlName]";
+      "number,url,result,actions[triggeredProjects[name,url,downstreamProjects[url,name]],failCount,skipCount,totalCount,urlName,name,result[warnings[message]]]";
 
     var jobRequest = $.getJSON(
       config.jenkinsUrl + "/job/" + jobName +
@@ -129,12 +129,27 @@ define(['jquery', 'builds/node', 'app-config', 'builds/nodesData'], function ($,
       };
     };
 
+    var getWarnings = function (build) {
+      var actions = build.actions;
+
+      var warningsActions = actions.filter(function (action) {
+        return action.name === "findbugs";
+      });
+
+      return Array.prototype.concat.apply([], warningsActions.map(function (action) {
+        return action.result.warnings.map(function (warning) {
+          return warning.message;
+        });
+      }));
+    };
+
     var updateNodeToUpdateFromBuild = function (nodeToUpdate, build) {
       nodeToUpdate.status = build.result.toLowerCase();
       nodeToUpdate.revision = build.revision;
       nodeToUpdate.previousRevision = build.prevBuild.revision;
       nodeToUpdate.url = build.url;
       nodeToUpdate.testResult = getTestResult(build);
+      nodeToUpdate.warnings = getWarnings(build);
       if (build.prevBuild !== undefined) {
         var previousTestResult = getTestResult(build.prevBuild);
         nodeToUpdate.newFailCount = nodeToUpdate.testResult.failCount - previousTestResult.failCount;
@@ -149,7 +164,7 @@ define(['jquery', 'builds/node', 'app-config', 'builds/nodesData'], function ($,
         .then(function (testReport) {
           nodeToUpdate.testResult.failedTests = Array.prototype.concat.apply([], testReport.suites.map(function (suite) {
             return suite.cases.filter(function (test) {
-              return test.status === 'FAILED';
+              return (test.status !== 'PASSED') && (test.status !== 'SKIPPED');
             });
           }));
           $(nodes.data).trigger("change");

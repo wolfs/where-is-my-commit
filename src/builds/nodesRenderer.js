@@ -49,7 +49,7 @@ define(['app-config', 'builds/nodesData', 'd3', 'jquery'], function (conf, nodes
       return acc.concat([node], node.downstreamProjects);
     }, [])
       .filter(function (node) {
-        return (node.status === "unstable" && node.testResult.failedTests !== undefined);
+        return (node.status === "unstable");
       });
 
     var unstableProjects = d3.select("#projects").selectAll(".unstableProject").data(unstableNodes, jobName);
@@ -72,7 +72,7 @@ define(['app-config', 'builds/nodesData', 'd3', 'jquery'], function (conf, nodes
     unstableProjects.exit().remove();
 
     var testResults = unstableProjects.select(".testResults").selectAll(".testResult").data(function (node) {
-      return node.testResult.failedTests;
+      return node.testResult.failedTests || [];
     }, function (test) {
       return test.name + "-" + test.className;
     });
@@ -81,9 +81,21 @@ define(['app-config', 'builds/nodesData', 'd3', 'jquery'], function (conf, nodes
       .append("div")
       .attr("class", "testResult")
       .html(function (test) {
-         return "<div class='list-group-item'><h4 class='list-group-item-heading'>" + test.className + "." + test.name + "</h4>" +
+         return "<div class='list-group-item'><h5 class='list-group-item-heading'>" + test.className + "." + test.name + "</h5>" +
            (test.errorDetails !== null ? "<small>" + test.errorDetails + "</small>" : "") +
          "</div>";
+      });
+
+    var warnings = unstableProjects.select(".testResults").selectAll(".warning").data(function (node) {
+      return node.warnings || [];
+    });
+
+    warnings.enter()
+      .append("div")
+      .attr("class", "warning")
+      .html(function (warning) {
+        return "<div class='list-group-item'><h5 class='list-group-item-heading'>" + warning + "</h5>" +
+          "</div>";
       });
 
     d3.selectAll("#projects .loading").remove();
