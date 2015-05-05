@@ -1,6 +1,6 @@
-body {
-  font: 15px sans-serif;
-}
+/*body {*/
+  /*font: 15px sans-serif;*/
+/*}*/
 
 .node path.success {
   fill: #729FCF;
@@ -95,13 +95,14 @@ body {
   /*font-weight: bold;*/
 /*}*/
 
-.modal-xl {
-  width: 90%;
-}
-
 .scrollable-menu {
   height: auto;
-  width: 20vw;
+  width: 100%;
   max-height: 80vh;
   overflow-x: hidden;
+  word-wrap: break-word;
+}
+
+.modal-xl {
+  width: 90%;
 }

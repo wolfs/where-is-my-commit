@@ -2,7 +2,7 @@ define(['jquery'], function ($) {
   'use strict';
   var globalConfig = window.whereIsMyCommit || {};
   return {
-    width: globalConfig.width || ($(window).width() - 25),
+    width: globalConfig.width || ($("#graph").width()),
     height: globalConfig.height || 2000,
     jenkinsUrl: globalConfig.jenkinsUrl || "http://localhost:8080",
     startJob: globalConfig.startJob || "chain-start",
