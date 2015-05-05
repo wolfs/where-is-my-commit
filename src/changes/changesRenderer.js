@@ -8,14 +8,18 @@ define(['changes/changes', 'd3'], function (changes, d3) {
     });
 
     revisions.enter()
+      .append("li")
+      .attr("role", "presentation")
+      .attr("class", "revision")
       .append("a")
       .attr("href", function (el) {
         return "?revision=" + el.commitId;
       })
+      .attr("role", "menuitem")
       .attr("name", function (el) {
         return el.commitId;
       })
-      .attr("class", "revision list-group-item")
+      .attr("class", "list-group-item")
       .html(function (el) {
         return "<h4 class='list-group-item-heading'>" + el.commitId + " - " + el.user + "</h4><p class='list-group-item-text'>" + el.msg.replace("\n", "<br />") + "</p>";
       });

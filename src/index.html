@@ -19,18 +19,20 @@
 <div class="container-fluid" >
   <nav class="navbar navbar-default navbar-fixed-top">
     <div class="container-fluid">
-      <button type="button" class="btn btn-default navbar-btn navbar-right" data-toggle="modal" data-target="#testResult">
-        Show all failed Tests
-      </button>
+      <div id="revs" class="dropdown navbar-left">
+        <button type="button" class="dropdown-toggle btn btn-lg btn-default navbar-btn" data-toggle="dropdown" id="dropdownCommits"
+                aria-haspopup="true" aria-expanded="true">
+          Commits<span class="caret"></span>
+        </button>
+        <ul id="commits" class="dropdown-menu scrollable-menu" role="menu" aria-labelledby="dropdownCommits"><li class="loading">Loading...</li></ul>
+      </div>
+      <div>
+        <button type="button" class="btn btn-default navbar-btn navbar-right" data-toggle="modal" data-target="#testResult">
+          Show all failed tests
+        </button>
+      </div>
     </div>
   </nav>
-  <div id="revs">
-    <h2>Commits</h2>
-    <div id="commits_div">
-      <ul id="commits" class="list-group"><li class="loading">Loading...</li></ul>
-    </div>
-  </div>
-
 
   <!-- Modal -->
   <div class="modal fade" id="testResult" tabindex="-1" role="dialog" aria-labelledby="testLabel" aria-hidden="true">

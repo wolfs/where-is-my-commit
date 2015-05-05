@@ -70,31 +70,38 @@ body {
   stroke-width: 1.5;
 }
 
-#revs {
-  position: fixed;
-  left: 2%;
-  top: 7%;
-  height: 100%;
-  width: 20%;
-}
+/*#revs {*/
+  /*position: fixed;*/
+  /*left: 2%;*/
+  /*top: 7%;*/
+  /*height: 100%;*/
+  /*width: 20%;*/
+/*}*/
 
-#commits_div {
-  height: 95%;
-}
+/*#commits_div {*/
+  /*height: 95%;*/
+/*}*/
 
-#commits {
-  overflow-x: hidden;
-  overflow-y: auto;
-  word-wrap: break-word;
-  width: 100%;
-  height: 90%;
-}
+/*#commits {*/
+  /*overflow-x: hidden;*/
+  /*overflow-y: auto;*/
+  /*word-wrap: break-word;*/
+  /*width: 100%;*/
+  /*height: 90%;*/
+/*}*/
 
-#commits h4 {
-  font-size: 13px;
-  font-weight: bold;
-}
+/*#commits h4 {*/
+  /*font-size: 13px;*/
+  /*font-weight: bold;*/
+/*}*/
 
 .modal-xl {
   width: 90%;
+}
+
+.scrollable-menu {
+  height: auto;
+  width: 20vw;
+  max-height: 80vh;
+  overflow-x: hidden;
 }
