@@ -8,13 +8,13 @@ define(['app-config', 'builds/nodesData', 'd3', 'jquery'], function (conf, nodes
       return [d.x, d.y];
     });
 
-  var canvas = d3.select("body").append("svg")
+  var canvas = d3.select("#graph").append("svg")
     .attr("width", conf.width)
     .attr("height", conf.height);
 
   var svg = canvas
     .append("g")
-    .attr("transform", "translate(" + ((conf.width + $("#revs").width()) / 2 )   + ",200)");
+    .attr("transform", "translate(" + (conf.width / 2 )   + ",200)");
 
   d3.select(self.frameElement).style("height", conf.height + "px");
 

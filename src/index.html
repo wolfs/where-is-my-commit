@@ -15,7 +15,7 @@
 <!-- build:js-->
 <script data-main="main" src="../bower_components/requirejs/require.js"></script>
 <!-- endbuild -->
-<!-- Button trigger modal -->
+
 <div class="container-fluid" >
   <nav class="navbar navbar-default navbar-fixed-top">
     <div class="container-fluid">
@@ -24,13 +24,15 @@
       </button>
     </div>
   </nav>
-  <div id="revs">
-    <h2>Commits</h2>
-    <div id="commits_div">
+</div>
+<div class="container-fluid">
+  <div class="row">
+    <div id="commits_div" class="col-md-3">
+      <h2>Commits</h2>
       <ul id="commits" class="list-group"><li class="loading">Loading...</li></ul>
     </div>
+    <div id="graph" class="col-md-offset-3 col-md-9"></div>
   </div>
-
 
   <!-- Modal -->
   <div class="modal fade" id="testResult" tabindex="-1" role="dialog" aria-labelledby="testLabel" aria-hidden="true">
