@@ -15,31 +15,37 @@
 <!-- build:js-->
 <script data-main="main" src="../bower_components/requirejs/require.js"></script>
 <!-- endbuild -->
-<div id="revs">
-  <h2>Commits</h2>
-  <div id="commits_div">
-    <ul id="commits" class="list-group"><li class="loading">Loading...</li></ul>
-  </div>
-</div>
-
 <!-- Button trigger modal -->
-<button type="button" class="btn btn-primary btn-lg pull-right fixed-top" data-toggle="modal" data-target="#testResult">
-  Show all failed Tests
-</button>
+<div class="container-fluid" >
+  <nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container-fluid">
+      <button type="button" class="btn btn-default navbar-btn navbar-right" data-toggle="modal" data-target="#testResult">
+        Show all failed Tests
+      </button>
+    </div>
+  </nav>
+  <div id="revs">
+    <h2>Commits</h2>
+    <div id="commits_div">
+      <ul id="commits" class="list-group"><li class="loading">Loading...</li></ul>
+    </div>
+  </div>
 
-<!-- Modal -->
-<div class="modal fade" id="testResult" tabindex="-1" role="dialog" aria-labelledby="testLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="testLabel">All Failed Tests</h4>
-      </div>
-      <div class="modal-body" id="allFailedTests">
-        <div id="projects" class="list-group"><div class="loading">Loading...</div></div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+
+  <!-- Modal -->
+  <div class="modal fade" id="testResult" tabindex="-1" role="dialog" aria-labelledby="testLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title" id="testLabel">All Failed Tests</h4>
+        </div>
+        <div class="modal-body" id="allFailedTests">
+          <div id="projects" class="list-group"><div class="loading">Loading...</div></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
       </div>
     </div>
   </div>

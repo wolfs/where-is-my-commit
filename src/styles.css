@@ -73,7 +73,7 @@ body {
 #revs {
   position: fixed;
   left: 2%;
-  top: 2%;
+  top: 7%;
   height: 100%;
   width: 20%;
 }
@@ -95,8 +95,6 @@ body {
   font-weight: bold;
 }
 
-@media (min-width: 1200px) {
-  .modal-lg {
-    width: 90%;
-  }
+.modal-xl {
+  width: 90%;
 }
