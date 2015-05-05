@@ -19,7 +19,7 @@
 <div class="container-fluid" >
   <nav class="navbar navbar-default navbar-fixed-top">
     <div class="container-fluid">
-      <div id="revs" class="dropdown navbar-left">
+      <div id="revs" class="dropdown navbar-left col-md-3">
         <button type="button" class="dropdown-toggle btn btn-lg btn-default navbar-btn" data-toggle="dropdown" id="dropdownCommits"
                 aria-haspopup="true" aria-expanded="true">
           Commits<span class="caret"></span>
@@ -28,23 +28,16 @@
       </div>
       <div>
         <button type="button" class="btn btn-default navbar-btn navbar-right" data-toggle="modal" data-target="#testResult">
-          Show all failed tests
+          Show all failed Tests
         </button>
       </div>
     </div>
   </nav>
-<<<<<<< HEAD
-=======
 </div>
 <div class="container-fluid">
   <div class="row">
-    <div id="commits_div" class="col-md-3">
-      <h2>Commits</h2>
-      <ul id="commits" class="list-group"><li class="loading">Loading...</li></ul>
-    </div>
     <div id="graph" class="col-md-offset-3 col-md-9"></div>
   </div>
->>>>>>> master
 
   <!-- Modal -->
   <div class="modal fade" id="testResult" tabindex="-1" role="dialog" aria-labelledby="testLabel" aria-hidden="true">
