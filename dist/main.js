@@ -9,11 +9,11 @@ define('changes/changesRenderer', [
         var revisions = d3.select('#commits').selectAll('.revision').data(changes.commits, function (d) {
             return d.commitId;
         });
-        revisions.enter().append('a').attr('href', function (el) {
+        revisions.enter().append('li').attr('role', 'presentation').attr('class', 'revision').append('a').attr('href', function (el) {
             return '?revision=' + el.commitId;
-        }).attr('name', function (el) {
+        }).attr('role', 'menuitem').attr('name', function (el) {
             return el.commitId;
-        }).attr('class', 'revision list-group-item').html(function (el) {
+        }).attr('class', 'list-group-item').html(function (el) {
             return '<h4 class=\'list-group-item-heading\'>' + el.commitId + ' - ' + el.user + '</h4><p class=\'list-group-item-text\'>' + el.msg.replace('\n', '<br />') + '</p>';
         });
         revisions.order();
@@ -26,7 +26,7 @@ define('app-config', ['jquery'], function ($) {
     'use strict';
     var globalConfig = window.whereIsMyCommit || {};
     return {
-        width: globalConfig.width || $(window).width() - 25,
+        width: globalConfig.width || $('#graph').width(),
         height: globalConfig.height || 2000,
         jenkinsUrl: globalConfig.jenkinsUrl || 'http://localhost:8080',
         startJob: globalConfig.startJob || 'chain-start',
@@ -139,9 +139,8 @@ define('builds/nodesData', [
 define('builds/nodesRenderer', [
     'app-config',
     'builds/nodesData',
-    'd3',
-    'jquery'
-], function (conf, nodesData, d3, $) {
+    'd3'
+], function (conf, nodesData, d3) {
     'use strict';
     var my = {};
     var cluster = d3.layout.tree().nodeSize([
@@ -154,8 +153,9 @@ define('builds/nodesRenderer', [
             d.y
         ];
     });
-    var canvas = d3.select('body').append('svg').attr('width', conf.width).attr('height', conf.height);
-    var svg = canvas.append('g').attr('transform', 'translate(' + (conf.width + $('#revs').width()) / 2 + ',200)');
+    var width = $('#graph').width();
+    var canvas = d3.select('#graph').append('svg').attr('width', width).attr('height', conf.height);
+    var svg = canvas.append('g').attr('transform', 'translate(' + width / 2 + ',200)');
     d3.select(self.frameElement).style('height', conf.height + 'px');
     var jobName = function (job) {
         return job.jobName;
@@ -206,7 +206,9 @@ define('builds/nodesRenderer', [
         var maxY = nodes.reduce(function (acc, current) {
             return Math.max(acc, current.y);
         }, 400);
-        canvas.attr('height', maxY + 400 + 'px');
+        var width = $('#graph').width();
+        canvas.attr('height', maxY + 400 + 'px').attr('width', width);
+        svg.attr('transform', 'translate(' + width / 2 + ',200)');
         var links = cluster.links(nodes);
         var link = svg.selectAll('.link').data(links, function (d) {
             return d.source.jobName + '->' + d.target.jobName;
@@ -453,17 +455,19 @@ define('builds/nodesController', [
     'builds/nodesRenderer',
     'builds/nodeUpdater',
     'app-config',
-    'jquery'
-], function (data, renderer, updater, config, $) {
+    'jquery',
+    'bootstrap'
+], function (data, renderer, updater, config, $, bs) {
     'use strict';
     var viewNeedsUpdate = true, my = {};
     var updateNext = function () {
         data.updateNextNodes(updater.update);
     };
+    var changeEvent = 'change';
     my.init = function () {
         if (data.revision) {
             data.scheduleUpdate(data.data);
-            $(data.data).bind('change', function () {
+            $(data.data).bind(changeEvent, function () {
                 viewNeedsUpdate = true;
                 setTimeout(function () {
                     if (viewNeedsUpdate) {
@@ -472,10 +476,21 @@ define('builds/nodesController', [
                     }
                 }, 0);
             });
-            $(data.data).trigger('change');
+            $(data.data).trigger(changeEvent);
             updateNext();
             setInterval(updateNext, config.updateInterval);
         }
+        $(document).ready(function () {
+            var revs = $('#revs');
+            revs.on('show.bs.dropdown', function () {
+                $('#graph').attr('class', 'col-md-offset-3 col-md-9');
+                $(data.data).trigger(changeEvent);
+            });
+            revs.on('hide.bs.dropdown', function () {
+                $('#graph').attr('class', 'col-md-12');
+                $(data.data).trigger(changeEvent);
+            });
+        });
     };
     return my;
 });
@@ -493,7 +508,13 @@ require.config({
   baseUrl: '',
   paths: {
     jquery: 'jquery.min',
-    d3: 'd3.min'
+    d3: 'd3.min',
+    bootstrap :  'bootstrap.min'
+  },
+  shim: {
+    'bootstrap' : {
+      "deps" :['jquery']
+    }
   },
   deps: ['init']
 });
