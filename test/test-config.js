@@ -5,6 +5,7 @@ require.config(function () {
     baseUrl: '../src',
     paths: {
       jquery: '../bower_components/jquery/dist/jquery.min',
+      bootstrap :  "../bower_components/bootstrap/dist/js/bootstrap.min",
       d3: '../bower_components/d3/d3.min',
       jasmine: '../bower_components/jasmine/lib/jasmine-core/jasmine',
       jasmineBoot: '../bower_components/jasmine/lib/jasmine-core/boot',
@@ -22,6 +23,9 @@ require.config(function () {
       },
       'jasmineAjax': {
         deps: ['jasmine', 'jasmineBoot']
+      },
+      'bootstrap' : {
+        "deps" :['jquery']
       }
     },
     deps: [logic]

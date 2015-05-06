@@ -1,5 +1,5 @@
-define(['builds/nodesData', 'builds/nodesRenderer', 'builds/nodeUpdater', 'app-config', 'jquery'],
-  function (data, renderer, updater, config, $) {
+define(['builds/nodesData', 'builds/nodesRenderer', 'builds/nodeUpdater', 'app-config', 'jquery', 'bootstrap'],
+  function (data, renderer, updater, config, $, bs) {
   'use strict';
     var viewNeedsUpdate = true,
       my = {};
@@ -8,11 +8,13 @@ define(['builds/nodesData', 'builds/nodesRenderer', 'builds/nodeUpdater', 'app-c
       data.updateNextNodes(updater.update);
     };
 
+    var changeEvent = "change";
+
     my.init = function () {
       if (data.revision) {
         data.scheduleUpdate(data.data);
 
-        $(data.data).bind("change", function () {
+        $(data.data).bind(changeEvent, function () {
           viewNeedsUpdate = true;
           setTimeout(function () {
             if (viewNeedsUpdate) {
@@ -21,11 +23,22 @@ define(['builds/nodesData', 'builds/nodesRenderer', 'builds/nodeUpdater', 'app-c
             }
           }, 0);
         });
-        $(data.data).trigger("change");
+        $(data.data).trigger(changeEvent);
         updateNext();
         setInterval(updateNext, config.updateInterval);
       }
 
+      $(document).ready(function () {
+        var revs = $("#revs");
+        revs.on('show.bs.dropdown', function () {
+          $("#graph").attr("class", "col-md-offset-3 col-md-9");
+          $(data.data).trigger(changeEvent);
+        });
+        revs.on('hide.bs.dropdown', function () {
+          $("#graph").attr("class", "col-md-12");
+          $(data.data).trigger(changeEvent);
+        });
+      });
     };
     return my;
   }

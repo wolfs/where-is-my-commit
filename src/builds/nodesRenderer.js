@@ -8,13 +8,15 @@ define(['app-config', 'builds/nodesData', 'd3'], function (conf, nodesData, d3) 
       return [d.x, d.y];
     });
 
+  var width = ($("#graph").width());
+
   var canvas = d3.select("#graph").append("svg")
-    .attr("width", conf.width)
+    .attr("width", width)
     .attr("height", conf.height);
 
   var svg = canvas
     .append("g")
-    .attr("transform", "translate(" + (conf.width / 2 )   + ",200)");
+    .attr("transform", "translate(" + (width / 2 )   + ",200)");
 
   d3.select(self.frameElement).style("height", conf.height + "px");
 
@@ -108,7 +110,12 @@ define(['app-config', 'builds/nodesData', 'd3'], function (conf, nodesData, d3) 
       return Math.max(acc, current.y);
     }, 400);
 
-    canvas.attr("height", (maxY + 400) + "px");
+    var width = ($("#graph").width());
+
+    canvas.attr("height", (maxY + 400) + "px")
+      .attr("width", width);
+
+    svg.attr("transform", "translate(" + (width / 2 )   + ",200)");
 
     var links = cluster.links(nodes);
 

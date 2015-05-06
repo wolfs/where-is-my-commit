@@ -13,9 +13,15 @@ gulp.task("scripts", function () {
     .pipe(amdOptimize("init", {
       paths: {
         jquery: 'bower_components/jquery/dist/jquery.min',
-        d3: 'bower_components/d3/d3.min'
+        d3: 'bower_components/d3/d3.min',
+        bootstrap :  'bower_components/bootstrap/dist/js/bootstrap.min'
       },
-      exclude: ['d3', 'jquery']
+      shim: {
+        'bootstrap' : {
+          'deps' :['jquery']
+        }
+      },
+      exclude: ['d3', 'jquery', 'bootstrap']
     }))
     .pipe(addsrc.append("src/dist/main.js"))
     .pipe(concat("main.js"))
@@ -46,8 +52,7 @@ gulp.task('build', ['scripts', 'lib', 'minify-css'], function () {
       js: {
         src: [['main', 'require.js']],
         tpl: '<script data-main="%s" src="%s"></script>'
-      },
-      libjs: ['jquery.min.js', 'bootstrap.min.js']
+      }
     }))
     .pipe(gulp.dest('dist'));
 });
