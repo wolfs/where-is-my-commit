@@ -73,19 +73,31 @@ define(['app-config', 'builds/nodesData', 'd3'], function (conf, nodesData, d3) 
 
     unstableProjects.exit().remove();
 
-    var testResults = unstableProjects.select(".testResults").selectAll(".testResult").data(function (node) {
+    var suiteResults = unstableProjects.select(".testResults").selectAll(".suiteResult").data(function (node) {
       return node.testResult.failedTests || [];
     }, function (test) {
       return test.name + "-" + test.className;
     });
 
-    testResults.enter()
+    suiteResults.enter()
       .append("div")
-      .attr("class", "testResult")
+      .attr("class", "suiteResult")
+      .append("div")
+      .attr("class", "list-group-item")
       .html(function (test) {
-         return "<div class='list-group-item'><h5 class='list-group-item-heading'>" + test.className + "." + test.name + "</h5>" +
-           (test.errorDetails !== null ? "<small>" + test.errorDetails + "</small>" : "") +
-         "</div>";
+        return "<h5 class='list-group-item-heading'>" + test.name + "</h5>";
+      });
+
+    suiteResults.selectAll(".testResult div").data(function (suite) {
+      return suite.cases;
+    }, function (testCase) {
+      return testCase.name;
+    }).enter()
+      .append("div")
+      .attr("class", "testResult list-group-item")
+      .html(function (testCase) {
+        return '<h6 class="list-group-item-heading">' + testCase.name + '</h6>' +
+          (testCase.errorDetails !== null ? "<small>" + testCase.errorDetails + "</small>" : "");
       });
 
     var warnings = unstableProjects.select(".testResults").selectAll(".warning").data(function (node) {

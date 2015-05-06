@@ -160,13 +160,18 @@ define(['jquery', 'builds/node', 'app-config', 'builds/nodesData'], function ($,
     };
 
     var addTestResult = function () {
-      $.getJSON(nodeToUpdate.url + "testReport/api/json?tree=suites[cases[age,className,name,status,errorDetails]]")
+      $.getJSON(nodeToUpdate.url + "testReport/api/json?tree=suites[name,cases[age,className,name,status,errorDetails]]")
         .then(function (testReport) {
-          nodeToUpdate.testResult.failedTests = Array.prototype.concat.apply([], testReport.suites.map(function (suite) {
-            return suite.cases.filter(function (test) {
-              return (test.status !== 'PASSED') && (test.status !== 'SKIPPED');
-            });
-          }));
+          nodeToUpdate.testResult.failedTests = testReport.suites.map(function (suite) {
+            return {
+              name: suite.name,
+              cases: suite.cases.filter(function (test) {
+                return (test.status !== 'PASSED') && (test.status !== 'SKIPPED');
+              })
+            };
+          }).filter(function (suite) {
+            return suite.cases.length > 0;
+          });
           $(nodes.data).trigger("change");
         });
     };
