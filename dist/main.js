@@ -185,13 +185,20 @@ define('builds/nodesRenderer', [
         });
         unstableProjects.order();
         unstableProjects.exit().remove();
-        var testResults = unstableProjects.select('.testResults').selectAll('.testResult').data(function (node) {
+        var suiteResults = unstableProjects.select('.testResults').selectAll('.suiteResult').data(function (node) {
             return node.testResult.failedTests || [];
         }, function (test) {
             return test.name + '-' + test.className;
         });
-        testResults.enter().append('div').attr('class', 'testResult').html(function (test) {
-            return '<div class=\'list-group-item\'><h5 class=\'list-group-item-heading\'>' + test.className + '.' + test.name + '</h5>' + (test.errorDetails !== null ? '<small>' + test.errorDetails + '</small>' : '') + '</div>';
+        suiteResults.enter().append('div').attr('class', 'suiteResult').append('div').attr('class', 'list-group-item').html(function (test) {
+            return '<h5 class=\'list-group-item-heading\'>' + test.name + '</h5>';
+        });
+        suiteResults.selectAll('.testResult div').data(function (suite) {
+            return suite.cases;
+        }, function (testCase) {
+            return testCase.name;
+        }).enter().append('div').attr('class', 'testResult list-group-item').html(function (testCase) {
+            return '<h6 class="list-group-item-heading">' + testCase.name + '</h6>' + (testCase.errorDetails !== null ? '<small>' + testCase.errorDetails + '</small>' : '');
         });
         var warnings = unstableProjects.select('.testResults').selectAll('.warning').data(function (node) {
             return node.warnings || [];
@@ -415,12 +422,17 @@ define('builds/nodeUpdater', [
             }
         };
         var addTestResult = function () {
-            $.getJSON(nodeToUpdate.url + 'testReport/api/json?tree=suites[cases[age,className,name,status,errorDetails]]').then(function (testReport) {
-                nodeToUpdate.testResult.failedTests = Array.prototype.concat.apply([], testReport.suites.map(function (suite) {
-                    return suite.cases.filter(function (test) {
-                        return test.status !== 'PASSED' && test.status !== 'SKIPPED';
-                    });
-                }));
+            $.getJSON(nodeToUpdate.url + 'testReport/api/json?tree=suites[name,cases[age,className,name,status,errorDetails]]').then(function (testReport) {
+                nodeToUpdate.testResult.failedTests = testReport.suites.map(function (suite) {
+                    return {
+                        name: suite.name,
+                        cases: suite.cases.filter(function (test) {
+                            return test.status !== 'PASSED' && test.status !== 'SKIPPED';
+                        })
+                    };
+                }).filter(function (suite) {
+                    return suite.cases.length > 0;
+                });
                 $(nodes.data).trigger('change');
             });
         };

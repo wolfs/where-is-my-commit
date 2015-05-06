@@ -7,24 +7,23 @@
 <body>
 <script data-main="main" src="require.js"></script>
 
-<div class="container-fluid" >
-  <nav class="navbar navbar-default navbar-fixed-top">
-    <div class="container-fluid">
-      <div id="revs" class="dropdown navbar-left col-md-3">
-        <button type="button" class="dropdown-toggle btn btn-lg btn-default navbar-btn" data-toggle="dropdown" id="dropdownCommits"
-                aria-haspopup="true" aria-expanded="true">
-          Commits<span class="caret"></span>
-        </button>
-        <ul id="commits" class="dropdown-menu scrollable-menu" role="menu" aria-labelledby="dropdownCommits"><li class="loading">Loading...</li></ul>
-      </div>
-      <div>
-        <button type="button" class="btn btn-default navbar-btn navbar-right" data-toggle="modal" data-target="#testResult">
-          Show all failed Tests
-        </button>
-      </div>
+<nav class="navbar navbar-default navbar-fixed-top">
+  <div class="container-fluid">
+    <div id="revs" class="dropdown navbar-left col-md-3">
+      <button type="button" class="dropdown-toggle btn btn-lg btn-default navbar-btn" data-toggle="dropdown" id="dropdownCommits"
+              aria-haspopup="true" aria-expanded="true">
+        Commits<span class="caret"></span>
+      </button>
+      <ul id="commits" class="dropdown-menu scrollable-menu" role="menu" aria-labelledby="dropdownCommits"><li class="loading">Loading...</li></ul>
     </div>
-  </nav>
-</div>
+    <div>
+      <button type="button" class="btn btn-default navbar-btn navbar-right" data-toggle="modal" data-target="#testResult">
+        Show all failed Tests
+      </button>
+    </div>
+  </div>
+</nav>
+
 <div class="container-fluid">
   <div class="row">
     <div id="graph" class="col-md-12"></div>
