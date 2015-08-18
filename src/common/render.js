@@ -14,7 +14,7 @@ define(function() {
       .append("div")
       .attr("class", "list-group-item")
       .html(function (test) {
-        return "<h5 class='list-group-item-heading'>" + test.name + "</h5>";
+        return "<h5 class='list-group-item-heading'><a href='" + test.url + "'>" + test.name + "</a></h5>";
       });
 
     suiteResults.selectAll(".testResult").data(function (suite) {
@@ -25,9 +25,10 @@ define(function() {
       .append("div")
       .attr("class", "testResult list-group-item")
       .html(function (testCase) {
-        return '<h6 class="list-group-item-heading">' + testCase.name + '</h6>' +
-          (testCase.errorDetails !== null ? "<small>" + testCase.errorDetails + "</small>" : "");
-      });
+        return '<h6 class="list-group-item-heading"><a href="' + testCase.url + '">' + testCase.name + '</a></h6>';
+      })
+      .append("small")
+      .text(function(testCase) { return testCase.errorDetails === null ? "" : testCase.errorDetails; });
 
     var warnings = projectSelection.selectAll(".warning").data(function (node) {
       return node.warnings || [];

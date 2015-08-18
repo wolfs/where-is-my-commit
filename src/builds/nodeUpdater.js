@@ -163,11 +163,17 @@ define(['jquery', 'builds/node', 'app-config', 'builds/nodesData'], function ($,
       $.getJSON(nodeToUpdate.url + "testReport/api/json?tree=suites[name,cases[age,className,name,status,errorDetails]]")
         .then(function (testReport) {
           nodeToUpdate.testResult.failedTests = testReport.suites.map(function (suite) {
+            var suiteUrl = nodeToUpdate.url + "testReport/" + suite.name.replace(".", "/");
             return {
               name: suite.name,
+              url: suiteUrl,
               cases: suite.cases.filter(function (test) {
                 return (test.status !== 'PASSED') && (test.status !== 'SKIPPED');
               })
+                .map(function (testCase) {
+                  testCase.url = suiteUrl + "/" + testCase.name;
+                  return testCase;
+                })
             };
           }).filter(function (suite) {
             return suite.cases.length > 0;
