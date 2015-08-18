@@ -136,11 +136,41 @@ define('builds/nodesData', [
     my.data = node.create(config.startJob, my.revision);
     return my;
 });
+define('common/render', [], function () {
+    var my = {};
+    my.renderTestresults = function (projectSelection) {
+        var suiteResults = projectSelection.selectAll('.suiteResult').data(function (node) {
+            return node.testResult.failedTests || [];
+        }, function (test) {
+            return test.name + '-' + test.className;
+        });
+        suiteResults.enter().append('div').attr('class', 'suiteResult').append('div').attr('class', 'list-group-item').html(function (test) {
+            return '<h5 class=\'list-group-item-heading\'><a href=\'' + test.url + '\'>' + test.name + '</a></h5>';
+        });
+        suiteResults.selectAll('.testResult').data(function (suite) {
+            return suite.cases;
+        }, function (testCase) {
+            return testCase.name;
+        }).enter().append('div').attr('class', 'testResult list-group-item').html(function (testCase) {
+            return '<h6 class="list-group-item-heading"><a href="' + testCase.url + '">' + testCase.name + '</a></h6>';
+        }).append('small').text(function (testCase) {
+            return testCase.errorDetails === null ? '' : testCase.errorDetails;
+        });
+        var warnings = projectSelection.selectAll('.warning').data(function (node) {
+            return node.warnings || [];
+        });
+        warnings.enter().append('div').attr('class', 'warning').html(function (warning) {
+            return '<div class=\'list-group-item\'><h5 class=\'list-group-item-heading\'>' + warning + '</h5>' + '</div>';
+        });
+    };
+    return my;
+});
 define('builds/nodesRenderer', [
     'app-config',
     'builds/nodesData',
+    'common/render',
     'd3'
-], function (conf, nodesData, d3) {
+], function (conf, nodesData, render, d3) {
     'use strict';
     var my = {};
     var cluster = d3.layout.tree().nodeSize([
@@ -185,27 +215,7 @@ define('builds/nodesRenderer', [
         });
         unstableProjects.order();
         unstableProjects.exit().remove();
-        var suiteResults = unstableProjects.select('.testResults').selectAll('.suiteResult').data(function (node) {
-            return node.testResult.failedTests || [];
-        }, function (test) {
-            return test.name + '-' + test.className;
-        });
-        suiteResults.enter().append('div').attr('class', 'suiteResult').append('div').attr('class', 'list-group-item').html(function (test) {
-            return '<h5 class=\'list-group-item-heading\'>' + test.name + '</h5>';
-        });
-        suiteResults.selectAll('.testResult div').data(function (suite) {
-            return suite.cases;
-        }, function (testCase) {
-            return testCase.name;
-        }).enter().append('div').attr('class', 'testResult list-group-item').html(function (testCase) {
-            return '<h6 class="list-group-item-heading">' + testCase.name + '</h6>' + (testCase.errorDetails !== null ? '<small>' + testCase.errorDetails + '</small>' : '');
-        });
-        var warnings = unstableProjects.select('.testResults').selectAll('.warning').data(function (node) {
-            return node.warnings || [];
-        });
-        warnings.enter().append('div').attr('class', 'warning').html(function (warning) {
-            return '<div class=\'list-group-item\'><h5 class=\'list-group-item-heading\'>' + warning + '</h5>' + '</div>';
-        });
+        render.renderTestresults(unstableProjects.select('.testResults'));
         d3.selectAll('#projects .loading').remove();
     };
     my.renderData = function () {
@@ -424,10 +434,15 @@ define('builds/nodeUpdater', [
         var addTestResult = function () {
             $.getJSON(nodeToUpdate.url + 'testReport/api/json?tree=suites[name,cases[age,className,name,status,errorDetails]]').then(function (testReport) {
                 nodeToUpdate.testResult.failedTests = testReport.suites.map(function (suite) {
+                    var suiteUrl = nodeToUpdate.url + 'testReport/' + suite.name.replace('.', '/');
                     return {
                         name: suite.name,
+                        url: suiteUrl,
                         cases: suite.cases.filter(function (test) {
                             return test.status !== 'PASSED' && test.status !== 'SKIPPED';
+                        }).map(function (testCase) {
+                            testCase.url = suiteUrl + '/' + testCase.name;
+                            return testCase;
                         })
                     };
                 }).filter(function (suite) {
