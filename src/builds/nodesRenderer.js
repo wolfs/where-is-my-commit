@@ -1,4 +1,4 @@
-define(['app-config', 'builds/nodesData', 'd3'], function (conf, nodesData, d3) {
+define(['app-config', 'builds/nodesData', 'common/render', 'd3'], function (conf, nodesData, render, d3) {
   'use strict';
   var my = {};
 
@@ -73,44 +73,7 @@ define(['app-config', 'builds/nodesData', 'd3'], function (conf, nodesData, d3) 
 
     unstableProjects.exit().remove();
 
-    var suiteResults = unstableProjects.select(".testResults").selectAll(".suiteResult").data(function (node) {
-      return node.testResult.failedTests || [];
-    }, function (test) {
-      return test.name + "-" + test.className;
-    });
-
-    suiteResults.enter()
-      .append("div")
-      .attr("class", "suiteResult")
-      .append("div")
-      .attr("class", "list-group-item")
-      .html(function (test) {
-        return "<h5 class='list-group-item-heading'>" + test.name + "</h5>";
-      });
-
-    suiteResults.selectAll(".testResult div").data(function (suite) {
-      return suite.cases;
-    }, function (testCase) {
-      return testCase.name;
-    }).enter()
-      .append("div")
-      .attr("class", "testResult list-group-item")
-      .html(function (testCase) {
-        return '<h6 class="list-group-item-heading">' + testCase.name + '</h6>' +
-          (testCase.errorDetails !== null ? "<small>" + testCase.errorDetails + "</small>" : "");
-      });
-
-    var warnings = unstableProjects.select(".testResults").selectAll(".warning").data(function (node) {
-      return node.warnings || [];
-    });
-
-    warnings.enter()
-      .append("div")
-      .attr("class", "warning")
-      .html(function (warning) {
-        return "<div class='list-group-item'><h5 class='list-group-item-heading'>" + warning + "</h5>" +
-          "</div>";
-      });
+    render.renderTestresults(unstableProjects.select(".testResults"));
 
     d3.selectAll("#projects .loading").remove();
   };
