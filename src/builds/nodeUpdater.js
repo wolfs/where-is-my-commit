@@ -1,4 +1,4 @@
-define(['jquery', 'builds/node', 'app-config', 'builds/nodesData'], function ($, node, config, nodes) {
+define(['jquery', 'builds/node', 'app-config', 'builds/nodesData', 'common/buildInfo'], function ($, node, config, nodes, buildInfo) {
   'use strict';
   var my = {};
   my.update = function (nodeToUpdate) {
@@ -13,12 +13,9 @@ define(['jquery', 'builds/node', 'app-config', 'builds/nodesData'], function ($,
       return node.create(project.name, nodeToUpdate.revision, project.url);
     };
 
-    var buildKeys =
-      "number,url,result,actions[triggeredProjects[name,url,downstreamProjects[url,name]],failCount,skipCount,totalCount,urlName,name,result[warnings[message]]]";
-
     var jobRequest = $.getJSON(
       config.jenkinsUrl + "/job/" + jobName +
-      "/api/json?tree=url,downstreamProjects[url,name],lastCompletedBuild[" + buildKeys + "]"
+      "/api/json?tree=url,downstreamProjects[url,name],lastCompletedBuild[" + buildInfo.buildKeys + "]"
     ).then(function (job) {
         return job;
       });
@@ -46,7 +43,7 @@ define(['jquery', 'builds/node', 'app-config', 'builds/nodesData'], function ($,
 
     var buildUrl = function (buildNumber) {
       return config.jenkinsUrl + "/job/" + nodeToUpdate.jobName + "/" + buildNumber +
-        "/api/json?tree=" + buildKeys;
+        "/api/json?tree=" + buildInfo.buildKeys;
     };
 
     var getBuildDef = function (buildNumber) {
@@ -112,74 +109,23 @@ define(['jquery', 'builds/node', 'app-config', 'builds/nodesData'], function ($,
       }, []);
     };
 
-    var getTestResult = function (build) {
-      var actions = build.actions;
-
-      var testReports = actions.filter(function (action) {
-        return action.urlName === "testReport";
-      });
-
-      if (testReports.length > 0) {
-        return testReports[0];
-      }
-      return {
-        failCount: 0,
-        skipCount: 0,
-        totalCount: 0
-      };
-    };
-
-    var getWarnings = function (build) {
-      var actions = build.actions;
-
-      var warningsActions = actions.filter(function (action) {
-        return action.name === "findbugs";
-      });
-
-      return Array.prototype.concat.apply([], warningsActions.map(function (action) {
-        return action.result.warnings.map(function (warning) {
-          return warning.message;
-        });
-      }));
-    };
-
     var updateNodeToUpdateFromBuild = function (nodeToUpdate, build) {
       nodeToUpdate.status = build.result.toLowerCase();
       nodeToUpdate.revision = build.revision;
       nodeToUpdate.previousRevision = build.prevBuild.revision;
       nodeToUpdate.url = build.url;
-      nodeToUpdate.testResult = getTestResult(build);
-      nodeToUpdate.warnings = getWarnings(build);
+      nodeToUpdate.testResult = buildInfo.getTestResult(build);
+      nodeToUpdate.warnings = buildInfo.getWarnings(build);
       if (build.prevBuild !== undefined) {
-        var previousTestResult = getTestResult(build.prevBuild);
+        var previousTestResult = buildInfo.getTestResult(build.prevBuild);
         nodeToUpdate.newFailCount = nodeToUpdate.testResult.failCount - previousTestResult.failCount;
       }
-      if (nodeToUpdate.status === "unstable") {
-        addTestResult();
-      }
-    };
-
-    var addTestResult = function () {
-      $.getJSON(nodeToUpdate.url + "testReport/api/json?tree=suites[name,cases[age,className,name,status,errorDetails]]")
-        .then(function (testReport) {
-          nodeToUpdate.testResult.failedTests = testReport.suites.map(function (suite) {
-            var suiteUrl = nodeToUpdate.url + "testReport/" + suite.name.replace(".", "/");
-            return {
-              name: suite.name,
-              url: suiteUrl,
-              cases: suite.cases.filter(function (test) {
-                return (test.status !== 'PASSED') && (test.status !== 'SKIPPED');
-              })
-                .map(function (testCase) {
-                  testCase.url = suiteUrl + "/" + testCase.name;
-                  return testCase;
-                })
-            };
-          }).filter(function (suite) {
-            return suite.cases.length > 0;
-          });
+      if (nodeToUpdate.status === "unstable" && nodeToUpdate.testResult.totalCount > 0) {
+        buildInfo.addFailedTests(nodeToUpdate, function (failedTests) {
+          nodeToUpdate.testResult.failedTests = failedTests;
           $(nodes.data).trigger("change");
         });
+      }
     };
 
     var foundBuildDef = buildForRevision(buildDef, buildDef.then(getRevision));

@@ -3,20 +3,17 @@
 <meta charset="utf-8">
 <head>
   <!-- build:css-->
-  <link href="../styles.css" rel="stylesheet" />
+  <link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="styles.css" rel="stylesheet" />
   <!-- endbuild -->
 </head>
 <body>
 <!-- build:js-->
-<script src="../my-config.js"></script>
-<script src="../jquery.min.js"></script>
-<script src="../d3.min.js"></script>
-<script src="../bootstrap.min.js"></script>
-<script src="tests/multiprojectUpdater.js"></script>
+<script data-main="main-broken" src="../bower_components/requirejs/require.js"></script>
 <!-- endbuild -->
 
 <div class="container-fluid">
-          <div id="projects" class="list-group"><div class="loading">Loading...</div></div>
+  <div id="projects" class="list-group"><div class="loading">Loading...</div></div>
 </div>
 
 </body>
