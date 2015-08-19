@@ -137,6 +137,7 @@ define('builds/nodesData', [
     return my;
 });
 define('common/render', [], function () {
+    'use strict';
     var my = {};
     my.renderTestresults = function (projectSelection) {
         var suiteResults = projectSelection.selectAll('.suiteResult').data(function (node) {
@@ -152,15 +153,19 @@ define('common/render', [], function () {
         }, function (testCase) {
             return testCase.name;
         }).enter().append('div').attr('class', 'testResult list-group-item').html(function (testCase) {
-            return '<h6 class="list-group-item-heading"><a href="' + testCase.url + '">' + testCase.name + '</a></h6>';
-        }).append('small').text(function (testCase) {
-            return testCase.errorDetails === null ? '' : testCase.errorDetails;
+            return '<h6 class="list-group-item-heading"><a href="' + testCase.url + '">' + testCase.name + '</a>' + (testCase.errorDetails ? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a data-toggle="collapse" href="#' + 'testCase' + testCase.count + '">Details</a>' : '') + '</h6>';
+        }).append('div').attr('class', function (testCase) {
+            return !testCase.errorDetails || testCase.errorDetails.length > 1200 ? 'collapse' : 'collapse in';
+        }).attr('id', function (testCase) {
+            return 'testCase' + testCase.count;
+        }).append('small').append('pre').text(function (testCase) {
+            return testCase.errorDetails === null ? '' : testCase.errorDetails.replace(/\[(\d+(, )?)*\]/, '');
         });
         var warnings = projectSelection.selectAll('.warning').data(function (node) {
             return node.warnings || [];
         });
         warnings.enter().append('div').attr('class', 'warning').html(function (warning) {
-            return '<div class=\'list-group-item\'><h5 class=\'list-group-item-heading\'>' + warning + '</h5>' + '</div>';
+            return '<div class=\'list-group-item\'><h5 class=\'list-group-item-heading\'>' + warning.fileName + '</h5><pre>' + warning.message + '</pre></h5>' + '</div>';
         });
     };
     return my;
@@ -292,12 +297,73 @@ define('builds/nodesRenderer', [
     };
     return my;
 });
+define('common/buildInfo', [], function () {
+    var my = {};
+    var testCaseCount = 1;
+    my.buildKeys = 'number,url,result,actions[triggeredProjects[name,url,downstreamProjects[url,name]],failCount,skipCount,totalCount,urlName,name,result[warnings[message,fileName]]]';
+    my.getWarnings = function (build) {
+        var actions = build.actions;
+        var warningsActions = actions.filter(function (action) {
+            return action.name === 'findbugs' || action.name === 'pmd' || action.name === 'warnings';
+        });
+        return Array.prototype.concat.apply([], warningsActions.map(function (action) {
+            return action.result.warnings.map(function (warning) {
+                return {
+                    name: action.name,
+                    message: warning.message,
+                    fileName: warning.fileName
+                };
+            }).filter(function (warning) {
+                return !(warning.name === 'warnings' && warnings.message.indexOf('(IF reasonable!) ADD)') > -1);
+            });
+        }));
+    };
+    my.getTestResult = function (build) {
+        var actions = build.actions;
+        var testReports = actions.filter(function (action) {
+            return action.urlName === 'testReport';
+        });
+        if (testReports.length > 0) {
+            return testReports[0];
+        }
+        return {
+            failCount: 0,
+            skipCount: 0,
+            totalCount: 0
+        };
+    };
+    my.addFailedTests = function (build, callback) {
+        $.getJSON(build.url + 'testReport/api/json?tree=suites[name,cases[age,className,name,status,errorDetails]]').then(function (testReport) {
+            var failedTests = testReport.suites.map(function (suite) {
+                var dotBeforeClass = suite.name.lastIndexOf('.');
+                var packageOfSuite = suite.name.substring(0, dotBeforeClass);
+                var suiteUrl = build.url + 'testReport/' + (packageOfSuite ? packageOfSuite : '(root)') + '/' + suite.name.substring(dotBeforeClass + 1) + '/';
+                return {
+                    name: suite.name,
+                    url: suiteUrl,
+                    cases: suite.cases.filter(function (test) {
+                        return test.status !== 'PASSED' && test.status !== 'SKIPPED' && test.status !== 'FIXED';
+                    }).map(function (testCase) {
+                        testCase.url = suiteUrl + testCase.name + '/';
+                        testCase.count = testCaseCount++;
+                        return testCase;
+                    })
+                };
+            }).filter(function (suite) {
+                return suite.cases.length > 0;
+            });
+            callback(failedTests);
+        });
+    };
+    return my;
+});
 define('builds/nodeUpdater', [
     'jquery',
     'builds/node',
     'app-config',
-    'builds/nodesData'
-], function ($, node, config, nodes) {
+    'builds/nodesData',
+    'common/buildInfo'
+], function ($, node, config, nodes, buildInfo) {
     'use strict';
     var my = {};
     my.update = function (nodeToUpdate) {
@@ -310,8 +376,7 @@ define('builds/nodeUpdater', [
         var nodeFromProject = function (project) {
             return node.create(project.name, nodeToUpdate.revision, project.url);
         };
-        var buildKeys = 'number,url,result,actions[triggeredProjects[name,url,downstreamProjects[url,name]],failCount,skipCount,totalCount,urlName,name,result[warnings[message]]]';
-        var jobRequest = $.getJSON(config.jenkinsUrl + '/job/' + jobName + '/api/json?tree=url,downstreamProjects[url,name],lastCompletedBuild[' + buildKeys + ']').then(function (job) {
+        var jobRequest = $.getJSON(config.jenkinsUrl + '/job/' + jobName + '/api/json?tree=url,downstreamProjects[url,name],lastCompletedBuild[' + buildInfo.buildKeys + ']').then(function (job) {
             return job;
         });
         var buildDef = jobRequest.then(function (job) {
@@ -333,7 +398,7 @@ define('builds/nodeUpdater', [
             });
         };
         var buildUrl = function (buildNumber) {
-            return config.jenkinsUrl + '/job/' + nodeToUpdate.jobName + '/' + buildNumber + '/api/json?tree=' + buildKeys;
+            return config.jenkinsUrl + '/job/' + nodeToUpdate.jobName + '/' + buildNumber + '/api/json?tree=' + buildInfo.buildKeys;
         };
         var getBuildDef = function (buildNumber) {
             return $.getJSON(buildUrl(buildNumber)).then(function (build) {
@@ -391,65 +456,23 @@ define('builds/nodeUpdater', [
                 return a.concat(b);
             }, []);
         };
-        var getTestResult = function (build) {
-            var actions = build.actions;
-            var testReports = actions.filter(function (action) {
-                return action.urlName === 'testReport';
-            });
-            if (testReports.length > 0) {
-                return testReports[0];
-            }
-            return {
-                failCount: 0,
-                skipCount: 0,
-                totalCount: 0
-            };
-        };
-        var getWarnings = function (build) {
-            var actions = build.actions;
-            var warningsActions = actions.filter(function (action) {
-                return action.name === 'findbugs';
-            });
-            return Array.prototype.concat.apply([], warningsActions.map(function (action) {
-                return action.result.warnings.map(function (warning) {
-                    return warning.message;
-                });
-            }));
-        };
         var updateNodeToUpdateFromBuild = function (nodeToUpdate, build) {
             nodeToUpdate.status = build.result.toLowerCase();
             nodeToUpdate.revision = build.revision;
             nodeToUpdate.previousRevision = build.prevBuild.revision;
             nodeToUpdate.url = build.url;
-            nodeToUpdate.testResult = getTestResult(build);
-            nodeToUpdate.warnings = getWarnings(build);
+            nodeToUpdate.testResult = buildInfo.getTestResult(build);
+            nodeToUpdate.warnings = buildInfo.getWarnings(build);
             if (build.prevBuild !== undefined) {
-                var previousTestResult = getTestResult(build.prevBuild);
+                var previousTestResult = buildInfo.getTestResult(build.prevBuild);
                 nodeToUpdate.newFailCount = nodeToUpdate.testResult.failCount - previousTestResult.failCount;
             }
-            if (nodeToUpdate.status === 'unstable') {
-                addTestResult();
-            }
-        };
-        var addTestResult = function () {
-            $.getJSON(nodeToUpdate.url + 'testReport/api/json?tree=suites[name,cases[age,className,name,status,errorDetails]]').then(function (testReport) {
-                nodeToUpdate.testResult.failedTests = testReport.suites.map(function (suite) {
-                    var suiteUrl = nodeToUpdate.url + 'testReport/' + suite.name.replace('.', '/');
-                    return {
-                        name: suite.name,
-                        url: suiteUrl,
-                        cases: suite.cases.filter(function (test) {
-                            return test.status !== 'PASSED' && test.status !== 'SKIPPED';
-                        }).map(function (testCase) {
-                            testCase.url = suiteUrl + '/' + testCase.name;
-                            return testCase;
-                        })
-                    };
-                }).filter(function (suite) {
-                    return suite.cases.length > 0;
+            if (nodeToUpdate.status === 'unstable' && nodeToUpdate.testResult.totalCount > 0) {
+                buildInfo.addFailedTests(nodeToUpdate, function (failedTests) {
+                    nodeToUpdate.testResult.failedTests = failedTests;
+                    $(nodes.data).trigger('change');
                 });
-                $(nodes.data).trigger('change');
-            });
+            }
         };
         var foundBuildDef = buildForRevision(buildDef, buildDef.then(getRevision));
         $.when(foundBuildDef).then(function (build) {
