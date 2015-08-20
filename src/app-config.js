@@ -8,6 +8,7 @@ define(['jquery'], function ($) {
     startJob: globalConfig.startJob || "chain-start",
     updateInterval: globalConfig.updateInterval || 2000,
     commitUpdateInterval: globalConfig.commitUpdateInterval || 20000,
-    bulkUpdateSize: globalConfig.bulkUpdateSize || 10
+    bulkUpdateSize: globalConfig.bulkUpdateSize || 10,
+    filterWarnings: globalConfig.filterWarnings || []
   };
 });
