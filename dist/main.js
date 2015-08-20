@@ -32,7 +32,8 @@ define('app-config', ['jquery'], function ($) {
         startJob: globalConfig.startJob || 'chain-start',
         updateInterval: globalConfig.updateInterval || 2000,
         commitUpdateInterval: globalConfig.commitUpdateInterval || 20000,
-        bulkUpdateSize: globalConfig.bulkUpdateSize || 10
+        bulkUpdateSize: globalConfig.bulkUpdateSize || 10,
+        filterWarnings: globalConfig.filterWarnings || []
     };
 });
 define('changes/changesUpdater', [
@@ -297,7 +298,7 @@ define('builds/nodesRenderer', [
     };
     return my;
 });
-define('common/buildInfo', [], function () {
+define('common/buildInfo', ['app-config'], function (config) {
     var my = {};
     var testCaseCount = 1;
     my.buildKeys = 'number,url,result,actions[triggeredProjects[name,url,downstreamProjects[url,name]],failCount,skipCount,totalCount,urlName,name,result[warnings[message,fileName]]]';
@@ -314,7 +315,9 @@ define('common/buildInfo', [], function () {
                     fileName: warning.fileName
                 };
             }).filter(function (warning) {
-                return !(warning.name === 'warnings' && warnings.message.indexOf('(IF reasonable!) ADD)') > -1);
+                return !(warning.name === 'warnings' && config.filterWarnings.some(function (filterWarning) {
+                    return warning.message.indexOf(filterWarning) > -1;
+                }));
             });
         }));
     };
@@ -334,25 +337,27 @@ define('common/buildInfo', [], function () {
     };
     my.addFailedTests = function (build, callback) {
         $.getJSON(build.url + 'testReport/api/json?tree=suites[name,cases[age,className,name,status,errorDetails]]').then(function (testReport) {
-            var failedTests = testReport.suites.map(function (suite) {
-                var dotBeforeClass = suite.name.lastIndexOf('.');
-                var packageOfSuite = suite.name.substring(0, dotBeforeClass);
-                var suiteUrl = build.url + 'testReport/' + (packageOfSuite ? packageOfSuite : '(root)') + '/' + suite.name.substring(dotBeforeClass + 1) + '/';
-                return {
-                    name: suite.name,
-                    url: suiteUrl,
-                    cases: suite.cases.filter(function (test) {
-                        return test.status !== 'PASSED' && test.status !== 'SKIPPED' && test.status !== 'FIXED';
-                    }).map(function (testCase) {
-                        testCase.url = suiteUrl + testCase.name + '/';
-                        testCase.count = testCaseCount++;
-                        return testCase;
-                    })
-                };
-            }).filter(function (suite) {
-                return suite.cases.length > 0;
-            });
-            callback(failedTests);
+            if (testReport.suites) {
+                var failedTests = testReport.suites.map(function (suite) {
+                    var dotBeforeClass = suite.name.lastIndexOf('.');
+                    var packageOfSuite = suite.name.substring(0, dotBeforeClass);
+                    var suiteUrl = build.url + 'testReport/' + (packageOfSuite ? packageOfSuite : '(root)') + '/' + suite.name.substring(dotBeforeClass + 1) + '/';
+                    return {
+                        name: suite.name,
+                        url: suiteUrl,
+                        cases: suite.cases.filter(function (test) {
+                            return test.status !== 'PASSED' && test.status !== 'SKIPPED' && test.status !== 'FIXED';
+                        }).map(function (testCase) {
+                            testCase.url = suiteUrl + testCase.name.replace(/[^a-zA-Z0-9_]/g, '_') + '/';
+                            testCase.count = testCaseCount++;
+                            return testCase;
+                        })
+                    };
+                }).filter(function (suite) {
+                    return suite.cases.length > 0;
+                });
+                callback(failedTests);
+            }
         });
     };
     return my;
