@@ -40,7 +40,7 @@ define(['app-config'], function(config) {
   };
 
   my.addFailedTests = function (build, callback) {
-    $.getJSON(build.url + "testReport/api/json?tree=suites[name,cases[age,className,name,status,errorDetails]]")
+    $.getJSON(build.url + "testReport/api/json?tree=suites[name,cases[age,className,name,status,errorDetails,errorStackTrace]]")
       .then(function (testReport) {
         if (testReport.suites) {
           var failedTests = testReport.suites.map(function (suite) {
