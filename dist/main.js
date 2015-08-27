@@ -149,18 +149,25 @@ define('common/render', [], function () {
         suiteResults.enter().append('div').attr('class', 'suiteResult').append('div').attr('class', 'list-group-item').html(function (test) {
             return '<h5 class=\'list-group-item-heading\'><a href=\'' + test.url + '\'>' + test.name + '</a></h5>';
         });
-        suiteResults.selectAll('.testResult').data(function (suite) {
+        var hull = suiteResults.selectAll('.testResult').data(function (suite) {
             return suite.cases;
         }, function (testCase) {
             return testCase.name;
         }).enter().append('div').attr('class', 'testResult list-group-item').html(function (testCase) {
-            return '<h6 class="list-group-item-heading"><a href="' + testCase.url + '">' + testCase.name + '</a>' + (testCase.errorDetails ? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a data-toggle="collapse" href="#' + 'testCase' + testCase.count + '">Details</a>' : '') + '</h6>';
-        }).append('div').attr('class', function (testCase) {
+            return '<h6 class="list-group-item-heading"><a href="' + testCase.url + '">' + testCase.name + '</a>' + (testCase.errorDetails ? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a data-toggle="collapse" href="#' + 'testCase' + testCase.count + '">Details</a>' : '') + (testCase.errorStackTrace ? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a data-toggle="collapse" href="#' + 'stackTrace' + testCase.count + '">Stacktrace</a>' : '');
+            '</h6>';
+        });
+        hull.append('div').attr('class', function (testCase) {
             return !testCase.errorDetails || testCase.errorDetails.length > 1200 ? 'collapse' : 'collapse in';
         }).attr('id', function (testCase) {
             return 'testCase' + testCase.count;
         }).append('small').append('pre').text(function (testCase) {
             return testCase.errorDetails === null ? '' : testCase.errorDetails.replace(/\[(\d+(, )?)*\]/, '');
+        });
+        hull.append('div').attr('class', 'collapse').attr('id', function (testCase) {
+            return 'stackTrace' + testCase.count;
+        }).append('small').append('pre').text(function (testCase) {
+            return testCase.errorStackTrace ? testCase.errorStackTrace.replace(/\[(\d+(, )?)*\]/, '') : '';
         });
         var warnings = projectSelection.selectAll('.warning').data(function (node) {
             return node.warnings || [];
@@ -336,7 +343,7 @@ define('common/buildInfo', ['app-config'], function (config) {
         };
     };
     my.addFailedTests = function (build, callback) {
-        $.getJSON(build.url + 'testReport/api/json?tree=suites[name,cases[age,className,name,status,errorDetails]]').then(function (testReport) {
+        $.getJSON(build.url + 'testReport/api/json?tree=suites[name,cases[age,className,name,status,errorDetails,errorStackTrace]]').then(function (testReport) {
             if (testReport.suites) {
                 var failedTests = testReport.suites.map(function (suite) {
                     var dotBeforeClass = suite.name.lastIndexOf('.');
