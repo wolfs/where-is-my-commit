@@ -6,7 +6,12 @@
   <link href="../src/styles.css" rel="stylesheet" />
 </head>
 <body>
-<script data-id="requirejs" data-logic="../test/main" data-main="test-config" src="../bower_components/requirejs/require.js"></script>
+<script src="../bower_components/requirejs/require.js"></script>
+<script>
+  require(['test-config'], function() {
+    require(['../test/main']);
+  });
+</script>
 
 <nav class="navbar navbar-default navbar-fixed-top">
   <div class="container-fluid">

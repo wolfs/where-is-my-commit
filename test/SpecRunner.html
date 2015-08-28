@@ -7,7 +7,12 @@
   <link rel="shortcut icon" type="image/png" href="../bower_components/jasmine/images/jasmine_favicon.png">
   <link rel="stylesheet" href="../bower_components/jasmine/lib/jasmine-core/jasmine.css">
 
-  <script data-id="requirejs" data-logic="../test/boot" data-main="test-config" src="../bower_components/requirejs/require.js"></script>
+  <script src="../bower_components/requirejs/require.js"></script>
+  <script>
+    require(['test-config'], function() {
+      require(['../test/boot']);
+    });
+  </script>
 </head>
 
 <body>

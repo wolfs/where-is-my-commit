@@ -112,7 +112,9 @@ require(['squire'], function (Squire) {
           $(changes).trigger("change");
         };
         return my;
-      }()});
+      }(),
+      'my-config': {}
+    });
   injector.require(["changes/changesController", 'builds/nodesController'], function (changes, nodes) {
     changes.init();
     nodes.init();

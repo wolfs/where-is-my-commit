@@ -1,7 +1,5 @@
-require.config(function () {
-  'use strict';
-  var logic = document.querySelector('script[data-id="requirejs"]').getAttribute("data-logic");
-  return {
+define([], function () {
+  require.config({
     baseUrl: '../src',
     paths: {
       jquery: '../bower_components/jquery/dist/jquery.min',
@@ -27,7 +25,6 @@ require.config(function () {
       'bootstrap' : {
         "deps" :['jquery']
       }
-    },
-    deps: [logic]
-  };
-}());
+    }
+  });
+});

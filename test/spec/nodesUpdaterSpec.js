@@ -5,7 +5,7 @@ define(['builds/nodeUpdater', 'builds/node', 'app-config'], function (updater, n
     nodeToUpdate,
     success = 'SUCCESS',
     aborted = 'ABORTED',
-    buildKeys = 'number,url,result,actions[triggeredProjects[name,url,downstreamProjects[url,name]],failCount,skipCount,totalCount,urlName]',
+    buildKeys = 'number,url,result,actions[triggeredProjects[name,url,downstreamProjects[url,name]],failCount,skipCount,totalCount,urlName,name,result[warnings[message,fileName]]]',
     jobApiRequest = 'api/json?tree=url,downstreamProjects[url,name],lastCompletedBuild[' + buildKeys + ']',
     buildApiRequest = 'api/json?tree=' + buildKeys;
 
