@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8">
+<head>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<script src="require.js"></script>
+<script src="main.js"></script>
+<script>
+  require(['shims'], function() {
+    require(['bootstrap', 'broken/init']);
+  });
+</script>
+
+<div class="container-fluid">
+  <div id="projects" class="list-group"><div class="loading">Loading...</div></div>
+</div>
+
+</body>
+</html>

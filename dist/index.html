@@ -5,7 +5,13 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<script data-main="main" src="require.js"></script>
+<script src="require.js"></script>
+<script src="main.js"></script>
+<script>
+  require(['shims'], function() {
+    require(['bootstrap', 'init']);
+  });
+</script>
 
 <nav class="navbar navbar-default navbar-fixed-top">
   <div class="container-fluid">
