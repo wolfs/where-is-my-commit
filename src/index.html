@@ -9,8 +9,13 @@
 </head>
 <body>
 <!-- build:js-->
-<script data-main="main" src="../bower_components/requirejs/require.js"></script>
+<script src="../bower_components/requirejs/require.js"></script>
 <!-- endbuild -->
+<script>
+  require(['shims'], function() {
+    require(['bootstrap', 'init']);
+  });
+</script>
 
 <nav class="navbar navbar-default navbar-fixed-top">
   <div class="container-fluid">

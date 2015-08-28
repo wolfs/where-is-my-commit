@@ -1,6 +1,5 @@
-define(['jquery'], function ($) {
+define(['jquery', 'optional!my-config'], function ($, globalConfig) {
   'use strict';
-  var globalConfig = window.whereIsMyCommit || {};
   return {
     width: globalConfig.width || ($("#graph").width()),
     height: globalConfig.height || 2000,

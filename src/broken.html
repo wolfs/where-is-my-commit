@@ -9,9 +9,13 @@
 </head>
 <body>
 <!-- build:js-->
-<script src="../my-config.js"></script>
-<script data-main="main-broken" src="../bower_components/requirejs/require.js"></script>
+<script src="../bower_components/requirejs/require.js"></script>
 <!-- endbuild -->
+<script>
+  require(['shims'], function() {
+    require(['bootstrap', 'broken/init']);
+  });
+</script>
 
 <div class="container-fluid">
   <div id="projects" class="list-group"><div class="loading">Loading...</div></div>

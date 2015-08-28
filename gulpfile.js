@@ -4,26 +4,20 @@ var gulp = require("gulp"),
   htmlreplace = require('gulp-html-replace'),
   minifyCSS = require('gulp-minify-css'),
   uglify = require('gulp-uglify'),
-  addsrc = require('gulp-add-src');
+  addsrc = require('gulp-add-src'),
+  gulpIgnore = require('gulp-ignore'),
+  debug = require('gulp-debug'),
+  shims = require('./src/shims.js')
+;
+
 
 gulp.task("scripts", function () {
   'use strict';
-  return gulp.src("src/**/!(main).js")
-    // Traces all modules and outputs them in the correct order.
-    .pipe(amdOptimize("init", {
-      paths: {
-        jquery: 'bower_components/jquery/dist/jquery.min',
-        d3: 'bower_components/d3/d3.min',
-        bootstrap :  'bower_components/bootstrap/dist/js/bootstrap.min'
-      },
-      shim: {
-        'bootstrap' : {
-          'deps' :['jquery']
-        }
-      },
-      exclude: ['d3', 'jquery', 'bootstrap']
-    }))
-    .pipe(addsrc.append("src/dist/main.js"))
+  shims.exclude = ['d3', 'jquery', 'bootstrap'];
+  return gulp.src(["src/**/*.js", "!src/**/shims.js"])
+    .pipe(amdOptimize("main", shims))
+    .pipe(gulpIgnore.exclude('**/main.js'))
+    .pipe(addsrc.append("src/shims.js"))
     .pipe(concat("main.js"))
     .pipe(gulp.dest("dist"));
 });
@@ -46,13 +40,10 @@ gulp.task('minify-css', function () {
 });
 
 gulp.task('build', ['scripts', 'lib', 'minify-css'], function () {
-  return gulp.src('src/index.html')
+  return gulp.src(['src/index.html', 'src/broken.html'])
     .pipe(htmlreplace({
       css: 'styles.css',
-      js: {
-        src: [['main', 'require.js']],
-        tpl: '<script data-main="%s" src="%s"></script>'
-      }
+      js: ['require.js', 'main.js']
     }))
     .pipe(gulp.dest('dist'));
 });
