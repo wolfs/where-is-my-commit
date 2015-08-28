@@ -7,5 +7,7 @@ before_script:
   - npm install -g gulp
   - npm install -g bower
   - bower install
-script: gulp build
+script:
+ - gulp build
+ - npm test
 after_success: ./update-gh-pages.sh
