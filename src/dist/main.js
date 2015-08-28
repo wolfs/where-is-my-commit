@@ -8,8 +8,8 @@ require.config({
     bootstrap :  'bootstrap.min'
   },
   shim: {
-    'bootstrap' : {
-      "deps" :['jquery']
+    bootstrap : {
+      deps :['jquery']
     }
   },
   deps: ['init']
