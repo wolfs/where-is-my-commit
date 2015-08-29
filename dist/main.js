@@ -15,9 +15,9 @@ define('optional', [], {
         parentRequire([moduleName], onLoadSuccess, onLoadFailure);
     }
 });
-define('changes/changes', [], { commits: [] });
-define('changes/changesRenderer', [
-    'changes/changes',
+define('where/changes/changes', [], { commits: [] });
+define('where/changes/changesRenderer', [
+    'where/changes/changes',
     'd3'
 ], function (changes, d3) {
     'use strict';
@@ -55,8 +55,8 @@ define('app-config', [
         filterWarnings: globalConfig.filterWarnings || []
     };
 });
-define('changes/changesUpdater', [
-    'changes/changes',
+define('where/changes/changesUpdater', [
+    'where/changes/changes',
     'app-config',
     'jquery'
 ], function (changes, config, $) {
@@ -76,10 +76,10 @@ define('changes/changesUpdater', [
     };
     return my;
 });
-define('changes/changesController', [
-    'changes/changes',
-    'changes/changesRenderer',
-    'changes/changesUpdater',
+define('where/changes/changesController', [
+    'where/changes/changes',
+    'where/changes/changesRenderer',
+    'where/changes/changesUpdater',
     'app-config',
     'jquery'
 ], function (changes, renderer, updater, config, $) {
@@ -92,7 +92,7 @@ define('changes/changesController', [
     };
     return my;
 });
-define('builds/node', [], function () {
+define('where/builds/node', [], function () {
     'use strict';
     var my = {};
     var baseBuildNode = {
@@ -114,7 +114,7 @@ define('builds/node', [], function () {
     };
     return my;
 });
-define('util', [], {
+define('common/util', [], {
     getQueryVariable: function (variable) {
         'use strict';
         var search = window.location.search;
@@ -133,10 +133,10 @@ define('util', [], {
         return results.length === 0 ? false : results[0];
     }
 });
-define('builds/nodesData', [
-    'builds/node',
+define('where/builds/nodesData', [
+    'where/builds/node',
     'app-config',
-    'util'
+    'common/util'
 ], function (node, config, util) {
     'use strict';
     var my = {};
@@ -197,9 +197,9 @@ define('common/render', [], function () {
     };
     return my;
 });
-define('builds/nodesRenderer', [
+define('where/builds/nodesRenderer', [
     'app-config',
-    'builds/nodesData',
+    'where/builds/nodesData',
     'common/render',
     'd3'
 ], function (conf, nodesData, render, d3) {
@@ -388,11 +388,11 @@ define('common/buildInfo', ['app-config'], function (config) {
     };
     return my;
 });
-define('builds/nodeUpdater', [
+define('where/builds/nodeUpdater', [
     'jquery',
-    'builds/node',
+    'where/builds/node',
     'app-config',
-    'builds/nodesData',
+    'where/builds/nodesData',
     'common/buildInfo'
 ], function ($, node, config, nodes, buildInfo) {
     'use strict';
@@ -531,10 +531,10 @@ define('builds/nodeUpdater', [
     };
     return my;
 });
-define('builds/nodesController', [
-    'builds/nodesData',
-    'builds/nodesRenderer',
-    'builds/nodeUpdater',
+define('where/builds/nodesController', [
+    'where/builds/nodesData',
+    'where/builds/nodesRenderer',
+    'where/builds/nodeUpdater',
     'app-config',
     'jquery',
     'bootstrap'
@@ -575,9 +575,9 @@ define('builds/nodesController', [
     };
     return my;
 });
-define('init', [
-    'changes/changesController',
-    'builds/nodesController'
+define('where/init', [
+    'where/changes/changesController',
+    'where/builds/nodesController'
 ], function (changes, nodes) {
     'use strict';
     changes.init();
@@ -586,7 +586,7 @@ define('init', [
 define('broken/init', [
     'jquery',
     'common/render',
-    'util',
+    'common/util',
     'app-config',
     'd3',
     'common/buildInfo'
