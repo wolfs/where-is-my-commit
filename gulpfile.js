@@ -7,6 +7,7 @@ var gulp = require("gulp"),
   addsrc = require('gulp-add-src'),
   gulpIgnore = require('gulp-ignore'),
   debug = require('gulp-debug'),
+  del = require('del'),
   shims = require('./src/shims.js')
 ;
 
@@ -37,6 +38,12 @@ gulp.task('minify-css', function () {
     .pipe(minifyCSS({keepBreaks: true}))
     .pipe(concat("styles.css"))
     .pipe(gulp.dest('dist'));
+});
+
+gulp.task('clean', function (cb) {
+  del([
+    'dist'
+  ], cb);
 });
 
 gulp.task('build', ['scripts', 'lib', 'minify-css'], function () {
