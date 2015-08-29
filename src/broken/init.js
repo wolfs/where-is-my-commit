@@ -1,4 +1,4 @@
-define(['jquery', 'common/render', 'util', 'app-config', 'd3', 'common/buildInfo'], function($, render, util, config, d3, buildInfo) {
+define(['jquery', 'common/render', 'common/util', 'app-config', 'd3', 'common/buildInfo'], function($, render, util, config, d3, buildInfo) {
   var multijobSubbuilds,
       multijobUrl,
       lastCompletedBuildsOfView,

@@ -1,4 +1,4 @@
-define(['util'], function(util){
+define(['common/util'], function(util){
   'use strict';
   describe("getQueryVariable", function(){
     it("Should extract the Query Variable", function(){

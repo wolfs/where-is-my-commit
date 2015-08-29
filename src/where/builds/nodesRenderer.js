@@ -1,4 +1,4 @@
-define(['app-config', 'builds/nodesData', 'common/render', 'd3'], function (conf, nodesData, render, d3) {
+define(['app-config', 'where/builds/nodesData', 'common/render', 'd3'], function (conf, nodesData, render, d3) {
   'use strict';
   var my = {};
 

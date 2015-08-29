@@ -88,8 +88,8 @@ require(['squire'], function (Squire) {
 
   injector
     .mock({
-      'changes/changes': changes,
-      'changes/changesUpdater': function () {
+      'where/changes/changes': changes,
+      'where/changes/changesUpdater': function () {
         var my = {};
         var firstCall = true;
         my.update = function () {
@@ -115,7 +115,7 @@ require(['squire'], function (Squire) {
       }(),
       'my-config': {}
     });
-  injector.require(["changes/changesController", 'builds/nodesController'], function (changes, nodes) {
+  injector.require(["where/changes/changesController", 'where/builds/nodesController'], function (changes, nodes) {
     changes.init();
     nodes.init();
   });

@@ -1,4 +1,4 @@
-define(['jquery', 'builds/node', 'app-config', 'builds/nodesData', 'common/buildInfo'], function ($, node, config, nodes, buildInfo) {
+define(['jquery', 'where/builds/node', 'app-config', 'where/builds/nodesData', 'common/buildInfo'], function ($, node, config, nodes, buildInfo) {
   'use strict';
   var my = {};
   my.update = function (nodeToUpdate) {

@@ -1,4 +1,4 @@
-define(['changes/changes', 'd3'], function (changes, d3) {
+define(['where/changes/changes', 'd3'], function (changes, d3) {
   'use strict';
   var my = {};
 

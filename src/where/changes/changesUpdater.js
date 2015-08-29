@@ -1,4 +1,4 @@
-define(['changes/changes', 'app-config', 'jquery'], function (changes, config, $) {
+define(['where/changes/changes', 'app-config', 'jquery'], function (changes, config, $) {
   'use strict';
   var my = {};
 

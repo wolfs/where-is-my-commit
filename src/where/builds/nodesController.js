@@ -1,4 +1,4 @@
-define(['builds/nodesData', 'builds/nodesRenderer', 'builds/nodeUpdater', 'app-config', 'jquery', 'bootstrap'],
+define(['where/builds/nodesData', 'where/builds/nodesRenderer', 'where/builds/nodeUpdater', 'app-config', 'jquery', 'bootstrap'],
   function (data, renderer, updater, config, $, bs) {
   'use strict';
     var viewNeedsUpdate = true,

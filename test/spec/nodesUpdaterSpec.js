@@ -1,4 +1,4 @@
-define(['builds/nodeUpdater', 'builds/node', 'app-config'], function (updater, node, config) {
+define(['where/builds/nodeUpdater', 'where/builds/node', 'app-config'], function (updater, node, config) {
   'use strict';
   var ajax = jasmine.Ajax,
     currentJobName,

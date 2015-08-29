@@ -1,1 +1,1 @@
-require(['optional', 'init', 'broken/init']);
+require(['optional', 'where/init', 'broken/init']);

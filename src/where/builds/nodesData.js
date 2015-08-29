@@ -1,4 +1,4 @@
-define(['builds/node', 'app-config', 'util'], function (node, config, util) {
+define(['where/builds/node', 'app-config', 'common/util'], function (node, config, util) {
   'use strict';
   var my = {};
 
