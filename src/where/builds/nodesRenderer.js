@@ -220,6 +220,10 @@ define(['app-config', 'where/builds/nodesData', 'common/render', 'd3'], function
     renderFailedTests(nodes);
   };
 
+  my.renderLoop = function () {
+    render.renderLoop(nodesData.data, nodesData.event, my.renderData);
+  };
+
 
   return my;
 });

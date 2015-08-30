@@ -29,7 +29,7 @@ define(function () {
         return '<h6 class="list-group-item-heading"><a href="' + testCase.url + '">' + testCase.name + '</a>' + (testCase.errorDetails ?
           '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a data-toggle="collapse" href="#' + "testCase" + testCase.count + '">Details</a>' : '') +
           (testCase.errorStackTrace ?
-          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a data-toggle="collapse" href="#' + "stackTrace" + testCase.count + '">Stacktrace</a>' : '')
+          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a data-toggle="collapse" href="#' + "stackTrace" + testCase.count + '">Stacktrace</a>' : '') +
         '</h6>';
       });
 
@@ -68,6 +68,20 @@ define(function () {
         return "<div class='list-group-item'><h5 class='list-group-item-heading'>" + warning.fileName + "</h5><pre>" + warning.message + "</pre></h5>" +
           "</div>";
       });
+  };
+
+  my.renderLoop = function (eventSource, eventName, render) {
+    var viewNeedsUpdate = true;
+    $(eventSource).bind(eventName, function () {
+      viewNeedsUpdate = true;
+      setTimeout(function () {
+        if (viewNeedsUpdate) {
+          render();
+          viewNeedsUpdate = false;
+        }
+      }, 0);
+    });
+    $(eventSource).trigger(eventName);
   };
 
   return my;

@@ -123,7 +123,7 @@ define(['jquery', 'where/builds/node', 'app-config', 'where/builds/nodesData', '
       if (nodeToUpdate.status === "unstable" && nodeToUpdate.testResult.totalCount > 0) {
         buildInfo.addFailedTests(nodeToUpdate, function (failedTests) {
           nodeToUpdate.testResult.failedTests = failedTests;
-          $(nodes.data).trigger("change");
+          $(nodes.data).trigger(nodes.event);
         });
       }
     };
@@ -149,8 +149,7 @@ define(['jquery', 'where/builds/node', 'app-config', 'where/builds/nodesData', '
 
         nodeToUpdate.children = children;
 
-        $(nodes.data).trigger("change");
-
+        $(nodes.data).trigger(nodes.event);
       }
       resultDef.resolve(nodeToUpdate);
     }, function () {

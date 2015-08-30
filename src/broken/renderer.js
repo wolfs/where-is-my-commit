@@ -32,5 +32,9 @@ define(['d3', 'common/render', 'broken/builds'], function (d3, render, data) {
     d3.selectAll("#projects .loading").remove();
   };
 
+  my.renderLoop = function () {
+    render.renderLoop(data, data.event, my.renderFailedTests);
+  };
+
   return my;
 });

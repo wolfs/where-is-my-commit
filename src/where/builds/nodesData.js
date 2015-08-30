@@ -6,6 +6,7 @@ define(['where/builds/node', 'app-config', 'common/util'], function (node, confi
 
   my.revision = parseInt(revisionString, 10);
   my.data = node.create(config.startJob, my.revision);
+  my.event = "change";
 
   return my;
 });
