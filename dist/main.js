@@ -92,6 +92,60 @@ define('where/changes/changesController', [
     };
     return my;
 });
+define('common/util', [], {
+    getQueryVariable: function (variable) {
+        'use strict';
+        var search = window.location.search;
+        return this.getQueryVariableFromSearch(variable, search);
+    },
+    getQueryVariableFromSearch: function (variable, search) {
+        'use strict';
+        var query = search.substring(1);
+        var results = query.split('&').map(function (el) {
+            return el.split('=');
+        }).filter(function (el) {
+            return el[0] === variable;
+        }).map(function (el) {
+            return el[1];
+        });
+        return results.length === 0 ? false : results[0];
+    },
+    newThrottler: function (updateFunction, bulkUpdateSizeParam, updateIntervalParam) {
+        var throttler = {}, toUpdate = [], currentTimer, timerRunning = false, bulkUpdateSize = bulkUpdateSizeParam || 10, updateInterval = updateIntervalParam || 2000;
+        var startTimer = function () {
+            updateNext();
+            currentTimer = setInterval(function () {
+                if (toUpdate.length === 0) {
+                    clearInterval(currentTimer);
+                    timerRunning = false;
+                } else {
+                    updateNext();
+                }
+            }, updateInterval);
+            timerRunning = true;
+        };
+        var startTimerIfNecessary = function () {
+            if (!timerRunning) {
+                startTimer();
+            }
+        };
+        var updateNext = function () {
+            if (toUpdate.length > 0) {
+                var toUpdateNow = toUpdate.slice(0, bulkUpdateSize);
+                toUpdate = toUpdate.slice(bulkUpdateSize);
+                toUpdateNow.forEach(updateFunction);
+            }
+        };
+        throttler.scheduleUpdate = function (node) {
+            toUpdate.push(node);
+            startTimerIfNecessary();
+        };
+        throttler.scheduleUpdates = function (nodes) {
+            nodes.forEach(throttler.scheduleUpdate);
+        };
+        return throttler;
+    }
+});
 define('where/builds/node', [], function () {
     'use strict';
     var my = {};
@@ -114,25 +168,6 @@ define('where/builds/node', [], function () {
     };
     return my;
 });
-define('common/util', [], {
-    getQueryVariable: function (variable) {
-        'use strict';
-        var search = window.location.search;
-        return this.getQueryVariableFromSearch(variable, search);
-    },
-    getQueryVariableFromSearch: function (variable, search) {
-        'use strict';
-        var query = search.substring(1);
-        var results = query.split('&').map(function (el) {
-            return el.split('=');
-        }).filter(function (el) {
-            return el[0] === variable;
-        }).map(function (el) {
-            return el[1];
-        });
-        return results.length === 0 ? false : results[0];
-    }
-});
 define('where/builds/nodesData', [
     'where/builds/node',
     'app-config',
@@ -140,20 +175,10 @@ define('where/builds/nodesData', [
 ], function (node, config, util) {
     'use strict';
     var my = {};
-    var toUpdate = [];
     var revisionString = util.getQueryVariable('revision');
-    my.scheduleUpdate = function (node) {
-        toUpdate.push(node);
-    };
-    my.updateNextNodes = function (updateFunction) {
-        if (toUpdate.length > 0) {
-            var toUpdateNow = toUpdate.slice(0, config.bulkUpdateSize);
-            toUpdate = toUpdate.slice(config.bulkUpdateSize);
-            toUpdateNow.map(updateFunction);
-        }
-    };
     my.revision = parseInt(revisionString, 10);
     my.data = node.create(config.startJob, my.revision);
+    my.event = 'change';
     return my;
 });
 define('common/render', [], function () {
@@ -173,8 +198,7 @@ define('common/render', [], function () {
         }, function (testCase) {
             return testCase.name;
         }).enter().append('div').attr('class', 'testResult list-group-item').html(function (testCase) {
-            return '<h6 class="list-group-item-heading"><a href="' + testCase.url + '">' + testCase.name + '</a>' + (testCase.errorDetails ? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a data-toggle="collapse" href="#' + 'testCase' + testCase.count + '">Details</a>' : '') + (testCase.errorStackTrace ? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a data-toggle="collapse" href="#' + 'stackTrace' + testCase.count + '">Stacktrace</a>' : '');
-            '</h6>';
+            return '<h6 class="list-group-item-heading"><a href="' + testCase.url + '">' + testCase.name + '</a>' + (testCase.errorDetails ? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a data-toggle="collapse" href="#' + 'testCase' + testCase.count + '">Details</a>' : '') + (testCase.errorStackTrace ? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a data-toggle="collapse" href="#' + 'stackTrace' + testCase.count + '">Stacktrace</a>' : '') + '</h6>';
         });
         hull.append('div').attr('class', function (testCase) {
             return !testCase.errorDetails || testCase.errorDetails.length > 1200 ? 'collapse' : 'collapse in';
@@ -194,6 +218,19 @@ define('common/render', [], function () {
         warnings.enter().append('div').attr('class', 'warning').html(function (warning) {
             return '<div class=\'list-group-item\'><h5 class=\'list-group-item-heading\'>' + warning.fileName + '</h5><pre>' + warning.message + '</pre></h5>' + '</div>';
         });
+    };
+    my.renderLoop = function (eventSource, eventName, render) {
+        var viewNeedsUpdate = true;
+        $(eventSource).bind(eventName, function () {
+            viewNeedsUpdate = true;
+            setTimeout(function () {
+                if (viewNeedsUpdate) {
+                    render();
+                    viewNeedsUpdate = false;
+                }
+            }, 0);
+        });
+        $(eventSource).trigger(eventName);
     };
     return my;
 });
@@ -322,12 +359,30 @@ define('where/builds/nodesRenderer', [
         node.exit().remove();
         renderFailedTests(nodes);
     };
+    my.renderLoop = function () {
+        render.renderLoop(nodesData.data, nodesData.event, my.renderData);
+    };
     return my;
 });
 define('common/buildInfo', ['app-config'], function (config) {
     var my = {};
     var testCaseCount = 1;
-    my.buildKeys = 'number,url,result,actions[triggeredProjects[name,url,downstreamProjects[url,name]],failCount,skipCount,totalCount,urlName,name,result[warnings[message,fileName]]]';
+    var defaultBuildKeys = [
+        'number',
+        'url',
+        'result'
+    ];
+    var defaultActionKeys = [
+        'failCount',
+        'skipCount',
+        'totalCount',
+        'urlName',
+        'name',
+        'result[warnings[message,fileName]]'
+    ];
+    my.buildKeys = function (buildKeys, actionKeys) {
+        return defaultBuildKeys.concat(buildKeys, ['actions[' + defaultActionKeys.concat(actionKeys).join(',') + ']']).join(',');
+    };
     my.getWarnings = function (build) {
         var actions = build.actions;
         var warningsActions = actions.filter(function (action) {
@@ -397,7 +452,7 @@ define('where/builds/nodeUpdater', [
 ], function ($, node, config, nodes, buildInfo) {
     'use strict';
     var my = {};
-    my.update = function (nodeToUpdate) {
+    my.update = function (nodeToUpdate, callback) {
         var jobName = nodeToUpdate.jobName;
         var resultDef = $.Deferred();
         var findRevision = function (envVars) {
@@ -407,7 +462,8 @@ define('where/builds/nodeUpdater', [
         var nodeFromProject = function (project) {
             return node.create(project.name, nodeToUpdate.revision, project.url);
         };
-        var jobRequest = $.getJSON(config.jenkinsUrl + '/job/' + jobName + '/api/json?tree=url,downstreamProjects[url,name],lastCompletedBuild[' + buildInfo.buildKeys + ']').then(function (job) {
+        var buildKeys = buildInfo.buildKeys([], ['triggeredProjects[name,url,downstreamProjects[url,name]]']);
+        var jobRequest = $.getJSON(config.jenkinsUrl + '/job/' + jobName + '/api/json?tree=url,downstreamProjects[url,name],lastCompletedBuild[' + buildKeys + ']').then(function (job) {
             return job;
         });
         var buildDef = jobRequest.then(function (job) {
@@ -429,7 +485,7 @@ define('where/builds/nodeUpdater', [
             });
         };
         var buildUrl = function (buildNumber) {
-            return config.jenkinsUrl + '/job/' + nodeToUpdate.jobName + '/' + buildNumber + '/api/json?tree=' + buildInfo.buildKeys;
+            return config.jenkinsUrl + '/job/' + nodeToUpdate.jobName + '/' + buildNumber + '/api/json?tree=' + buildKeys;
         };
         var getBuildDef = function (buildNumber) {
             return $.getJSON(buildUrl(buildNumber)).then(function (build) {
@@ -445,13 +501,11 @@ define('where/builds/nodeUpdater', [
         var buildForRevision = function (buildDef, revisionDef) {
             var prevBuildDef = buildDef.then(getPreviousBuildDef);
             var prevRevisionDef = prevBuildDef.then(getRevision);
-            return $.when(buildDef, revisionDef, prevBuildDef, prevRevisionDef).then(function (build, revision, prevBuild, prevRevision) {
+            return $.when(buildDef, revisionDef, prevBuildDef, prevRevisionDef).then(function (build, revision, prevBuildParam, prevRevision) {
                 if (build === undefined) {
                     return undefined;
                 }
-                if (prevBuild === undefined) {
-                    prevBuild = build;
-                }
+                var prevBuild = prevBuildParam === undefined ? build : prevBuildParam;
                 build.revision = revision;
                 prevBuild.revision = prevRevision;
                 if (revision < nodeToUpdate.revision) {
@@ -501,7 +555,7 @@ define('where/builds/nodeUpdater', [
             if (nodeToUpdate.status === 'unstable' && nodeToUpdate.testResult.totalCount > 0) {
                 buildInfo.addFailedTests(nodeToUpdate, function (failedTests) {
                     nodeToUpdate.testResult.failedTests = failedTests;
-                    $(nodes.data).trigger('change');
+                    $(nodes.data).trigger(nodes.event);
                 });
             }
         };
@@ -509,7 +563,7 @@ define('where/builds/nodeUpdater', [
         $.when(foundBuildDef).then(function (build) {
             var isBuildUndefined = build === undefined || build.result.toLowerCase() == 'aborted';
             if (isBuildUndefined) {
-                nodes.scheduleUpdate(nodeToUpdate);
+                callback(nodeToUpdate);
             } else {
                 updateNodeToUpdateFromBuild(nodeToUpdate, build);
                 var triggeredProjects = getTriggeredProjects(build);
@@ -521,45 +575,35 @@ define('where/builds/nodeUpdater', [
                 children.map(my.update);
                 nodeToUpdate.downstreamProjects.map(my.update);
                 nodeToUpdate.children = children;
-                $(nodes.data).trigger('change');
+                $(nodes.data).trigger(nodes.event);
             }
             resultDef.resolve(nodeToUpdate);
         }, function () {
-            nodes.scheduleUpdate(nodeToUpdate);
+            callback(nodeToUpdate);
         });
         return resultDef;
     };
     return my;
 });
 define('where/builds/nodesController', [
+    'common/util',
     'where/builds/nodesData',
     'where/builds/nodesRenderer',
     'where/builds/nodeUpdater',
     'app-config',
     'jquery',
     'bootstrap'
-], function (data, renderer, updater, config, $, bs) {
+], function (util, data, renderer, updater, config, $, bs) {
     'use strict';
-    var viewNeedsUpdate = true, my = {};
-    var updateNext = function () {
-        data.updateNextNodes(updater.update);
-    };
+    var my = {};
+    var throttler = util.newThrottler(function (node) {
+        updater.update(node, throttler.scheduleUpdate);
+    }, config.bulkUpdateSize, config.updateInterval);
     var changeEvent = 'change';
     my.init = function () {
         if (data.revision) {
-            data.scheduleUpdate(data.data);
-            $(data.data).bind(changeEvent, function () {
-                viewNeedsUpdate = true;
-                setTimeout(function () {
-                    if (viewNeedsUpdate) {
-                        renderer.renderData();
-                        viewNeedsUpdate = false;
-                    }
-                }, 0);
-            });
-            $(data.data).trigger(changeEvent);
-            updateNext();
-            setInterval(updateNext, config.updateInterval);
+            throttler.scheduleUpdate(data.data);
+            renderer.renderLoop();
         }
         $(document).ready(function () {
             var revs = $('#revs');
@@ -583,71 +627,60 @@ define('where/init', [
     changes.init();
     nodes.init();
 });
-define('broken/init', [
-    'jquery',
-    'common/render',
+define('broken/builds', [], function () {
+    return {
+        builds: [],
+        event: 'change'
+    };
+});
+define('broken/updater', [
+    'broken/builds',
     'common/util',
-    'app-config',
-    'd3',
-    'common/buildInfo'
-], function ($, render, util, config, d3, buildInfo) {
-    var multijobSubbuilds, multijobUrl, lastCompletedBuildsOfView, viewUrl, work = [], builds = [], buildKeys = 'fullDisplayName,status,number,url,result,actions[failCount,skipCount,totalCount,urlName,name,result[warnings[message,fileName]]]';
-    var view = util.getQueryVariable('view');
-    var multijob = util.getQueryVariable('multijob');
-    if (view) {
-        viewUrl = config.jenkinsUrl + '/view/' + view + '/api/json?tree=jobs[url,color]';
-        lastCompletedBuildsOfView = $.getJSON(viewUrl).then(function (view) {
-            return view.jobs.filter(function (job) {
-                return job.color !== 'blue';
-            }).map(function (job) {
-                return job.url + 'lastCompletedBuild/';
-            });
-        });
-    }
-    if (multijob) {
-        multijobUrl = config.jenkinsUrl + '/job/' + multijob + '/lastSuccessfulBuild/api/json?tree=subBuilds[url]';
-        multijobSubbuilds = $.getJSON(multijobUrl).then(function (multijobBuild) {
-            return multijobBuild.subBuilds.map(function (subBuild) {
-                return config.jenkinsUrl + '/' + subBuild.url;
-            });
-        });
-    }
-    var urlsToCheck = view ? lastCompletedBuildsOfView : multijobSubbuilds;
+    'common/buildInfo',
+    'jquery'
+], function (data, util, buildInfo, $) {
+    var my = {};
     var buildUrl = function (mybuildUrl) {
-        return mybuildUrl + '/api/json?tree=' + buildKeys;
+        return mybuildUrl + '/api/json?tree=' + buildInfo.buildKeys(['fullDisplayName'], []);
     };
     var getBuildDef = function (myBuildUrl) {
         return $.getJSON(buildUrl(myBuildUrl)).then(function (build) {
             return build;
         });
     };
-    urlsToCheck.then(function (urls) {
-        return urls.forEach(function (url) {
-            work.push(function () {
-                getBuildDef(url).then(function (build) {
-                    var buildData = {
-                        name: build.fullDisplayName,
-                        url: build.url,
-                        testResult: buildInfo.getTestResult(build),
-                        warnings: buildInfo.getWarnings(build),
-                        status: build.result.toLowerCase()
-                    };
-                    builds.push(buildData);
-                    if (buildData.status === 'unstable' && buildData.testResult.totalCount > 0) {
-                        buildInfo.addFailedTests(buildData, function (failedTests) {
-                            buildData.testResult.failedTests = failedTests;
-                        });
-                    }
+    my.addForUrl = function (url) {
+        getBuildDef(url).then(function (build) {
+            var buildData = {
+                name: build.fullDisplayName,
+                url: build.url,
+                testResult: buildInfo.getTestResult(build),
+                warnings: buildInfo.getWarnings(build),
+                status: build.result.toLowerCase()
+            };
+            data.builds.push(buildData);
+            $(data).trigger(data.event);
+            if (buildData.status === 'unstable' && buildData.testResult.totalCount > 0) {
+                buildInfo.addFailedTests(buildData, function (failedTests) {
+                    buildData.testResult.failedTests = failedTests;
+                    $(data).trigger(data.event);
                 });
-            });
+            }
         });
-    });
+    };
+    return my;
+});
+define('broken/renderer', [
+    'd3',
+    'common/render',
+    'broken/builds'
+], function (d3, render, data) {
+    var my = {};
     var buildName = function (build) {
         return build.name;
     };
-    var renderFailedTests = function (nodes) {
-        var unstableNodes = nodes.filter(function (node) {
-            return node.status === 'unstable';
+    my.renderFailedTests = function () {
+        var unstableNodes = data.builds.filter(function (build) {
+            return build.status === 'unstable';
         });
         var unstableProjects = d3.select('#projects').selectAll('.unstableProject').data(unstableNodes, buildName);
         unstableProjects.enter().append('div').attr('class', 'list-group-item unstableProject').attr('name', function (el) {
@@ -660,24 +693,63 @@ define('broken/init', [
         render.renderTestresults(unstableProjects.select('.testResults'));
         d3.selectAll('#projects .loading').remove();
     };
-    setInterval(function () {
-        renderFailedTests(builds);
-    }, 1000);
-    var updateFunction = function () {
-        if (work.length > 0) {
-            var toUpdateNow = work.slice(0, 10);
-            work = work.slice(10);
-            toUpdateNow.forEach(function (workFunction) {
-                workFunction();
-            });
-        }
+    my.renderLoop = function () {
+        render.renderLoop(data, data.event, my.renderFailedTests);
     };
-    updateFunction();
-    setInterval(updateFunction, 10000);
+    return my;
+});
+define('broken/controller', [
+    'jquery',
+    'common/util',
+    'app-config',
+    'broken/builds',
+    'broken/updater',
+    'broken/renderer'
+], function ($, util, config, data, updater, renderer) {
+    var my = {}, throttler = util.newThrottler(updater.addForUrl, config.bulkUpdateSize, config.updateInterval);
+    my.init = function (urlsDef) {
+        urlsDef.then(throttler.scheduleUpdates);
+        renderer.renderLoop();
+    };
+    return my;
+});
+define('broken/lastCompletedBuildsOf', [
+    'jquery',
+    'app-config'
+], function ($, config) {
+    var my = {};
+    my.multijob = function (multijobName) {
+        var multijobUrl = config.jenkinsUrl + '/job/' + multijobName + '/lastCompletedBuild/api/json?tree=subBuilds[url]';
+        return $.getJSON(multijobUrl).then(function (multijobBuild) {
+            return multijobBuild.subBuilds.map(function (subBuild) {
+                return config.jenkinsUrl + '/' + subBuild.url;
+            });
+        });
+    };
+    my.view = function (viewName) {
+        var viewUrl = config.jenkinsUrl + '/view/' + viewName + '/api/json?tree=jobs[url,color]';
+        return $.getJSON(viewUrl).then(function (view) {
+            return view.jobs.filter(function (job) {
+                return job.color !== 'blue';
+            }).map(function (job) {
+                return job.url + 'lastCompletedBuild/';
+            });
+        });
+    };
+    return my;
+});
+define('broken/init', [
+    'common/util',
+    'broken/controller',
+    'broken/lastCompletedBuildsOf'
+], function (util, controller, lastCompletedBuildsOf) {
+    var viewName = util.getQueryVariable('view'), multijobName = util.getQueryVariable('multijob');
+    var urlsToCheck = viewName ? lastCompletedBuildsOf.view(viewName) : lastCompletedBuildsOf.multijob(multijobName);
+    controller.init(urlsToCheck);
 });
 (function (config) {
   if (typeof define === 'function' && define.amd) {
-    define('shims', [], function() {
+    define('shims', [], function () {
       var dev = ("window" in this || window.whereIsMyCommit === undefined);
       require.config(config("..", dev));
     });
@@ -694,11 +766,11 @@ define('broken/init', [
     paths: {
       jquery: lib('jquery/dist', 'jquery.min'),
       d3: lib('d3', 'd3.min'),
-      bootstrap :  lib('bootstrap/dist/js', 'bootstrap.min')
+      bootstrap: lib('bootstrap/dist/js', 'bootstrap.min')
     },
     shim: {
-      bootstrap : {
-        deps :['jquery']
+      bootstrap: {
+        deps: ['jquery']
       }
     }
   };
