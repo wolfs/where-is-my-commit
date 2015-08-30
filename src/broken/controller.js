@@ -1,7 +1,7 @@
-define(['jquery', 'common/throttler', 'app-config', 'broken/builds', 'broken/updater', 'broken/renderer'], function ($, throttlerFactory, config, data, updater, renderer) {
+define(['jquery', 'common/util', 'app-config', 'broken/builds', 'broken/updater', 'broken/renderer'], function ($, util, config, data, updater, renderer) {
   var my = {},
     viewNeedsUpdate = true,
-    throttler = throttlerFactory.newThrottler(updater.addForUrl, config.bulkUpdateSize, config.updateInterval);
+    throttler = util.newThrottler(updater.addForUrl, config.bulkUpdateSize, config.updateInterval);
 
   my.init = function (urlsDef) {
     urlsDef.then(throttler.scheduleUpdates);

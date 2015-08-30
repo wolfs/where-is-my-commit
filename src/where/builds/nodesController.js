@@ -1,10 +1,10 @@
-define(['common/throttler', 'where/builds/nodesData', 'where/builds/nodesRenderer', 'where/builds/nodeUpdater', 'app-config', 'jquery', 'bootstrap'],
-  function (throttlerFactory, data, renderer, updater, config, $, bs) {
+define(['common/util', 'where/builds/nodesData', 'where/builds/nodesRenderer', 'where/builds/nodeUpdater', 'app-config', 'jquery', 'bootstrap'],
+  function (util, data, renderer, updater, config, $, bs) {
     'use strict';
     var viewNeedsUpdate = true,
       my = {};
 
-    var throttler = throttlerFactory.newThrottler(function (node) {
+    var throttler = util.newThrottler(function (node) {
       updater.update(node, throttler.scheduleUpdate);
     }, config.bulkUpdateSize, config.updateInterval);
 
