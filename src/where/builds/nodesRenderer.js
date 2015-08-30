@@ -16,7 +16,7 @@ define(['app-config', 'where/builds/nodesData', 'common/render', 'd3'], function
 
   var svg = canvas
     .append("g")
-    .attr("transform", "translate(" + (width / 2 )   + ",200)");
+    .attr("transform", "translate(" + (width / 2 ) + ",200)");
 
   d3.select(self.frameElement).style("height", conf.height + "px");
 
@@ -90,7 +90,7 @@ define(['app-config', 'where/builds/nodesData', 'common/render', 'd3'], function
     canvas.attr("height", (maxY + 400) + "px")
       .attr("width", width);
 
-    svg.attr("transform", "translate(" + (width / 2 )   + ",200)");
+    svg.attr("transform", "translate(" + (width / 2 ) + ",200)");
 
     var links = cluster.links(nodes);
 

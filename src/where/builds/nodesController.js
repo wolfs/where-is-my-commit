@@ -1,18 +1,19 @@
-define(['where/builds/nodesData', 'where/builds/nodesRenderer', 'where/builds/nodeUpdater', 'app-config', 'jquery', 'bootstrap'],
-  function (data, renderer, updater, config, $, bs) {
-  'use strict';
+define(['common/throttler', 'where/builds/nodesData', 'where/builds/nodesRenderer', 'where/builds/nodeUpdater', 'app-config', 'jquery', 'bootstrap'],
+  function (throttlerFactory, data, renderer, updater, config, $, bs) {
+    'use strict';
     var viewNeedsUpdate = true,
       my = {};
 
-    var updateNext = function () {
-      data.updateNextNodes(updater.update);
-    };
+    var throttler = throttlerFactory.newThrottler(function (node) {
+      updater.update(node, throttler.scheduleUpdate);
+    }, config.bulkUpdateSize, config.updateInterval);
+
 
     var changeEvent = "change";
 
     my.init = function () {
       if (data.revision) {
-        data.scheduleUpdate(data.data);
+        throttler.scheduleUpdate(data.data);
 
         $(data.data).bind(changeEvent, function () {
           viewNeedsUpdate = true;
@@ -24,8 +25,6 @@ define(['where/builds/nodesData', 'where/builds/nodesRenderer', 'where/builds/no
           }, 0);
         });
         $(data.data).trigger(changeEvent);
-        updateNext();
-        setInterval(updateNext, config.updateInterval);
       }
 
       $(document).ready(function () {

@@ -1,7 +1,7 @@
 define(['jquery', 'where/builds/node', 'app-config', 'where/builds/nodesData', 'common/buildInfo'], function ($, node, config, nodes, buildInfo) {
   'use strict';
   var my = {};
-  my.update = function (nodeToUpdate) {
+  my.update = function (nodeToUpdate, callback) {
     var jobName = nodeToUpdate.jobName;
     var resultDef = $.Deferred();
     var findRevision = function (envVars) {
@@ -13,9 +13,11 @@ define(['jquery', 'where/builds/node', 'app-config', 'where/builds/nodesData', '
       return node.create(project.name, nodeToUpdate.revision, project.url);
     };
 
+    var buildKeys = buildInfo.buildKeys([], ['triggeredProjects[name,url,downstreamProjects[url,name]]']);
+
     var jobRequest = $.getJSON(
       config.jenkinsUrl + "/job/" + jobName +
-      "/api/json?tree=url,downstreamProjects[url,name],lastCompletedBuild[" + buildInfo.buildKeys + "]"
+      "/api/json?tree=url,downstreamProjects[url,name],lastCompletedBuild[" + buildKeys + "]"
     ).then(function (job) {
         return job;
       });
@@ -43,7 +45,7 @@ define(['jquery', 'where/builds/node', 'app-config', 'where/builds/nodesData', '
 
     var buildUrl = function (buildNumber) {
       return config.jenkinsUrl + "/job/" + nodeToUpdate.jobName + "/" + buildNumber +
-        "/api/json?tree=" + buildInfo.buildKeys;
+        "/api/json?tree=" + buildKeys;
     };
 
     var getBuildDef = function (buildNumber) {
@@ -63,13 +65,11 @@ define(['jquery', 'where/builds/node', 'app-config', 'where/builds/nodesData', '
       var prevBuildDef = buildDef.then(getPreviousBuildDef);
       var prevRevisionDef = prevBuildDef.then(getRevision);
       return $.when(buildDef, revisionDef, prevBuildDef, prevRevisionDef)
-        .then(function (build, revision, prevBuild, prevRevision) {
+        .then(function (build, revision, prevBuildParam, prevRevision) {
           if (build === undefined) {
             return undefined;
           }
-          if (prevBuild === undefined) {
-            prevBuild = build;
-          }
+          var prevBuild = prevBuildParam === undefined ? build : prevBuildParam;
           build.revision = revision;
           prevBuild.revision = prevRevision;
 
@@ -133,7 +133,7 @@ define(['jquery', 'where/builds/node', 'app-config', 'where/builds/nodesData', '
     $.when(foundBuildDef).then(function (build) {
       var isBuildUndefined = build === undefined || build.result.toLowerCase() == "aborted";
       if (isBuildUndefined) {
-        nodes.scheduleUpdate(nodeToUpdate);
+        callback(nodeToUpdate);
       } else {
         updateNodeToUpdateFromBuild(nodeToUpdate, build);
 
@@ -154,7 +154,7 @@ define(['jquery', 'where/builds/node', 'app-config', 'where/builds/nodesData', '
       }
       resultDef.resolve(nodeToUpdate);
     }, function () {
-      nodes.scheduleUpdate(nodeToUpdate);
+      callback(nodeToUpdate);
     });
 
     return resultDef;

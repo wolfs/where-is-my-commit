@@ -1,10 +1,23 @@
-define(['app-config'], function(config) {
+define(['app-config'], function (config) {
   var my = {};
-
   var testCaseCount = 1;
+  var defaultBuildKeys = [
+    'number',
+    'url',
+    'result'
+  ];
+  var defaultActionKeys = [
+    'failCount',
+    'skipCount',
+    'totalCount',
+    'urlName',
+    'name',
+    'result[warnings[message,fileName]]'
+  ];
 
-  my.buildKeys =
-    "number,url,result,actions[triggeredProjects[name,url,downstreamProjects[url,name]],failCount,skipCount,totalCount,urlName,name,result[warnings[message,fileName]]]";
+  my.buildKeys = function (buildKeys, actionKeys) {
+    return defaultBuildKeys.concat(buildKeys, ['actions[' + defaultActionKeys.concat(actionKeys).join(',') + "]"]).join(',');
+  };
 
   my.getWarnings = function (build) {
     var actions = build.actions;
@@ -17,7 +30,9 @@ define(['app-config'], function(config) {
       return action.result.warnings.map(function (warning) {
         return {name: action.name, message: warning.message, fileName: warning.fileName};
       }).filter(function (warning) {
-        return !(warning.name === "warnings" && config.filterWarnings.some(function(filterWarning) { return warning.message.indexOf(filterWarning) > -1; }));
+        return !(warning.name === "warnings" && config.filterWarnings.some(function (filterWarning) {
+          return warning.message.indexOf(filterWarning) > -1;
+        }));
       });
     }));
   };

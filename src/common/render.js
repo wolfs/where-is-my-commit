@@ -1,4 +1,4 @@
-define(function() {
+define(function () {
   'use strict';
   var my = {};
 
@@ -29,11 +29,11 @@ define(function() {
         return '<h6 class="list-group-item-heading"><a href="' + testCase.url + '">' + testCase.name + '</a>' + (testCase.errorDetails ?
           '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a data-toggle="collapse" href="#' + "testCase" + testCase.count + '">Details</a>' : '') +
           (testCase.errorStackTrace ?
-                    '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a data-toggle="collapse" href="#' + "stackTrace" + testCase.count + '">Stacktrace</a>' : '')
-          '</h6>';
+          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a data-toggle="collapse" href="#' + "stackTrace" + testCase.count + '">Stacktrace</a>' : '')
+        '</h6>';
       });
 
-      hull.append("div")
+    hull.append("div")
       .attr("class", function (testCase) {
         return (!testCase.errorDetails || testCase.errorDetails.length > 1200) ? "collapse" : "collapse in";
       })
@@ -46,7 +46,7 @@ define(function() {
         return testCase.errorDetails === null ? "" : testCase.errorDetails.replace(/\[(\d+(, )?)*\]/, "");
       });
 
-      hull.append("div")
+    hull.append("div")
       .attr("class", "collapse")
       .attr("id", function (testCase) {
         return "stackTrace" + testCase.count;

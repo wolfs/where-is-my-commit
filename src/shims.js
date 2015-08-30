@@ -1,6 +1,6 @@
 (function (config) {
   if (typeof define === 'function' && define.amd) {
-    define('shims', [], function() {
+    define('shims', [], function () {
       var dev = ("window" in this || window.whereIsMyCommit === undefined);
       require.config(config("..", dev));
     });
@@ -17,11 +17,11 @@
     paths: {
       jquery: lib('jquery/dist', 'jquery.min'),
       d3: lib('d3', 'd3.min'),
-      bootstrap :  lib('bootstrap/dist/js', 'bootstrap.min')
+      bootstrap: lib('bootstrap/dist/js', 'bootstrap.min')
     },
     shim: {
-      bootstrap : {
-        deps :['jquery']
+      bootstrap: {
+        deps: ['jquery']
       }
     }
   };

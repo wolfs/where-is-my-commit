@@ -5,7 +5,7 @@ define({
     return this.getQueryVariableFromSearch(variable, search);
   },
 
-  getQueryVariableFromSearch: function(variable, search) {
+  getQueryVariableFromSearch: function (variable, search) {
     'use strict';
     var query = search.substring(1);
     var results = query.split("&").map(function (el) {
