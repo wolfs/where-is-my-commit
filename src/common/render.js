@@ -11,11 +11,11 @@ define(function () {
 
     suiteResults.enter()
       .append("div")
-      .attr("class", "suiteResult")
+      .attr("class", "suiteResult list-group")
       .append("div")
-      .attr("class", "list-group-item")
+      .attr("class", "list-group-item suite")
       .html(function (test) {
-        return "<h5 class='list-group-item-heading'><a href='" + test.url + "'>" + test.name + "</a></h5>";
+        return "<div class='h4'><a href='" + test.url + "'>" + test.name + "</a></div>";
       });
 
     var hull = suiteResults.selectAll(".testResult").data(function (suite) {
@@ -26,11 +26,11 @@ define(function () {
       .append("div")
       .attr("class", "testResult list-group-item")
       .html(function (testCase) {
-        return '<h6 class="list-group-item-heading"><a href="' + testCase.url + '">' + testCase.name + '</a>' + (testCase.errorDetails ?
-          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a data-toggle="collapse" href="#' + "testCase" + testCase.count + '">Details</a>' : '') +
+        return '<div class="h5"><a href="' + testCase.url + '">' + testCase.name + '</a><ul class="list-inline pull-right">' + (testCase.errorDetails ?
+          '<li><a data-toggle="collapse" href="#' + "testCase" + testCase.count + '">Details</a></li>' : '') +
           (testCase.errorStackTrace ?
-          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a data-toggle="collapse" href="#' + "stackTrace" + testCase.count + '">Stacktrace</a>' : '') +
-        '</h6>';
+          '<li><a data-toggle="collapse" href="#' + "stackTrace" + testCase.count + '">Stacktrace</a></li>' : '') +
+        '</ul></div>';
       });
 
     hull.append("div")

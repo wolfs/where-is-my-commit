@@ -15,12 +15,12 @@ define(['d3', 'common/render', 'broken/builds'], function (d3, render, data) {
 
     unstableProjects.enter()
       .append("div")
-      .attr("class", "list-group-item unstableProject")
+      .attr("class", "panel panel-default unstableProject")
       .attr("name", function (el) {
         return el.name;
       })
       .html(function (el) {
-        return "<h3 class='list-group-item-heading'><a href='" + el.url + "'>" + el.name + "</a></h3><div class='testResults'></div>";
+        return "<div class='panel-heading'><h2 class='panel-title'><a class='h2' href='" + el.url + "'>" + el.name + "</a></h2></div><div class='testResults panel-body'></div>";
       });
 
     unstableProjects.order();

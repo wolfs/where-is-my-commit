@@ -34,7 +34,7 @@ gulp.task("lib", function () {
 });
 
 gulp.task('minify-css', function () {
-  return gulp.src(['src/styles.css', 'bower_components/bootstrap/dist/css/bootstrap.min.css'])
+  return gulp.src(['bower_components/bootstrap/dist/css/bootstrap.min.css', 'src/styles.css'])
     .pipe(minifyCSS({keepBreaks: true}))
     .pipe(concat("styles.css"))
     .pipe(gulp.dest('dist'));
