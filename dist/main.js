@@ -190,15 +190,15 @@ define('common/render', [], function () {
         }, function (test) {
             return test.name + '-' + test.className;
         });
-        suiteResults.enter().append('div').attr('class', 'suiteResult').append('div').attr('class', 'list-group-item').html(function (test) {
-            return '<h5 class=\'list-group-item-heading\'><a href=\'' + test.url + '\'>' + test.name + '</a></h5>';
+        suiteResults.enter().append('div').attr('class', 'suiteResult list-group').append('div').attr('class', 'list-group-item suite').html(function (test) {
+            return '<div class=\'h4\'><a href=\'' + test.url + '\'>' + test.name + '</a></div>';
         });
         var hull = suiteResults.selectAll('.testResult').data(function (suite) {
             return suite.cases;
         }, function (testCase) {
             return testCase.name;
         }).enter().append('div').attr('class', 'testResult list-group-item').html(function (testCase) {
-            return '<h6 class="list-group-item-heading"><a href="' + testCase.url + '">' + testCase.name + '</a>' + (testCase.errorDetails ? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a data-toggle="collapse" href="#' + 'testCase' + testCase.count + '">Details</a>' : '') + (testCase.errorStackTrace ? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a data-toggle="collapse" href="#' + 'stackTrace' + testCase.count + '">Stacktrace</a>' : '') + '</h6>';
+            return '<div class="h5"><a href="' + testCase.url + '">' + testCase.name + '</a><ul class="list-inline pull-right">' + (testCase.errorDetails ? '<li><a data-toggle="collapse" href="#' + 'testCase' + testCase.count + '">Details</a></li>' : '') + (testCase.errorStackTrace ? '<li><a data-toggle="collapse" href="#' + 'stackTrace' + testCase.count + '">Stacktrace</a></li>' : '') + '</ul></div>';
         });
         hull.append('div').attr('class', function (testCase) {
             return !testCase.errorDetails || testCase.errorDetails.length > 1200 ? 'collapse' : 'collapse in';
@@ -683,10 +683,10 @@ define('broken/renderer', [
             return build.status === 'unstable';
         });
         var unstableProjects = d3.select('#projects').selectAll('.unstableProject').data(unstableNodes, buildName);
-        unstableProjects.enter().append('div').attr('class', 'list-group-item unstableProject').attr('name', function (el) {
+        unstableProjects.enter().append('div').attr('class', 'panel panel-default unstableProject').attr('name', function (el) {
             return el.name;
         }).html(function (el) {
-            return '<h3 class=\'list-group-item-heading\'><a href=\'' + el.url + '\'>' + el.name + '</a></h3><div class=\'testResults\'></div>';
+            return '<div class=\'panel-heading\'><h2 class=\'panel-title\'><a class=\'h2\' href=\'' + el.url + '\'>' + el.name + '</a></h2></div><div class=\'testResults panel-body\'></div>';
         });
         unstableProjects.order();
         unstableProjects.exit().remove();

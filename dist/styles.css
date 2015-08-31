@@ -1,23 +1,3 @@
-.node path.success{fill:#729FCF}
-.node path.unstable{fill:#FCE94F}
-.node path.failure{fill:#EF2929}
-.node path.aborted,.node path.pending{fill:#ABABAB}
-.node text.better{fill:#29EF29}
-.node text.worse{fill:#EF2929}
-.node circle{fill:#fff}
-@-webkit-keyframes blink{from{opacity:1}
-to{opacity:0}
-}
-@-moz-keyframes blink{from{opacity:1}
-to{opacity:0}
-}
-@keyframes blink{from{opacity:1}
-to{opacity:0}
-}
-.node path.pending{-webkit-animation-name:blink;-webkit-animation-duration:1s;-webkit-animation-iteration-count:infinite;-webkit-animation-direction:alternate;-moz-animation-name:blink;-moz-animation-duration:1s;-moz-animation-iteration-count:infinite;-moz-animation-direction:alternate;animation-name:blink;animation-duration:1s;animation-iteration-count:infinite;animation-direction:alternate}
-.link{fill:none;stroke:#ccc;stroke-width:1.5}
-.scrollable-menu{height:auto;width:100%;max-height:80vh;overflow-x:hidden;word-wrap:break-word}
-.modal-xl{width:90%}
 /*!
  * Bootstrap v3.3.5 (http://getbootstrap.com)
  * Copyright 2011-2015 Twitter, Inc.
@@ -1470,3 +1450,24 @@ td.visible-print,th.visible-print{display:table-cell!important}
 @media print{.visible-print-inline-block{display:inline-block!important}
 .hidden-print{display:none!important}
 }
+.node path.success{fill:#729FCF}
+.node path.unstable{fill:#FCE94F}
+.node path.failure{fill:#EF2929}
+.node path.aborted,.node path.pending{fill:#ABABAB}
+.node text.better{fill:#29EF29}
+.node text.worse{fill:#EF2929}
+.node circle{fill:#fff}
+@-webkit-keyframes blink{from{opacity:1}
+to{opacity:0}
+}
+@-moz-keyframes blink{from{opacity:1}
+to{opacity:0}
+}
+@keyframes blink{from{opacity:1}
+to{opacity:0}
+}
+.node path.pending{-webkit-animation-name:blink;-webkit-animation-duration:1s;-webkit-animation-iteration-count:infinite;-webkit-animation-direction:alternate;-moz-animation-name:blink;-moz-animation-duration:1s;-moz-animation-iteration-count:infinite;-moz-animation-direction:alternate;animation-name:blink;animation-duration:1s;animation-iteration-count:infinite;animation-direction:alternate}
+.link{fill:none;stroke:#ccc;stroke-width:1.5}
+.scrollable-menu{height:auto;width:100%;max-height:80vh;overflow-x:hidden;word-wrap:break-word}
+.modal-xl{width:90%}
+.list-group-item.suite{background-color:#f5f5f5}
