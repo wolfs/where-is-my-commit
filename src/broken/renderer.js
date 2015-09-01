@@ -19,8 +19,12 @@ define(['d3', 'common/render', 'broken/builds'], function (d3, render, data) {
       .attr("name", function (el) {
         return el.name;
       })
-      .html(function (el) {
-        return "<div class='panel-heading'><h2 class='panel-title'><a class='h2' href='" + el.url + "'>" + el.name + "</a></h2></div><div class='testResults panel-body'></div>";
+      .html(function (build) {
+        return "<div class='panel-heading'>" +
+          "<h2 class='panel-title'><a class='h2' href='" + build.url + "'>" + build.name +
+          "</a>, <span class='h3'>" + build.date.toLocaleString('de-DE') + "</span></h2>" +
+          "</div>" +
+          "<div class='testResults panel-body'></div>";
       });
 
     unstableProjects.order();

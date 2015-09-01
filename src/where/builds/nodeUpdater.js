@@ -114,6 +114,7 @@ define(['jquery', 'where/builds/node', 'app-config', 'where/builds/nodesData', '
       nodeToUpdate.revision = build.revision;
       nodeToUpdate.previousRevision = build.prevBuild.revision;
       nodeToUpdate.url = build.url;
+      nodeToUpdate.date = new Date(build.timestamp)
       nodeToUpdate.testResult = buildInfo.getTestResult(build);
       nodeToUpdate.warnings = buildInfo.getWarnings(build);
       if (build.prevBuild !== undefined) {

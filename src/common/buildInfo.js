@@ -4,7 +4,8 @@ define(['app-config'], function (config) {
   var defaultBuildKeys = [
     'number',
     'url',
-    'result'
+    'result',
+    'timestamp'
   ];
   var defaultActionKeys = [
     'failCount',

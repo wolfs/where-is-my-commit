@@ -17,6 +17,7 @@ define(['broken/builds', 'common/util', 'common/buildInfo', 'jquery'], function 
       var buildData = {
         name: build.fullDisplayName,
         url: build.url,
+        date: new Date(build.timestamp),
         testResult: buildInfo.getTestResult(build),
         warnings: buildInfo.getWarnings(build),
         status: build.result.toLowerCase()
