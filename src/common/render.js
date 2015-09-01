@@ -26,11 +26,13 @@ define(function () {
       .append("div")
       .attr("class", "testResult list-group-item")
       .html(function (testCase) {
-        return '<div class="h5"><a href="' + testCase.url + '">' + testCase.name + '</a><ul class="list-inline pull-right">' + (testCase.errorDetails ?
+        return '<div class="row">' +
+          ['<div class="h5 col-md-8">', '<a href="', testCase.url, '">', testCase.name, ' <span class="badge">', testCase.age, '</span></a></div>'].join("") +
+          '<div class="col-md-4"><ul class="list-inline pull-right">' + (testCase.errorDetails ?
           '<li><a data-toggle="collapse" href="#' + "testCase" + testCase.count + '">Details</a></li>' : '') +
           (testCase.errorStackTrace ?
           '<li><a data-toggle="collapse" href="#' + "stackTrace" + testCase.count + '">Stacktrace</a></li>' : '') +
-        '</ul></div>';
+          '</ul></div></div>';
       });
 
     hull.append("div")
