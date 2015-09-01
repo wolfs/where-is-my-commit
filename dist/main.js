@@ -198,7 +198,16 @@ define('common/render', [], function () {
         }, function (testCase) {
             return testCase.name;
         }).enter().append('div').attr('class', 'testResult list-group-item').html(function (testCase) {
-            return '<div class="h5"><a href="' + testCase.url + '">' + testCase.name + '</a><ul class="list-inline pull-right">' + (testCase.errorDetails ? '<li><a data-toggle="collapse" href="#' + 'testCase' + testCase.count + '">Details</a></li>' : '') + (testCase.errorStackTrace ? '<li><a data-toggle="collapse" href="#' + 'stackTrace' + testCase.count + '">Stacktrace</a></li>' : '') + '</ul></div>';
+            return '<div class="row">' + [
+                '<div class="h5 col-md-8">',
+                '<a href="',
+                testCase.url,
+                '">',
+                testCase.name,
+                ' <span class="badge">',
+                testCase.age,
+                '</span></a></div>'
+            ].join('') + '<div class="col-md-4"><ul class="list-inline pull-right">' + (testCase.errorDetails ? '<li><a data-toggle="collapse" href="#' + 'testCase' + testCase.count + '">Details</a></li>' : '') + (testCase.errorStackTrace ? '<li><a data-toggle="collapse" href="#' + 'stackTrace' + testCase.count + '">Stacktrace</a></li>' : '') + '</ul></div></div>';
         });
         hull.append('div').attr('class', function (testCase) {
             return !testCase.errorDetails || testCase.errorDetails.length > 1200 ? 'collapse' : 'collapse in';
@@ -370,7 +379,8 @@ define('common/buildInfo', ['app-config'], function (config) {
     var defaultBuildKeys = [
         'number',
         'url',
-        'result'
+        'result',
+        'timestamp'
     ];
     var defaultActionKeys = [
         'failCount',
@@ -546,6 +556,7 @@ define('where/builds/nodeUpdater', [
             nodeToUpdate.revision = build.revision;
             nodeToUpdate.previousRevision = build.prevBuild.revision;
             nodeToUpdate.url = build.url;
+            nodeToUpdate.date = new Date(build.timestamp);
             nodeToUpdate.testResult = buildInfo.getTestResult(build);
             nodeToUpdate.warnings = buildInfo.getWarnings(build);
             if (build.prevBuild !== undefined) {
@@ -653,6 +664,7 @@ define('broken/updater', [
             var buildData = {
                 name: build.fullDisplayName,
                 url: build.url,
+                date: new Date(build.timestamp),
                 testResult: buildInfo.getTestResult(build),
                 warnings: buildInfo.getWarnings(build),
                 status: build.result.toLowerCase()
@@ -685,8 +697,8 @@ define('broken/renderer', [
         var unstableProjects = d3.select('#projects').selectAll('.unstableProject').data(unstableNodes, buildName);
         unstableProjects.enter().append('div').attr('class', 'panel panel-default unstableProject').attr('name', function (el) {
             return el.name;
-        }).html(function (el) {
-            return '<div class=\'panel-heading\'><h2 class=\'panel-title\'><a class=\'h2\' href=\'' + el.url + '\'>' + el.name + '</a></h2></div><div class=\'testResults panel-body\'></div>';
+        }).html(function (build) {
+            return '<div class=\'panel-heading\'>' + '<h2 class=\'panel-title\'><a class=\'h2\' href=\'' + build.url + '\'>' + build.name + '</a>, <span class=\'h3\'>' + build.date.toLocaleString('de-DE') + '</span></h2>' + '</div>' + '<div class=\'testResults panel-body\'></div>';
         });
         unstableProjects.order();
         unstableProjects.exit().remove();
