@@ -181,7 +181,7 @@ define('where/builds/nodesData', [
     my.event = 'change';
     return my;
 });
-define('common/render', [], function () {
+define('common/render', ['jquery'], function ($) {
     'use strict';
     var my = {};
     my.renderTestresults = function (projectSelection) {
@@ -204,7 +204,7 @@ define('common/render', [], function () {
                 testCase.url,
                 '">',
                 testCase.name,
-                ' <span class="badge">',
+                ' <span class="badge" data-toggle="tooltip" title="age">',
                 testCase.age,
                 '</span></a></div>'
             ].join('') + '<div class="col-md-4"><ul class="list-inline pull-right">' + (testCase.errorDetails ? '<li><a data-toggle="collapse" href="#' + 'testCase' + testCase.count + '">Details</a></li>' : '') + (testCase.errorStackTrace ? '<li><a data-toggle="collapse" href="#' + 'stackTrace' + testCase.count + '">Stacktrace</a></li>' : '') + '</ul></div></div>';
@@ -226,6 +226,9 @@ define('common/render', [], function () {
         });
         warnings.enter().append('div').attr('class', 'warning').html(function (warning) {
             return '<div class=\'list-group-item\'><h5 class=\'list-group-item-heading\'>' + warning.fileName + '</h5><pre>' + warning.message + '</pre></h5>' + '</div>';
+        });
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip();
         });
     };
     my.renderLoop = function (eventSource, eventName, render) {
