@@ -1,4 +1,4 @@
-define(function () {
+define(['jquery'], function ($) {
   'use strict';
   var my = {};
 
@@ -27,7 +27,7 @@ define(function () {
       .attr("class", "testResult list-group-item")
       .html(function (testCase) {
         return '<div class="row">' +
-          ['<div class="h5 col-md-8">', '<a href="', testCase.url, '">', testCase.name, ' <span class="badge">', testCase.age, '</span></a></div>'].join("") +
+          ['<div class="h5 col-md-8">', '<a href="', testCase.url, '">', testCase.name, ' <span class="badge" data-toggle="tooltip" title="age">', testCase.age, '</span></a></div>'].join("") +
           '<div class="col-md-4"><ul class="list-inline pull-right">' + (testCase.errorDetails ?
           '<li><a data-toggle="collapse" href="#' + "testCase" + testCase.count + '">Details</a></li>' : '') +
           (testCase.errorStackTrace ?
@@ -70,6 +70,10 @@ define(function () {
         return "<div class='list-group-item'><h5 class='list-group-item-heading'>" + warning.fileName + "</h5><pre>" + warning.message + "</pre></h5>" +
           "</div>";
       });
+
+    $(function () {
+      $('[data-toggle="tooltip"]').tooltip();
+    });
   };
 
   my.renderLoop = function (eventSource, eventName, render) {
