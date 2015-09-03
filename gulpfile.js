@@ -20,7 +20,7 @@ gulp.task("scripts", function () {
     .pipe(gulpIgnore.exclude('**/main.js'))
     .pipe(addsrc.append("src/shims.js"))
     .pipe(concat("main.js"))
-    .pipe(gulp.dest("dist"));
+    .pipe(gulp.dest("dist/js"));
 });
 
 gulp.task("lib", function () {
@@ -30,14 +30,21 @@ gulp.task("lib", function () {
     'bower_components/d3/d3.min.js',
     'bower_components/bootstrap/dist/js/bootstrap.min.js'
   ])
-    .pipe(gulp.dest("dist"));
+    .pipe(gulp.dest("dist/js"));
+});
+
+gulp.task("fonts", function () {
+   return gulp.src([
+     'bower_components/bootstrap/dist/fonts/*'
+   ])
+     .pipe(gulp.dest("dist/fonts"));
 });
 
 gulp.task('minify-css', function () {
   return gulp.src(['bower_components/bootstrap/dist/css/bootstrap.min.css', 'src/styles.css'])
     .pipe(minifyCSS({keepBreaks: true}))
     .pipe(concat("styles.css"))
-    .pipe(gulp.dest('dist'));
+    .pipe(gulp.dest('dist/css'));
 });
 
 gulp.task('clean', function (cb) {
@@ -46,11 +53,11 @@ gulp.task('clean', function (cb) {
   ], cb);
 });
 
-gulp.task('build', ['scripts', 'lib', 'minify-css'], function () {
+gulp.task('build', ['scripts', 'lib', 'minify-css', 'fonts'], function () {
   return gulp.src(['src/index.html', 'src/broken.html'])
     .pipe(htmlreplace({
-      css: 'styles.css',
-      js: ['require.js', 'main.js']
+      css: 'css/styles.css',
+      js: ['js/require.js', 'js/main.js']
     }))
     .pipe(gulp.dest('dist'));
 });
