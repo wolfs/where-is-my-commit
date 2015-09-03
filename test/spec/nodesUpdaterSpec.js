@@ -5,7 +5,7 @@ define(['where/builds/nodeUpdater', 'where/builds/node', 'app-config', 'common/u
     nodeToUpdate,
     success = 'SUCCESS',
     aborted = 'ABORTED',
-    buildKeys = 'number,url,result,timestamp,actions[failCount,skipCount,totalCount,urlName,name,result[warnings[message,fileName]],triggeredProjects[name,url,downstreamProjects[url,name]]]',
+    buildKeys = 'number,url,result,timestamp,actions[failCount,skipCount,totalCount,urlName,name,result[warnings[message,fileName]],claimDate,claimed,claimedBy,reason,triggeredProjects[name,url,downstreamProjects[url,name]]]',
     jobApiRequest = 'api/json?tree=url,downstreamProjects[url,name],lastCompletedBuild[' + buildKeys + ']',
     buildApiRequest = 'api/json?tree=' + buildKeys;
 

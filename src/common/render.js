@@ -2,6 +2,17 @@ define(['jquery'], function ($) {
   'use strict';
   var my = {};
 
+  my.dateTimeFormat= { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric' };
+
+  my.formatClaim = function (claim) {
+    return (claim.claimed ? '<span class="glyphicon glyphicon-lock"> </span>' + ' <span>' + claim.reason + '</span><br /> ' +
+    ' <span class="label label-default">' + claim.claimedBy + '</span>' +
+    ' <span>' + new Date(claim.claimDate).toLocaleString('de-DE', my.dateTimeFormat) + '</span>'
+      : '');
+  };
+
+
+
   my.renderTestresults = function (projectSelection) {
     var suiteResults = projectSelection.selectAll(".suiteResult").data(function (node) {
       return node.testResult.failedTests || [];
@@ -27,8 +38,14 @@ define(['jquery'], function ($) {
       .attr("class", "testResult list-group-item")
       .html(function (testCase) {
         return '<div class="row">' +
-          ['<div class="h5 col-md-8">', '<a href="', testCase.url, '">', testCase.name, ' <span class="badge" data-toggle="tooltip" title="age">', testCase.age, '</span></a></div>'].join("") +
-          '<div class="col-md-4"><ul class="list-inline pull-right">' + (testCase.errorDetails ?
+          [
+            '<div class="h5 col-md-7">',
+            '<a href="', testCase.url, '">', testCase.name, '</a> ',
+            ' <span class="glyphicon glyphicon-time"></span>',
+            '<span class="badge" data-toggle="tooltip" title="age">', testCase.age, '</span>',
+            '</div>'].join("") +
+            '<div class="col-md-3">' + my.formatClaim(testCase.claim) + '</div>' +
+          '<div class="col-md-2"><ul class="list-inline pull-right">' + (testCase.errorDetails ?
           '<li><a data-toggle="collapse" href="#' + "testCase" + testCase.count + '">Details</a></li>' : '') +
           (testCase.errorStackTrace ?
           '<li><a data-toggle="collapse" href="#' + "stackTrace" + testCase.count + '">Stacktrace</a></li>' : '') +

@@ -13,7 +13,8 @@ define(['app-config'], function (config) {
     'totalCount',
     'urlName',
     'name',
-    'result[warnings[message,fileName]]'
+    'result[warnings[message,fileName]]',
+    'claimDate,claimed,claimedBy,reason'
   ];
 
   my.buildKeys = function (buildKeys, actionKeys) {
@@ -56,7 +57,7 @@ define(['app-config'], function (config) {
   };
 
   my.addFailedTests = function (build, callback) {
-    $.getJSON(build.url + "testReport/api/json?tree=suites[name,cases[age,className,name,status,errorDetails,errorStackTrace]]")
+    $.getJSON(build.url + "testReport/api/json?tree=suites[name,cases[age,className,name,status,errorDetails,errorStackTrace,testActions[claimDate,claimed,claimedBy,reason]]]")
       .then(function (testReport) {
         if (testReport.suites) {
           var failedTests = testReport.suites.map(function (suite) {
@@ -71,6 +72,10 @@ define(['app-config'], function (config) {
               }).map(function (testCase) {
                 testCase.url = suiteUrl + testCase.name.replace(/[^a-zA-Z0-9_]/g, "_") + "/";
                 testCase.count = testCaseCount++;
+                var claims = testCase.testActions.filter(function (c) {
+                  return c.claimed === true;
+                });
+                testCase.claim = claims.length == 1 ? claims[0] : { claimed: false };
                 return testCase;
               })
             };

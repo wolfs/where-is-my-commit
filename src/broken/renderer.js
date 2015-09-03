@@ -1,4 +1,4 @@
-define(['d3', 'common/render', 'broken/builds'], function (d3, render, data) {
+define(['d3', 'common/render', 'broken/builds', 'common/util'], function (d3, render, data) {
   var my = {};
 
   var buildName = function (build) {
@@ -20,9 +20,12 @@ define(['d3', 'common/render', 'broken/builds'], function (d3, render, data) {
         return el.name;
       })
       .html(function (build) {
-        return "<div class='panel-heading'>" +
-          "<h2 class='panel-title'><a class='h2' href='" + build.url + "'>" + build.name +
-          "</a>, <span class='h3'>" + build.date.toLocaleString('de-DE') + "</span></h2>" +
+        return "<div class='panel-heading'>" +   '<div class="row">' +
+          "<div class='col-md-8'><h2 class='panel-title'><a class='h2' href='" + build.url + "'>" + build.name +
+          "</a>, <span class='h3'>" + build.date.toLocaleString('de-DE', render.dateTimeFormat) +
+          "</span></h2></div>" +
+            '<div class="col-md-4">' + render.formatClaim(build.claim) + '</div>' +
+            '</div>' +
           "</div>" +
           "<div class='testResults panel-body'></div>";
       });
