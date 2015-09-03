@@ -184,6 +184,16 @@ define('where/builds/nodesData', [
 define('common/render', ['jquery'], function ($) {
     'use strict';
     var my = {};
+    my.dateTimeFormat = {
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric'
+    };
+    my.formatClaim = function (claim) {
+        return claim.claimed ? '<span class="glyphicon glyphicon-lock"> </span>' + ' <span>' + claim.reason + '</span><br /> ' + ' <span class="label label-default">' + claim.claimedBy + '</span>' + ' <span>' + new Date(claim.claimDate).toLocaleString('de-DE', my.dateTimeFormat) + '</span>' : '';
+    };
     my.renderTestresults = function (projectSelection) {
         var suiteResults = projectSelection.selectAll('.suiteResult').data(function (node) {
             return node.testResult.failedTests || [];
@@ -199,15 +209,18 @@ define('common/render', ['jquery'], function ($) {
             return testCase.name;
         }).enter().append('div').attr('class', 'testResult list-group-item').html(function (testCase) {
             return '<div class="row">' + [
-                '<div class="h5 col-md-8">',
+                '<div class="h5 col-md-7">',
                 '<a href="',
                 testCase.url,
                 '">',
                 testCase.name,
-                ' <span class="badge" data-toggle="tooltip" title="age">',
+                '</a> ',
+                ' <span class="glyphicon glyphicon-time"></span>',
+                '<span class="badge" data-toggle="tooltip" title="age">',
                 testCase.age,
-                '</span></a></div>'
-            ].join('') + '<div class="col-md-4"><ul class="list-inline pull-right">' + (testCase.errorDetails ? '<li><a data-toggle="collapse" href="#' + 'testCase' + testCase.count + '">Details</a></li>' : '') + (testCase.errorStackTrace ? '<li><a data-toggle="collapse" href="#' + 'stackTrace' + testCase.count + '">Stacktrace</a></li>' : '') + '</ul></div></div>';
+                '</span>',
+                '</div>'
+            ].join('') + '<div class="col-md-3">' + my.formatClaim(testCase.claim) + '</div>' + '<div class="col-md-2"><ul class="list-inline pull-right">' + (testCase.errorDetails ? '<li><a data-toggle="collapse" href="#' + 'testCase' + testCase.count + '">Details</a></li>' : '') + (testCase.errorStackTrace ? '<li><a data-toggle="collapse" href="#' + 'stackTrace' + testCase.count + '">Stacktrace</a></li>' : '') + '</ul></div></div>';
         });
         hull.append('div').attr('class', function (testCase) {
             return !testCase.errorDetails || testCase.errorDetails.length > 1200 ? 'collapse' : 'collapse in';
@@ -391,7 +404,8 @@ define('common/buildInfo', ['app-config'], function (config) {
         'totalCount',
         'urlName',
         'name',
-        'result[warnings[message,fileName]]'
+        'result[warnings[message,fileName]]',
+        'claimDate,claimed,claimedBy,reason'
     ];
     my.buildKeys = function (buildKeys, actionKeys) {
         return defaultBuildKeys.concat(buildKeys, ['actions[' + defaultActionKeys.concat(actionKeys).join(',') + ']']).join(',');
@@ -430,7 +444,7 @@ define('common/buildInfo', ['app-config'], function (config) {
         };
     };
     my.addFailedTests = function (build, callback) {
-        $.getJSON(build.url + 'testReport/api/json?tree=suites[name,cases[age,className,name,status,errorDetails,errorStackTrace]]').then(function (testReport) {
+        $.getJSON(build.url + 'testReport/api/json?tree=suites[name,cases[age,className,name,status,errorDetails,errorStackTrace,testActions[claimDate,claimed,claimedBy,reason]]]').then(function (testReport) {
             if (testReport.suites) {
                 var failedTests = testReport.suites.map(function (suite) {
                     var dotBeforeClass = suite.name.lastIndexOf('.');
@@ -444,6 +458,10 @@ define('common/buildInfo', ['app-config'], function (config) {
                         }).map(function (testCase) {
                             testCase.url = suiteUrl + testCase.name.replace(/[^a-zA-Z0-9_]/g, '_') + '/';
                             testCase.count = testCaseCount++;
+                            var claims = testCase.testActions.filter(function (c) {
+                                return c.claimed === true;
+                            });
+                            testCase.claim = claims.length == 1 ? claims[0] : { claimed: false };
                             return testCase;
                         })
                     };
@@ -664,13 +682,17 @@ define('broken/updater', [
     };
     my.addForUrl = function (url) {
         getBuildDef(url).then(function (build) {
+            var claims = build.actions.filter(function (c) {
+                return c.claimed === true;
+            });
             var buildData = {
                 name: build.fullDisplayName,
                 url: build.url,
                 date: new Date(build.timestamp),
                 testResult: buildInfo.getTestResult(build),
                 warnings: buildInfo.getWarnings(build),
-                status: build.result.toLowerCase()
+                status: build.result.toLowerCase(),
+                claim: claims.length === 1 ? claims[0] : { claimed: false }
             };
             data.builds.push(buildData);
             $(data).trigger(data.event);
@@ -687,7 +709,8 @@ define('broken/updater', [
 define('broken/renderer', [
     'd3',
     'common/render',
-    'broken/builds'
+    'broken/builds',
+    'common/util'
 ], function (d3, render, data) {
     var my = {};
     var buildName = function (build) {
@@ -701,7 +724,7 @@ define('broken/renderer', [
         unstableProjects.enter().append('div').attr('class', 'panel panel-default unstableProject').attr('name', function (el) {
             return el.name;
         }).html(function (build) {
-            return '<div class=\'panel-heading\'>' + '<h2 class=\'panel-title\'><a class=\'h2\' href=\'' + build.url + '\'>' + build.name + '</a>, <span class=\'h3\'>' + build.date.toLocaleString('de-DE') + '</span></h2>' + '</div>' + '<div class=\'testResults panel-body\'></div>';
+            return '<div class=\'panel-heading\'>' + '<div class="row">' + '<div class=\'col-md-8\'><h2 class=\'panel-title\'><a class=\'h2\' href=\'' + build.url + '\'>' + build.name + '</a>, <span class=\'h3\'>' + build.date.toLocaleString('de-DE', render.dateTimeFormat) + '</span></h2></div>' + '<div class="col-md-4">' + render.formatClaim(build.claim) + '</div>' + '</div>' + '</div>' + '<div class=\'testResults panel-body\'></div>';
         });
         unstableProjects.order();
         unstableProjects.exit().remove();
