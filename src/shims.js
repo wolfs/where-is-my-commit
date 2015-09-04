@@ -1,15 +1,15 @@
 (function (config) {
   if (typeof define === 'function' && define.amd) {
     define('shims', [], function () {
-      var dev = ("window" in this || window.whereIsMyCommit === undefined);
-      require.config(config("..", dev));
+      var dev = ("window" in this && window.location.pathname.includes('src'));
+      require.config(config(dev ? ".." : ".", dev));
     });
   } else {
     module.exports = config(".", true);
   }
 })(function (rootDir, bower) {
   var lib = function (bowerPath, filename) {
-    return [rootDir].concat((bower ? ['bower_components', bowerPath] : []), [filename]).join('/');
+    return [rootDir].concat((bower ? ['bower_components', bowerPath] : ['js']), [filename]).join('/');
   };
 
   return {
