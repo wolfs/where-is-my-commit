@@ -192,7 +192,7 @@ define('common/render', ['jquery'], function ($) {
         minute: 'numeric'
     };
     my.formatClaim = function (claim) {
-        return claim.claimed ? '<span class="glyphicon glyphicon-lock"> </span>' + ' <span>' + claim.reason + '</span><br /> ' + ' <span class="label label-default">' + claim.claimedBy + '</span>' + ' <span>' + new Date(claim.claimDate).toLocaleString('de-DE', my.dateTimeFormat) + '</span>' : '';
+        return claim.claimed ? '<span class="glyphicon glyphicon-lock"> </span>' + (claim.reason ? ' <span>' + claim.reason + '</span><br /> ' : '') + ' <span class="label label-default">' + claim.claimedBy + '</span>' + ' <span>' + new Date(claim.claimDate).toLocaleString('de-DE', my.dateTimeFormat) + '</span>' : '';
     };
     my.renderTestresults = function (projectSelection) {
         var suiteResults = projectSelection.selectAll('.suiteResult').data(function (node) {
@@ -227,7 +227,7 @@ define('common/render', ['jquery'], function ($) {
         }).attr('id', function (testCase) {
             return 'testCase' + testCase.count;
         }).append('small').append('pre').text(function (testCase) {
-            return testCase.errorDetails === null ? '' : testCase.errorDetails.replace(/\[(\d+(, )?)*\]/, '');
+            return testCase.errorDetails === null ? '' : testCase.errorDetails.replace(/\[(\d+(, )?)?\]/, '');
         });
         hull.append('div').attr('class', 'collapse').attr('id', function (testCase) {
             return 'stackTrace' + testCase.count;
@@ -458,10 +458,14 @@ define('common/buildInfo', ['app-config'], function (config) {
                         }).map(function (testCase) {
                             testCase.url = suiteUrl + testCase.name.replace(/[^a-zA-Z0-9_]/g, '_') + '/';
                             testCase.count = testCaseCount++;
-                            var claims = testCase.testActions.filter(function (c) {
-                                return c.claimed === true;
-                            });
-                            testCase.claim = claims.length == 1 ? claims[0] : { claimed: false };
+                            if (testCase.testActions) {
+                                var claims = testCase.testActions.filter(function (c) {
+                                    return c.claimed === true;
+                                });
+                                testCase.claim = claims.length == 1 ? claims[0] : { claimed: false };
+                            } else {
+                                testCase.claim = { claimed: false };
+                            }
                             return testCase;
                         })
                     };
@@ -757,7 +761,7 @@ define('broken/lastCompletedBuildsOf', [
 ], function ($, config) {
     var my = {};
     my.multijob = function (multijobName) {
-        var multijobUrl = config.jenkinsUrl + '/job/' + multijobName + '/lastCompletedBuild/api/json?tree=subBuilds[url]';
+        var multijobUrl = config.jenkinsUrl + '/job/' + multijobName + '/lastSuccessfulBuild/api/json?tree=subBuilds[url]';
         return $.getJSON(multijobUrl).then(function (multijobBuild) {
             return multijobBuild.subBuilds.map(function (subBuild) {
                 return config.jenkinsUrl + '/' + subBuild.url;
@@ -770,7 +774,7 @@ define('broken/lastCompletedBuildsOf', [
             return view.jobs.filter(function (job) {
                 return job.color !== 'blue';
             }).map(function (job) {
-                return job.url + 'lastCompletedBuild/';
+                return job.url + 'lastSuccessfulBuild/';
             });
         });
     };
@@ -788,15 +792,15 @@ define('broken/init', [
 (function (config) {
   if (typeof define === 'function' && define.amd) {
     define('shims', [], function () {
-      var dev = ("window" in this || window.whereIsMyCommit === undefined);
-      require.config(config("..", dev));
+      var dev = ("window" in this && window.location.pathname.includes('src'));
+      require.config(config(dev ? ".." : ".", dev));
     });
   } else {
     module.exports = config(".", true);
   }
 })(function (rootDir, bower) {
   var lib = function (bowerPath, filename) {
-    return [rootDir].concat((bower ? ['bower_components', bowerPath] : []), [filename]).join('/');
+    return [rootDir].concat((bower ? ['bower_components', bowerPath] : ['js']), [filename]).join('/');
   };
 
   return {
