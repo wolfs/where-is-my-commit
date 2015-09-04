@@ -1,4 +1,4 @@
-define(['jquery'], function ($) {
+define(['jquery', 'bootstrap'], function ($) {
   'use strict';
   var my = {};
 
