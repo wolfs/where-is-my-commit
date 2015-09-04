@@ -181,7 +181,10 @@ define('where/builds/nodesData', [
     my.event = 'change';
     return my;
 });
-define('common/render', ['jquery'], function ($) {
+define('common/render', [
+    'jquery',
+    'bootstrap'
+], function ($) {
     'use strict';
     var my = {};
     my.dateTimeFormat = {
