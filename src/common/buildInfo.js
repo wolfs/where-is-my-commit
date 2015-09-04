@@ -72,10 +72,14 @@ define(['app-config'], function (config) {
               }).map(function (testCase) {
                 testCase.url = suiteUrl + testCase.name.replace(/[^a-zA-Z0-9_]/g, "_") + "/";
                 testCase.count = testCaseCount++;
-                var claims = testCase.testActions.filter(function (c) {
-                  return c.claimed === true;
-                });
-                testCase.claim = claims.length == 1 ? claims[0] : { claimed: false };
+                if (testCase.testActions) {
+                  var claims = testCase.testActions.filter(function (c) {
+                    return c.claimed === true;
+                  });
+                  testCase.claim = claims.length == 1 ? claims[0] : { claimed: false };
+                } else {
+                  testCase.claim = { claimed: false };
+                }
                 return testCase;
               })
             };

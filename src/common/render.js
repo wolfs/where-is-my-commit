@@ -5,7 +5,7 @@ define(['jquery'], function ($) {
   my.dateTimeFormat= { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric' };
 
   my.formatClaim = function (claim) {
-    return (claim.claimed ? '<span class="glyphicon glyphicon-lock"> </span>' + ' <span>' + claim.reason + '</span><br /> ' +
+    return (claim.claimed ? '<span class="glyphicon glyphicon-lock"> </span>' + (claim.reason ? (' <span>' + claim.reason + '</span><br /> ') : '') +
     ' <span class="label label-default">' + claim.claimedBy + '</span>' +
     ' <span>' + new Date(claim.claimDate).toLocaleString('de-DE', my.dateTimeFormat) + '</span>'
       : '');
@@ -62,7 +62,7 @@ define(['jquery'], function ($) {
       .append("small")
       .append("pre")
       .text(function (testCase) {
-        return testCase.errorDetails === null ? "" : testCase.errorDetails.replace(/\[(\d+(, )?)*\]/, "");
+        return testCase.errorDetails === null ? "" : testCase.errorDetails.replace(/\[(\d+(, )?)?\]/, "");
       });
 
     hull.append("div")
