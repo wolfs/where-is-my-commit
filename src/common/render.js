@@ -12,6 +12,27 @@ define(['jquery', 'bootstrap'], function ($) {
   };
 
 
+  var appendTestCaseDetails = function(hull, name, description, present, collapse, text) {
+    hull
+      .filter(present)
+      .append("div")
+      .html(function (testCase) {
+        return '<h6>' +
+          '<a data-toggle="collapse" href="#' + name + testCase.count + '">' + description + '<span class="caret"></span></a>' +
+          '</h6>';
+      })
+      .append("div")
+      .attr("class", function (testCase) {
+        return collapse(testCase) ? "panel-collapse collapse" : "panel-collapse collapse in";
+      })
+      .attr("id", function (testCase) {
+        return name + testCase.count;
+      })
+      .append("pre")
+      .text(function (testCase) {
+        return text(testCase);
+      });
+  };
 
   my.renderTestresults = function (projectSelection) {
     var suiteResults = projectSelection.selectAll(".suiteResult").data(function (node) {
@@ -44,49 +65,48 @@ define(['jquery', 'bootstrap'], function ($) {
             ' <span class="glyphicon glyphicon-time"></span>',
             '<span class="badge" data-toggle="tooltip" title="age">', testCase.age, '</span>',
             '</div>'].join("") +
-            '<div class="col-md-3">' + my.formatClaim(testCase.claim) + '</div>' +
-          '<div class="col-md-2"><ul class="list-inline pull-right">' + (testCase.errorDetails ?
-          '<li><a data-toggle="collapse" href="#' + "testCase" + testCase.count + '">Details</a></li>' : '') +
-          (testCase.errorStackTrace ?
-          '<li><a data-toggle="collapse" href="#' + "stackTrace" + testCase.count + '">Stacktrace</a></li>' : '') +
-          '</ul></div></div>';
+          '<div class="col-md-5">' + my.formatClaim(testCase.claim) + '</div>' +
+          '</div>';
       });
 
-    hull.append("div")
-      .attr("class", function (testCase) {
-        return (!testCase.errorDetails || testCase.errorDetails.length > 1200) ? "collapse" : "collapse in";
-      })
-      .attr("id", function (testCase) {
-        return "testCase" + testCase.count;
-      })
-      .append("small")
-      .append("pre")
-      .text(function (testCase) {
-        return testCase.errorDetails === null ? "" : testCase.errorDetails.replace(/\[(\d+(, )?)?\]/, "");
-      });
+    appendTestCaseDetails(hull, "details", 'Details',
+      function (testCase) {
+        return testCase.errorDetails;
+      },
+      function (testCase) {
+        return testCase.errorDetails.length > 1200;
+      },
+      function (testCase) {
+        return testCase.errorDetails.replace(/\[(\d+(, )?)?\]/, "");
+      }
+    );
 
-    hull.append("div")
-      .attr("class", "collapse")
-      .attr("id", function (testCase) {
-        return "stackTrace" + testCase.count;
-      })
-      .append("small")
-      .append("pre")
-      .text(function (testCase) {
-        return testCase.errorStackTrace ? testCase.errorStackTrace.replace(/\[(\d+(, )?)*\]/, "") : "";
-      });
+    appendTestCaseDetails(hull, "stacktrace", 'Stacktrace',
+      function (testCase) {
+        return testCase.errorStackTrace;
+      },
+      function () {
+        return true;
+      },
+      function (testCase) {
+        return testCase.errorStackTrace.replace(/\[(\d+(, )?)?\]/, "");
+      }
+    );
 
     var warnings = projectSelection.selectAll(".warning").data(function (node) {
       return node.warnings || [];
     });
 
-    warnings.enter()
+    appendTestCaseDetails(warnings.enter()
       .append("div")
       .attr("class", "warning")
+      .append("div")
+      .attr("class", "list-group-item")
       .html(function (warning) {
-        return "<div class='list-group-item'><h5 class='list-group-item-heading'>" + warning.fileName + "</h5><pre>" + warning.message + "</pre></h5>" +
-          "</div>";
-      });
+        return "<h5 class='list-group-item-heading'>" + warning.fileName + "</h5>";
+      }), "warning", "Warning", function () { return true; }, function () { return false; }, function (warning) {
+      return warning.message;
+    });
 
     $(function () {
       $('[data-toggle="tooltip"]').tooltip();

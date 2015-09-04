@@ -30,7 +30,7 @@ define(['app-config'], function (config) {
 
     return Array.prototype.concat.apply([], warningsActions.map(function (action) {
       return action.result.warnings.map(function (warning) {
-        return {name: action.name, message: warning.message, fileName: warning.fileName};
+        return {name: action.name, message: warning.message, fileName: warning.fileName, count: testCaseCount++ };
       }).filter(function (warning) {
         return !(warning.name === "warnings" && config.filterWarnings.some(function (filterWarning) {
           return warning.message.indexOf(filterWarning) > -1;
