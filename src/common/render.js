@@ -50,11 +50,13 @@ define(['jquery', 'bootstrap'], function ($) {
         return "<div class='h4'><a href='" + test.url + "'>" + test.name + "</a></div>";
       });
 
-    var hull = suiteResults.selectAll(".testResult").data(function (suite) {
+    var testResults = suiteResults.selectAll(".testResult").data(function (suite) {
       return suite.cases;
     }, function (testCase) {
       return testCase.name;
-    }).enter()
+    });
+
+    var hull = testResults.enter()
       .append("div")
       .attr("class", "input-group testResult")
       .html(function (testCase) {
@@ -70,7 +72,7 @@ define(['jquery', 'bootstrap'], function ($) {
             ' <span class="glyphicon glyphicon-time"></span>',
             '<span class="badge" data-toggle="tooltip" title="age">', testCase.age, '</span>',
             '</div>'].join("") +
-          '<div class="col-md-5">' + my.formatClaim(testCase.claim) + '</div>' +
+          '<div class="col-md-5 claim"/>' +
           '</div>';
       });
 
@@ -97,6 +99,10 @@ define(['jquery', 'bootstrap'], function ($) {
         return testCase.errorStackTrace.replace(/\[(\d+(, )?)?\]/, "");
       }
     );
+
+    testResults.select('.claim').html(function (testCase) {
+      return my.formatClaim(testCase.claim);
+    });
 
     var warnings = projectSelection.selectAll(".warning").data(function (node) {
       return node.warnings || [];

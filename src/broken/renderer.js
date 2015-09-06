@@ -44,11 +44,20 @@ define(['d3', 'jquery', 'common/render', 'broken/builds', 'common/util'], functi
         Submit: "Claim",
         json: JSON.stringify(claim)
       }
-    );
+    ).then(function () {
+        claim.claimed = true;
+        claim.claimDate = new Date().getTime();
+        claim.claimedBy = claim.assignee;
+        testCase.claim = claim;
+        $(data).trigger(data.event);
+      });
   };
 
   var unclaimTest = function (testCase)  {
-    $.post(testCase.url  + '/claim/unclaim');
+    $.post(testCase.url  + '/claim/unclaim').then(function () {
+      testCase.claim = { claimed: false };
+      $(data).trigger(data.event);
+    });
   };
 
   my.initFormSubmit = function () {
@@ -57,10 +66,9 @@ define(['d3', 'jquery', 'common/render', 'broken/builds', 'common/util'], functi
       var ids = $.makeArray(selected.map(function () {
         return $(this).data('testcaseid');
       }));
-      var testCases = ids.map(function (id) {
+      return ids.map(function (id) {
         return data.testCaseForId(id);
       });
-      return testCases;
     };
 
     $('#claimForm').submit(function (event) {
@@ -71,9 +79,7 @@ define(['d3', 'jquery', 'common/render', 'broken/builds', 'common/util'], functi
           claim[field.name] = field.value;
         });
         testCases.forEach(function (testCase) {
-          claimTest({
-            url: testCase.url
-          }, claim);
+          claimTest(testCase, claim);
         });
       } catch (err) {
         console.log(err);
