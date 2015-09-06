@@ -3,8 +3,8 @@
 <meta charset="utf-8">
 <head>
   <!-- build:css-->
-  <link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link href="styles.css" rel="stylesheet" />
+  <link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="styles.css" rel="stylesheet"/>
   <!-- endbuild -->
 </head>
 <body>
@@ -12,14 +12,37 @@
 <script src="../bower_components/requirejs/require.js"></script>
 <!-- endbuild -->
 <script>
-  require(['shims'], function() {
+  require(['shims'], function () {
     require(['bootstrap', 'broken/init']);
   });
 </script>
 
 <div class="container-fluid">
-  <div id="projects"><div class="loading">Loading...</div></div>
+  <div id="projects">
+    <div class="loading">Loading...</div>
+  </div>
 </div>
+
+<nav id="claimBar" class="navbar navbar-default navbar-fixed-bottom"><!-- hidden -->
+  <div class="container-fluid">
+    <div class="collapse navbar-collapse">
+      <form class="form-inline navbar-form navbar-left" id="claimForm">
+        <div class="form-group">
+          <input type="text" name="assignee" class="form-control" placeholder="Assignee">
+        </div>
+        <div class="form-group">
+          <textarea class="form-control" rows="1" name="reason" placeholder="Reason"></textarea>
+        </div>
+        <div class="checkbox">
+          <label>
+            <input name="sticky" type="checkbox" value="true"> Sticky
+          </label>
+        </div>
+        <button type="submit" class="btn btn-primary">Claim</button>
+      </form>
+    </div>
+  </div>
+</nav>
 
 </body>
 </html>

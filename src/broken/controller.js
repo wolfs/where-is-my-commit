@@ -3,6 +3,7 @@ define(['jquery', 'common/util', 'app-config', 'broken/builds', 'broken/updater'
     throttler = util.newThrottler(updater.addForUrl, config.bulkUpdateSize, config.updateInterval);
 
   my.init = function (urlsDef) {
+    renderer.initFormSubmit();
     urlsDef.then(throttler.scheduleUpdates);
     renderer.renderLoop();
   };

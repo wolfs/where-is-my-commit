@@ -1,4 +1,4 @@
-define(['d3', 'common/render', 'broken/builds', 'common/util'], function (d3, render, data) {
+define(['d3', 'jquery', 'common/render', 'broken/builds', 'common/util'], function (d3, $, render, data) {
   var my = {};
 
   var buildName = function (build) {
@@ -37,6 +37,40 @@ define(['d3', 'common/render', 'broken/builds', 'common/util'], function (d3, re
     render.renderTestresults(unstableProjects.select(".testResults"));
 
     d3.selectAll("#projects .loading").remove();
+  };
+
+  var claimTest = function (testCase, claim)  {
+    $.post(testCase.url  + '/claim/claim', {
+        Submit: "Claim",
+        json: JSON.stringify(claim)
+      }
+    );
+  };
+
+  my.initFormSubmit = function () {
+    $('#claimForm').submit(function (event) {
+      try {
+        var selected = $('input.testCaseSelect:checked');
+        var ids = $.makeArray(selected.map(function () {
+          return $(this).data('testcaseid');
+        }));
+        var testCases = ids.map(function (id) {
+          return data.testCaseForId(id);
+        });
+        var claim = { assignee: '', reason: '', sticky: false};
+        $(this).serializeArray().forEach(function (field) {
+          claim[field.name] = field.value;
+        });
+        testCases.forEach(function (testCase) {
+          claimTest({
+            url: testCase.url
+          }, claim);
+        });
+      } catch (err) {
+        console.log(err);
+      }
+      event.preventDefault();
+    });
   };
 
   my.renderLoop = function () {
