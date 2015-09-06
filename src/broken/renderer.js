@@ -57,7 +57,7 @@ define(['d3', 'jquery', 'common/render', 'broken/builds', 'common/util'], functi
         var testCases = ids.map(function (id) {
           return data.testCaseForId(id);
         });
-        var claim = { assignee: '', reason: '', sticky: false};
+        var claim = { };
         $(this).serializeArray().forEach(function (field) {
           claim[field.name] = field.value;
         });
