@@ -197,6 +197,17 @@ define('common/render', [
     my.formatClaim = function (claim) {
         return claim.claimed ? '<span class="glyphicon glyphicon-lock"> </span>' + (claim.reason ? ' <span>' + claim.reason + '</span><br /> ' : '') + ' <span class="label label-default">' + claim.claimedBy + '</span>' + ' <span>' + new Date(claim.claimDate).toLocaleString('de-DE', my.dateTimeFormat) + '</span>' : '';
     };
+    var appendTestCaseDetails = function (hull, name, description, present, collapse, text) {
+        hull.filter(present).append('div').html(function (testCase) {
+            return '<h6>' + '<a data-toggle="collapse" href="#' + name + testCase.count + '">' + description + '<span class="caret"></span></a>' + '</h6>';
+        }).append('div').attr('class', function (testCase) {
+            return collapse(testCase) ? 'panel-collapse collapse' : 'panel-collapse collapse in';
+        }).attr('id', function (testCase) {
+            return name + testCase.count;
+        }).append('pre').text(function (testCase) {
+            return text(testCase);
+        });
+    };
     my.renderTestresults = function (projectSelection) {
         var suiteResults = projectSelection.selectAll('.suiteResult').data(function (node) {
             return node.testResult.failedTests || [];
@@ -210,7 +221,9 @@ define('common/render', [
             return suite.cases;
         }, function (testCase) {
             return testCase.name;
-        }).enter().append('div').attr('class', 'testResult list-group-item').html(function (testCase) {
+        }).enter().append('div').attr('class', 'input-group testResult').html(function (testCase) {
+            return '<span class="input-group-addon"><input class="testCaseSelect" data-testCaseId="' + testCase.count + '" type="checkbox"></span>';
+        }).append('div').attr('class', 'list-group-item').html(function (testCase) {
             return '<div class="row">' + [
                 '<div class="h5 col-md-7">',
                 '<a href="',
@@ -223,25 +236,33 @@ define('common/render', [
                 testCase.age,
                 '</span>',
                 '</div>'
-            ].join('') + '<div class="col-md-3">' + my.formatClaim(testCase.claim) + '</div>' + '<div class="col-md-2"><ul class="list-inline pull-right">' + (testCase.errorDetails ? '<li><a data-toggle="collapse" href="#' + 'testCase' + testCase.count + '">Details</a></li>' : '') + (testCase.errorStackTrace ? '<li><a data-toggle="collapse" href="#' + 'stackTrace' + testCase.count + '">Stacktrace</a></li>' : '') + '</ul></div></div>';
+            ].join('') + '<div class="col-md-5">' + my.formatClaim(testCase.claim) + '</div>' + '</div>';
         });
-        hull.append('div').attr('class', function (testCase) {
-            return !testCase.errorDetails || testCase.errorDetails.length > 1200 ? 'collapse' : 'collapse in';
-        }).attr('id', function (testCase) {
-            return 'testCase' + testCase.count;
-        }).append('small').append('pre').text(function (testCase) {
-            return testCase.errorDetails === null ? '' : testCase.errorDetails.replace(/\[(\d+(, )?)?\]/, '');
+        appendTestCaseDetails(hull, 'details', 'Details', function (testCase) {
+            return testCase.errorDetails;
+        }, function (testCase) {
+            return testCase.errorDetails.length > 1200;
+        }, function (testCase) {
+            return testCase.errorDetails.replace(/\[(\d+(, )?)?\]/, '');
         });
-        hull.append('div').attr('class', 'collapse').attr('id', function (testCase) {
-            return 'stackTrace' + testCase.count;
-        }).append('small').append('pre').text(function (testCase) {
-            return testCase.errorStackTrace ? testCase.errorStackTrace.replace(/\[(\d+(, )?)*\]/, '') : '';
+        appendTestCaseDetails(hull, 'stacktrace', 'Stacktrace', function (testCase) {
+            return testCase.errorStackTrace;
+        }, function () {
+            return true;
+        }, function (testCase) {
+            return testCase.errorStackTrace.replace(/\[(\d+(, )?)?\]/, '');
         });
         var warnings = projectSelection.selectAll('.warning').data(function (node) {
             return node.warnings || [];
         });
-        warnings.enter().append('div').attr('class', 'warning').html(function (warning) {
-            return '<div class=\'list-group-item\'><h5 class=\'list-group-item-heading\'>' + warning.fileName + '</h5><pre>' + warning.message + '</pre></h5>' + '</div>';
+        appendTestCaseDetails(warnings.enter().append('div').attr('class', 'warning').append('div').attr('class', 'list-group-item').html(function (warning) {
+            return '<h5 class=\'list-group-item-heading\'>' + warning.fileName + '</h5>';
+        }), 'warning', 'Warning', function () {
+            return true;
+        }, function () {
+            return false;
+        }, function (warning) {
+            return warning.message;
         });
         $(function () {
             $('[data-toggle="tooltip"]').tooltip();
@@ -423,7 +444,8 @@ define('common/buildInfo', ['app-config'], function (config) {
                 return {
                     name: action.name,
                     message: warning.message,
-                    fileName: warning.fileName
+                    fileName: warning.fileName,
+                    count: testCaseCount++
                 };
             }).filter(function (warning) {
                 return !(warning.name === 'warnings' && config.filterWarnings.some(function (filterWarning) {
@@ -667,10 +689,26 @@ define('where/init', [
     nodes.init();
 });
 define('broken/builds', [], function () {
-    return {
+    var my = {
         builds: [],
         event: 'change'
     };
+    var concat = function (a, b) {
+        return a.concat(b);
+    };
+    my.testCases = function () {
+        return my.builds.map(function (build) {
+            return build.testResult.failedTests || [];
+        }).reduce(concat).map(function (testSuite) {
+            return testSuite.cases;
+        }).reduce(concat);
+    };
+    my.testCaseForId = function (id) {
+        return my.testCases().filter(function (testCase) {
+            return testCase.count === id;
+        }).pop();
+    };
+    return my;
 });
 define('broken/updater', [
     'broken/builds',
@@ -715,10 +753,11 @@ define('broken/updater', [
 });
 define('broken/renderer', [
     'd3',
+    'jquery',
     'common/render',
     'broken/builds',
     'common/util'
-], function (d3, render, data) {
+], function (d3, $, render, data) {
     var my = {};
     var buildName = function (build) {
         return build.name;
@@ -738,6 +777,39 @@ define('broken/renderer', [
         render.renderTestresults(unstableProjects.select('.testResults'));
         d3.selectAll('#projects .loading').remove();
     };
+    var claimTest = function (testCase, claim) {
+        $.post(testCase.url + '/claim/claim', {
+            Submit: 'Claim',
+            json: JSON.stringify(claim)
+        });
+    };
+    my.initFormSubmit = function () {
+        $('#claimForm').submit(function (event) {
+            try {
+                var selected = $('input.testCaseSelect:checked');
+                var ids = $.makeArray(selected.map(function () {
+                    return $(this).data('testcaseid');
+                }));
+                var testCases = ids.map(function (id) {
+                    return data.testCaseForId(id);
+                });
+                var claim = {
+                    assignee: '',
+                    reason: '',
+                    sticky: false
+                };
+                $(this).serializeArray().forEach(function (field) {
+                    claim[field.name] = field.value;
+                });
+                testCases.forEach(function (testCase) {
+                    claimTest({ url: testCase.url }, claim);
+                });
+            } catch (err) {
+                console.log(err);
+            }
+            event.preventDefault();
+        });
+    };
     my.renderLoop = function () {
         render.renderLoop(data, data.event, my.renderFailedTests);
     };
@@ -753,6 +825,7 @@ define('broken/controller', [
 ], function ($, util, config, data, updater, renderer) {
     var my = {}, throttler = util.newThrottler(updater.addForUrl, config.bulkUpdateSize, config.updateInterval);
     my.init = function (urlsDef) {
+        renderer.initFormSubmit();
         urlsDef.then(throttler.scheduleUpdates);
         renderer.renderLoop();
     };
