@@ -783,16 +783,23 @@ define('broken/renderer', [
             json: JSON.stringify(claim)
         });
     };
+    var unclaimTest = function (testCase) {
+        $.post(testCase.url + '/claim/unclaim');
+    };
     my.initFormSubmit = function () {
+        selectedTestCases = function () {
+            var selected = $('input.testCaseSelect:checked');
+            var ids = $.makeArray(selected.map(function () {
+                return $(this).data('testcaseid');
+            }));
+            var testCases = ids.map(function (id) {
+                return data.testCaseForId(id);
+            });
+            return testCases;
+        };
         $('#claimForm').submit(function (event) {
             try {
-                var selected = $('input.testCaseSelect:checked');
-                var ids = $.makeArray(selected.map(function () {
-                    return $(this).data('testcaseid');
-                }));
-                var testCases = ids.map(function (id) {
-                    return data.testCaseForId(id);
-                });
+                var testCases = selectedTestCases();
                 var claim = {};
                 $(this).serializeArray().forEach(function (field) {
                     claim[field.name] = field.value;
@@ -800,6 +807,15 @@ define('broken/renderer', [
                 testCases.forEach(function (testCase) {
                     claimTest({ url: testCase.url }, claim);
                 });
+            } catch (err) {
+                console.log(err);
+            }
+            event.preventDefault();
+        });
+        $('#dropClaimsForm').submit(function (event) {
+            try {
+                var testCases = selectedTestCases();
+                testCases.forEach(unclaimTest);
             } catch (err) {
                 console.log(err);
             }
