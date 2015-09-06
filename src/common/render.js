@@ -56,7 +56,10 @@ define(['jquery', 'bootstrap'], function ($) {
       return testCase.name;
     }).enter()
       .append("div")
-      .attr("class", "testResult list-group-item")
+      .attr("class", "input-group testResult")
+      .html('<span class="input-group-addon"><input type="checkbox"></span>')
+      .append("div")
+      .attr("class", "list-group-item")
       .html(function (testCase) {
         return '<div class="row">' +
           [
