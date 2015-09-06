@@ -793,11 +793,7 @@ define('broken/renderer', [
                 var testCases = ids.map(function (id) {
                     return data.testCaseForId(id);
                 });
-                var claim = {
-                    assignee: '',
-                    reason: '',
-                    sticky: false
-                };
+                var claim = {};
                 $(this).serializeArray().forEach(function (field) {
                     claim[field.name] = field.value;
                 });
