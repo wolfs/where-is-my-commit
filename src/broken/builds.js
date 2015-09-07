@@ -24,5 +24,11 @@ define([], function () {
     }).pop();
   };
 
+  my.buildForId = function (id) {
+    return my.builds.filter(function (build) {
+      return build.id === id;
+    }).pop();
+  };
+
   return my;
 });

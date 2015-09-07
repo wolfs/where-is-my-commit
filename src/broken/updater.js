@@ -6,6 +6,8 @@ define(['broken/builds', 'common/util', 'common/buildInfo', 'jquery'], function 
       "/api/json?tree=" + buildInfo.buildKeys(['fullDisplayName'], []);
   };
 
+  var buildId = 0;
+
   var getBuildDef = function (myBuildUrl) {
     return $.getJSON(buildUrl(myBuildUrl)).then(function (build) {
       return build;
@@ -24,7 +26,8 @@ define(['broken/builds', 'common/util', 'common/buildInfo', 'jquery'], function 
         testResult: buildInfo.getTestResult(build),
         warnings: buildInfo.getWarnings(build),
         status: build.result.toLowerCase(),
-        claim: claims.length === 1 ? claims[0] : { claimed: false }
+        claim: claims.length === 1 ? claims[0] : { claimed: false },
+        id: buildId++
       };
       data.builds.push(buildData);
       $(data).trigger(data.event);
@@ -34,6 +37,27 @@ define(['broken/builds', 'common/util', 'common/buildInfo', 'jquery'], function 
           $(data).trigger(data.event);
         });
       }
+    });
+  };
+
+  my.claim = function (objectToClaim, claim)  {
+    $.post(objectToClaim.url  + '/claim/claim', {
+        Submit: "Claim",
+        json: JSON.stringify(claim)
+      }
+    ).then(function () {
+        claim.claimed = true;
+        claim.claimDate = new Date().getTime();
+        claim.claimedBy = claim.assignee;
+        objectToClaim.claim = claim;
+        $(data).trigger(data.event);
+      });
+  };
+
+  my.unclaim = function (objectToClaim)  {
+    $.post(objectToClaim.url  + '/claim/unclaim').then(function () {
+      objectToClaim.claim = { claimed: false };
+      $(data).trigger(data.event);
     });
   };
 
