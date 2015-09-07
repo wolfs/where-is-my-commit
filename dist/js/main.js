@@ -712,6 +712,11 @@ define('broken/builds', [], function () {
             return testCase.count === id;
         }).pop();
     };
+    my.buildForId = function (id) {
+        return my.builds.filter(function (build) {
+            return build.id === id;
+        }).pop();
+    };
     return my;
 });
 define('broken/updater', [
@@ -724,6 +729,7 @@ define('broken/updater', [
     var buildUrl = function (mybuildUrl) {
         return mybuildUrl + '/api/json?tree=' + buildInfo.buildKeys(['fullDisplayName'], []);
     };
+    var buildId = 0;
     var getBuildDef = function (myBuildUrl) {
         return $.getJSON(buildUrl(myBuildUrl)).then(function (build) {
             return build;
@@ -741,7 +747,8 @@ define('broken/updater', [
                 testResult: buildInfo.getTestResult(build),
                 warnings: buildInfo.getWarnings(build),
                 status: build.result.toLowerCase(),
-                claim: claims.length === 1 ? claims[0] : { claimed: false }
+                claim: claims.length === 1 ? claims[0] : { claimed: false },
+                id: buildId++
             };
             data.builds.push(buildData);
             $(data).trigger(data.event);
@@ -751,6 +758,24 @@ define('broken/updater', [
                     $(data).trigger(data.event);
                 });
             }
+        });
+    };
+    my.claim = function (objectToClaim, claim) {
+        $.post(objectToClaim.url + '/claim/claim', {
+            Submit: 'Claim',
+            json: JSON.stringify(claim)
+        }).then(function () {
+            claim.claimed = true;
+            claim.claimDate = new Date().getTime();
+            claim.claimedBy = claim.assignee;
+            objectToClaim.claim = claim;
+            $(data).trigger(data.event);
+        });
+    };
+    my.unclaim = function (objectToClaim) {
+        $.post(objectToClaim.url + '/claim/unclaim').then(function () {
+            objectToClaim.claim = { claimed: false };
+            $(data).trigger(data.event);
         });
     };
     return my;
@@ -774,65 +799,15 @@ define('broken/renderer', [
         unstableProjects.enter().append('div').attr('class', 'panel panel-default unstableProject').attr('name', function (el) {
             return el.name;
         }).html(function (build) {
-            return '<div class=\'panel-heading\'>' + '<div class="row">' + '<div class=\'col-md-8\'><h2 class=\'panel-title\'><a class=\'h2\' href=\'' + build.url + '\'>' + build.name + '</a>, <span class=\'h3\'>' + build.date.toLocaleString('de-DE', render.dateTimeFormat) + '</span></h2></div>' + '<div class="col-md-4">' + render.formatClaim(build.claim) + '</div>' + '</div>' + '</div>' + '<div class=\'testResults panel-body\'></div>';
+            return '<div class="input-group panel-default">' + '<span class="input-group-addon"><input class="buildSelect" data-buildId="' + build.id + '" type="checkbox"></span>' + '<div class=\'panel-heading\'>' + '<div class="row">' + '<div class=\'col-md-8\'><h2 class=\'panel-title\'><a class=\'h2\' href=\'' + build.url + '\'>' + build.name + '</a>, <span class=\'h3\'>' + build.date.toLocaleString('de-DE', render.dateTimeFormat) + '</span></h2></div>' + '<div class="col-md-4 claim"></div>' + '</div>' + '</div></div>' + '<div class=\'testResults panel-body\'></div>';
         });
         unstableProjects.order();
+        unstableProjects.select('.claim').html(function (build) {
+            return render.formatClaim(build.claim);
+        });
         unstableProjects.exit().remove();
         render.renderTestresults(unstableProjects.select('.testResults'));
         d3.selectAll('#projects .loading').remove();
-    };
-    var claimTest = function (testCase, claim) {
-        $.post(testCase.url + '/claim/claim', {
-            Submit: 'Claim',
-            json: JSON.stringify(claim)
-        }).then(function () {
-            claim.claimed = true;
-            claim.claimDate = new Date().getTime();
-            claim.claimedBy = claim.assignee;
-            testCase.claim = claim;
-            $(data).trigger(data.event);
-        });
-    };
-    var unclaimTest = function (testCase) {
-        $.post(testCase.url + '/claim/unclaim').then(function () {
-            testCase.claim = { claimed: false };
-            $(data).trigger(data.event);
-        });
-    };
-    my.initFormSubmit = function () {
-        selectedTestCases = function () {
-            var selected = $('input.testCaseSelect:checked');
-            var ids = $.makeArray(selected.map(function () {
-                return $(this).data('testcaseid');
-            }));
-            return ids.map(function (id) {
-                return data.testCaseForId(id);
-            });
-        };
-        $('#claimForm').submit(function (event) {
-            try {
-                var testCases = selectedTestCases();
-                var claim = {};
-                $(this).serializeArray().forEach(function (field) {
-                    claim[field.name] = field.value;
-                });
-                testCases.forEach(function (testCase) {
-                    claimTest(testCase, claim);
-                });
-            } catch (err) {
-                console.log(err);
-            }
-            event.preventDefault();
-        });
-        $('#dropClaimsForm').submit(function (event) {
-            try {
-                var testCases = selectedTestCases();
-                testCases.forEach(unclaimTest);
-            } catch (err) {
-                console.log(err);
-            }
-            event.preventDefault();
-        });
     };
     my.renderLoop = function () {
         render.renderLoop(data, data.event, my.renderFailedTests);
@@ -848,8 +823,54 @@ define('broken/controller', [
     'broken/renderer'
 ], function ($, util, config, data, updater, renderer) {
     var my = {}, throttler = util.newThrottler(updater.addForUrl, config.bulkUpdateSize, config.updateInterval);
+    var initFormSubmit = function () {
+        var selectedTestCases = function () {
+            var selected = $('input.testCaseSelect:checked');
+            var ids = $.makeArray(selected.map(function () {
+                return $(this).data('testcaseid');
+            }));
+            return ids.map(function (id) {
+                return data.testCaseForId(id);
+            });
+        };
+        var selectedBuilds = function () {
+            var selected = $('input.buildSelect:checked');
+            var ids = $.makeArray(selected.map(function () {
+                return $(this).data('buildid');
+            }));
+            return ids.map(function (id) {
+                return data.buildForId(id);
+            });
+        };
+        $('#claimForm').submit(function (event) {
+            try {
+                var testCases = selectedTestCases();
+                var builds = selectedBuilds();
+                var claim = {};
+                $(this).serializeArray().forEach(function (field) {
+                    claim[field.name] = field.value;
+                });
+                testCases.concat(builds).forEach(function (testCase) {
+                    updater.claim(testCase, claim);
+                });
+            } catch (err) {
+                console.log(err);
+            }
+            event.preventDefault();
+        });
+        $('#dropClaimsForm').submit(function (event) {
+            try {
+                var testCases = selectedTestCases();
+                var builds = selectedBuilds();
+                testCases.concat(builds).forEach(updater.unclaim);
+            } catch (err) {
+                console.log(err);
+            }
+            event.preventDefault();
+        });
+    };
     my.init = function (urlsDef) {
-        renderer.initFormSubmit();
+        initFormSubmit();
         urlsDef.then(throttler.scheduleUpdates);
         renderer.renderLoop();
     };
