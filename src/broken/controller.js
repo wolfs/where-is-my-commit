@@ -3,7 +3,7 @@ define(['jquery', 'common/util', 'app-config', 'broken/builds', 'broken/updater'
     throttler = util.newThrottler(updater.addForUrl, config.bulkUpdateSize, config.updateInterval);
 
   var initFormSubmit = function () {
-    var selectedTestCases = function() {
+    var selectedTestCases = function () {
       var selected = $('input.testCaseSelect:checked');
       var ids = $.makeArray(selected.map(function () {
         return $(this).data('testcaseid');
@@ -13,7 +13,7 @@ define(['jquery', 'common/util', 'app-config', 'broken/builds', 'broken/updater'
       });
     };
 
-    var selectedBuilds = function() {
+    var selectedBuilds = function () {
       var selected = $('input.buildSelect:checked');
       var ids = $.makeArray(selected.map(function () {
         return $(this).data('buildid');
@@ -27,7 +27,7 @@ define(['jquery', 'common/util', 'app-config', 'broken/builds', 'broken/updater'
       try {
         var testCases = selectedTestCases();
         var builds = selectedBuilds();
-        var claim = { };
+        var claim = {};
         $(this).serializeArray().forEach(function (field) {
           claim[field.name] = field.value;
         });
@@ -56,6 +56,9 @@ define(['jquery', 'common/util', 'app-config', 'broken/builds', 'broken/updater'
     initFormSubmit();
     urlsDef.then(throttler.scheduleUpdates);
     renderer.renderLoop();
+    updater.users.then(function (users) {
+      renderer.addUsers(users);
+    });
   };
 
   return my;

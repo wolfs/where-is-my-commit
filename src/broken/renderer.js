@@ -42,6 +42,21 @@ define(['d3', 'jquery', 'common/render', 'broken/builds', 'common/util'], functi
     d3.selectAll("#projects .loading").remove();
   };
 
+  my.addUsers = function (users) {
+    var userId = function (user) {
+      return user.id;
+    };
+    d3.select('#assignees')
+      .selectAll('.user')
+      .data(users, userId)
+      .enter()
+      .append("option")
+      .attr("class", "user")
+      .attr("value", userId)
+      .text(function (user) { return user.fullName; })
+    ;
+  };
+
   my.renderLoop = function () {
     render.renderLoop(data, data.event, my.renderFailedTests);
   };
