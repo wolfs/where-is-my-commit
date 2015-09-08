@@ -147,7 +147,7 @@ define(['jquery', 'bootstrap'], function ($) {
           render();
           viewNeedsUpdate = false;
         }
-      }, 0);
+      }, 20);
     });
     $(eventSource).trigger(eventName);
   };
