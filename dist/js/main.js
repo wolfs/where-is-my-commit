@@ -194,19 +194,30 @@ define('common/render', [
         hour: 'numeric',
         minute: 'numeric'
     };
-    my.formatClaim = function (claim) {
-        return claim.claimed ? '<span class="glyphicon glyphicon-lock"> </span>' + (claim.reason ? ' <span>' + claim.reason + '</span><br /> ' : '') + ' <span class="label label-default">' + claim.claimedBy + '</span>' + ' <span>' + new Date(claim.claimDate).toLocaleString('de-DE', my.dateTimeFormat) + '</span>' : '';
-    };
-    var appendTestCaseDetails = function (hull, name, description, present, collapse, text) {
-        hull.filter(present).append('div').html(function (testCase) {
-            return '<h6>' + '<a data-toggle="collapse" href="#' + name + testCase.count + '">' + description + '<span class="caret"></span></a>' + '</h6>';
-        }).append('div').attr('class', function (testCase) {
-            return collapse(testCase) ? 'panel-collapse collapse' : 'panel-collapse collapse in';
-        }).attr('id', function (testCase) {
-            return name + testCase.count;
-        }).append('pre').text(function (testCase) {
-            return text(testCase);
+    my.formatClaim = function (el) {
+        el.html(function (claimedObject) {
+            var claim = claimedObject.claim;
+            if (claim.claimed) {
+                return '<span class="glyphicon glyphicon-lock"> </span>' + (claim.reason ? ' <span>' + claim.reason + '</span><br /> ' : '') + ' <span class="label label-default">' + claim.claimedBy + '</span>' + ' <span>' + new Date(claim.claimDate).toLocaleString('de-DE', my.dateTimeFormat) + '</span>';
+            } else {
+                return '';
+            }
         });
+    };
+    var appendTestCaseDetails = function (name, description, present, collapse, text) {
+        return function (hull) {
+            hull.filter(present).append('div').call(function (div) {
+                div.append('h6').append('a').attr('data-toggle', 'collapse').attr('href', function (testCase) {
+                    return '#' + name + testCase.id;
+                }).text(description).append('span').attr('class', 'caret');
+            }).append('div').attr('class', function (testCase) {
+                return collapse(testCase) ? 'panel-collapse collapse' : 'panel-collapse collapse in';
+            }).attr('id', function (testCase) {
+                return name + testCase.id;
+            }).append('pre').text(function (testCase) {
+                return text(testCase);
+            });
+        };
     };
     my.renderTestresults = function (projectSelection) {
         var suiteResults = projectSelection.selectAll('.suiteResult').data(function (node) {
@@ -222,8 +233,8 @@ define('common/render', [
         }, function (testCase) {
             return testCase.name;
         });
-        var hull = testResults.enter().append('div').attr('class', 'input-group testResult').html(function (testCase) {
-            return '<span class="input-group-addon"><input class="testCaseSelect" data-testCaseId="' + testCase.count + '" type="checkbox"></span>';
+        testResults.enter().append('div').attr('class', 'input-group testResult').html(function (testCase) {
+            return '<span class="input-group-addon"><input class="testCaseSelect" data-testCaseId="' + testCase.id + '" type="checkbox"></span>';
         }).append('div').attr('class', 'list-group-item').html(function (testCase) {
             return '<div class="row">' + [
                 '<div class="h5 col-md-7">',
@@ -238,36 +249,32 @@ define('common/render', [
                 '</span>',
                 '</div>'
             ].join('') + '<div class="col-md-5 claim"/>' + '</div>';
-        });
-        appendTestCaseDetails(hull, 'details', 'Details', function (testCase) {
+        }).call(appendTestCaseDetails('details', 'Details', function (testCase) {
             return testCase.errorDetails;
         }, function (testCase) {
             return testCase.errorDetails.length > 1200;
         }, function (testCase) {
             return testCase.errorDetails.replace(/\[(\d+(, )?)?\]/, '');
-        });
-        appendTestCaseDetails(hull, 'stacktrace', 'Stacktrace', function (testCase) {
+        })).call(appendTestCaseDetails('stacktrace', 'Stacktrace', function (testCase) {
             return testCase.errorStackTrace;
         }, function () {
             return true;
         }, function (testCase) {
             return testCase.errorStackTrace.replace(/\[(\d+(, )?)?\]/, '');
-        });
-        testResults.select('.claim').html(function (testCase) {
-            return my.formatClaim(testCase.claim);
-        });
+        }));
+        testResults.select('.claim').call(my.formatClaim);
         var warnings = projectSelection.selectAll('.warning').data(function (node) {
             return node.warnings || [];
         });
-        appendTestCaseDetails(warnings.enter().append('div').attr('class', 'warning').append('div').attr('class', 'list-group-item').html(function (warning) {
+        warnings.enter().append('div').attr('class', 'warning').append('div').attr('class', 'list-group-item').html(function (warning) {
             return '<h5 class=\'list-group-item-heading\'>' + warning.fileName + '</h5>';
-        }), 'warning', 'Warning', function () {
+        }).call(appendTestCaseDetails('warning', 'Warning', function () {
             return true;
         }, function () {
             return false;
         }, function (warning) {
             return warning.message;
-        });
+        }));
         $(function () {
             $('[data-toggle="tooltip"]').tooltip();
         });
@@ -281,7 +288,7 @@ define('common/render', [
                     render();
                     viewNeedsUpdate = false;
                 }
-            }, 0);
+            }, 20);
         });
         $(eventSource).trigger(eventName);
     };
@@ -449,7 +456,7 @@ define('common/buildInfo', ['app-config'], function (config) {
                     name: action.name,
                     message: warning.message,
                     fileName: warning.fileName,
-                    count: testCaseCount++
+                    id: testCaseCount++
                 };
             }).filter(function (warning) {
                 return !(warning.name === 'warnings' && config.filterWarnings.some(function (filterWarning) {
@@ -486,7 +493,7 @@ define('common/buildInfo', ['app-config'], function (config) {
                             return test.status !== 'PASSED' && test.status !== 'SKIPPED' && test.status !== 'FIXED';
                         }).map(function (testCase) {
                             testCase.url = suiteUrl + testCase.name.replace(/[^a-zA-Z0-9_]/g, '_') + '/';
-                            testCase.count = testCaseCount++;
+                            testCase.id = testCaseCount++;
                             if (testCase.testActions) {
                                 var claims = testCase.testActions.filter(function (c) {
                                     return c.claimed === true;
@@ -707,15 +714,16 @@ define('broken/builds', [], function () {
             return testSuite.cases;
         }).reduce(concat);
     };
-    my.testCaseForId = function (id) {
-        return my.testCases().filter(function (testCase) {
-            return testCase.count === id;
+    var findById = function (id, list) {
+        return list.filter(function (objectWithId) {
+            return objectWithId.id === id;
         }).pop();
     };
+    my.testCaseForId = function (id) {
+        return findById(id, my.testCases());
+    };
     my.buildForId = function (id) {
-        return my.builds.filter(function (build) {
-            return build.id === id;
-        }).pop();
+        return findById(id, my.builds);
     };
     return my;
 });
@@ -802,9 +810,7 @@ define('broken/renderer', [
             return '<div class="input-group panel-default">' + '<span class="input-group-addon"><input class="buildSelect" data-buildId="' + build.id + '" type="checkbox"></span>' + '<div class=\'panel-heading\'>' + '<div class="row">' + '<div class=\'col-md-8\'><h2 class=\'panel-title\'><a class=\'h2\' href=\'' + build.url + '\'>' + build.name + '</a>, <span class=\'h3\'>' + build.date.toLocaleString('de-DE', render.dateTimeFormat) + '</span></h2></div>' + '<div class="col-md-4 claim"></div>' + '</div>' + '</div></div>' + '<div class=\'testResults panel-body\'></div>';
         });
         unstableProjects.order();
-        unstableProjects.select('.claim').html(function (build) {
-            return render.formatClaim(build.claim);
-        });
+        unstableProjects.select('.claim').call(render.formatClaim);
         unstableProjects.exit().remove();
         render.renderTestresults(unstableProjects.select('.testResults'));
         d3.selectAll('#projects .loading').remove();
