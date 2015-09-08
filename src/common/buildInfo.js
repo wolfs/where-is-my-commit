@@ -30,7 +30,7 @@ define(['app-config'], function (config) {
 
     return Array.prototype.concat.apply([], warningsActions.map(function (action) {
       return action.result.warnings.map(function (warning) {
-        return {name: action.name, message: warning.message, fileName: warning.fileName, count: testCaseCount++ };
+        return {name: action.name, message: warning.message, fileName: warning.fileName, id: testCaseCount++ };
       }).filter(function (warning) {
         return !(warning.name === "warnings" && config.filterWarnings.some(function (filterWarning) {
           return warning.message.indexOf(filterWarning) > -1;
@@ -71,7 +71,7 @@ define(['app-config'], function (config) {
                 return (test.status !== 'PASSED') && (test.status !== 'SKIPPED') && (test.status !== 'FIXED');
               }).map(function (testCase) {
                 testCase.url = suiteUrl + testCase.name.replace(/[^a-zA-Z0-9_]/g, "_") + "/";
-                testCase.count = testCaseCount++;
+                testCase.id = testCaseCount++;
                 if (testCase.testActions) {
                   var claims = testCase.testActions.filter(function (c) {
                     return c.claimed === true;

@@ -18,16 +18,18 @@ define([], function () {
       .reduce(concat);
   };
 
-  my.testCaseForId = function (id) {
-    return my.testCases().filter(function (testCase) {
-      return testCase.count === id;
+  var findById = function (id, list) {
+    return list.filter(function (objectWithId) {
+      return objectWithId.id === id;
     }).pop();
   };
 
+  my.testCaseForId = function (id) {
+    return findById(id, my.testCases());
+  };
+
   my.buildForId = function (id) {
-    return my.builds.filter(function (build) {
-      return build.id === id;
-    }).pop();
+    return findById(id, my.builds);
   };
 
   return my;

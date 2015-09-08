@@ -17,7 +17,6 @@ define(['jquery', 'bootstrap'], function ($) {
     });
   };
 
-
   var appendTestCaseDetails = function (name, description, present, collapse, text) {
     return function (hull) {
       hull
@@ -27,7 +26,7 @@ define(['jquery', 'bootstrap'], function ($) {
             .append("a")
             .attr("data-toggle", "collapse")
             .attr("href", function (testCase) {
-              return "#" + name + testCase.count;
+              return "#" + name + testCase.id;
             })
             .text(description)
             .append("span")
@@ -39,7 +38,7 @@ define(['jquery', 'bootstrap'], function ($) {
           return collapse(testCase) ? "panel-collapse collapse" : "panel-collapse collapse in";
         })
         .attr("id", function (testCase) {
-          return name + testCase.count;
+          return name + testCase.id;
         })
         .append("pre")
         .text(function (testCase) {
@@ -74,7 +73,7 @@ define(['jquery', 'bootstrap'], function ($) {
       .append("div")
       .attr("class", "input-group testResult")
       .html(function (testCase) {
-        return '<span class="input-group-addon"><input class="testCaseSelect" data-testCaseId="' + testCase.count + '" type="checkbox"></span>';
+        return '<span class="input-group-addon"><input class="testCaseSelect" data-testCaseId="' + testCase.id + '" type="checkbox"></span>';
       })
       .append("div")
       .attr("class", "list-group-item")
