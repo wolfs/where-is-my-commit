@@ -2,36 +2,50 @@ define(['jquery', 'bootstrap'], function ($) {
   'use strict';
   var my = {};
 
-  my.dateTimeFormat= { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric' };
+  my.dateTimeFormat = {year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric'};
 
-  my.formatClaim = function (claim) {
-    return (claim.claimed ? '<span class="glyphicon glyphicon-lock"> </span>' + (claim.reason ? (' <span>' + claim.reason + '</span><br /> ') : '') +
-    ' <span class="label label-default">' + claim.claimedBy + '</span>' +
-    ' <span>' + new Date(claim.claimDate).toLocaleString('de-DE', my.dateTimeFormat) + '</span>'
-      : '');
+  my.formatClaim = function (el) {
+    el.html(function (claimedObject) {
+      var claim = claimedObject.claim;
+      if (claim.claimed) {
+        return '<span class="glyphicon glyphicon-lock"> </span>' + (claim.reason ? (' <span>' + claim.reason + '</span><br /> ') : '') +
+          ' <span class="label label-default">' + claim.claimedBy + '</span>' +
+          ' <span>' + new Date(claim.claimDate).toLocaleString('de-DE', my.dateTimeFormat) + '</span>';
+      } else {
+        return '';
+      }
+    });
   };
 
 
-  var appendTestCaseDetails = function(hull, name, description, present, collapse, text) {
-    hull
-      .filter(present)
-      .append("div")
-      .html(function (testCase) {
-        return '<h6>' +
-          '<a data-toggle="collapse" href="#' + name + testCase.count + '">' + description + '<span class="caret"></span></a>' +
-          '</h6>';
-      })
-      .append("div")
-      .attr("class", function (testCase) {
-        return collapse(testCase) ? "panel-collapse collapse" : "panel-collapse collapse in";
-      })
-      .attr("id", function (testCase) {
-        return name + testCase.count;
-      })
-      .append("pre")
-      .text(function (testCase) {
-        return text(testCase);
-      });
+  var appendTestCaseDetails = function (name, description, present, collapse, text) {
+    return function (hull) {
+      hull
+        .filter(present)
+        .append("div").call(function (div) {
+          div.append("h6")
+            .append("a")
+            .attr("data-toggle", "collapse")
+            .attr("href", function (testCase) {
+              return "#" + name + testCase.count;
+            })
+            .text(description)
+            .append("span")
+            .attr("class", "caret")
+          ;
+        })
+        .append("div")
+        .attr("class", function (testCase) {
+          return collapse(testCase) ? "panel-collapse collapse" : "panel-collapse collapse in";
+        })
+        .attr("id", function (testCase) {
+          return name + testCase.count;
+        })
+        .append("pre")
+        .text(function (testCase) {
+          return text(testCase);
+        });
+    };
   };
 
   my.renderTestresults = function (projectSelection) {
@@ -56,7 +70,7 @@ define(['jquery', 'bootstrap'], function ($) {
       return testCase.name;
     });
 
-    var hull = testResults.enter()
+    testResults.enter()
       .append("div")
       .attr("class", "input-group testResult")
       .html(function (testCase) {
@@ -74,50 +88,50 @@ define(['jquery', 'bootstrap'], function ($) {
             '</div>'].join("") +
           '<div class="col-md-5 claim"/>' +
           '</div>';
-      });
+      }).call(appendTestCaseDetails("details", 'Details',
+        function (testCase) {
+          return testCase.errorDetails;
+        },
+        function (testCase) {
+          return testCase.errorDetails.length > 1200;
+        },
+        function (testCase) {
+          return testCase.errorDetails.replace(/\[(\d+(, )?)?\]/, "");
+        }
+      ))
+      .call(appendTestCaseDetails("stacktrace", 'Stacktrace',
+        function (testCase) {
+          return testCase.errorStackTrace;
+        },
+        function () {
+          return true;
+        },
+        function (testCase) {
+          return testCase.errorStackTrace.replace(/\[(\d+(, )?)?\]/, "");
+        }
+      ));
 
-    appendTestCaseDetails(hull, "details", 'Details',
-      function (testCase) {
-        return testCase.errorDetails;
-      },
-      function (testCase) {
-        return testCase.errorDetails.length > 1200;
-      },
-      function (testCase) {
-        return testCase.errorDetails.replace(/\[(\d+(, )?)?\]/, "");
-      }
-    );
-
-    appendTestCaseDetails(hull, "stacktrace", 'Stacktrace',
-      function (testCase) {
-        return testCase.errorStackTrace;
-      },
-      function () {
-        return true;
-      },
-      function (testCase) {
-        return testCase.errorStackTrace.replace(/\[(\d+(, )?)?\]/, "");
-      }
-    );
-
-    testResults.select('.claim').html(function (testCase) {
-      return my.formatClaim(testCase.claim);
-    });
+    testResults.select('.claim').call(my.formatClaim);
 
     var warnings = projectSelection.selectAll(".warning").data(function (node) {
       return node.warnings || [];
     });
 
-    appendTestCaseDetails(warnings.enter()
+    warnings.enter()
       .append("div")
       .attr("class", "warning")
       .append("div")
       .attr("class", "list-group-item")
       .html(function (warning) {
         return "<h5 class='list-group-item-heading'>" + warning.fileName + "</h5>";
-      }), "warning", "Warning", function () { return true; }, function () { return false; }, function (warning) {
-      return warning.message;
-    });
+      })
+      .call(appendTestCaseDetails("warning", "Warning", function () {
+        return true;
+      }, function () {
+        return false;
+      }, function (warning) {
+        return warning.message;
+      }));
 
     $(function () {
       $('[data-toggle="tooltip"]').tooltip();

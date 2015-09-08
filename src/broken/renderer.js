@@ -33,9 +33,7 @@ define(['d3', 'jquery', 'common/render', 'broken/builds', 'common/util'], functi
 
     unstableProjects.order();
 
-    unstableProjects.select('.claim').html(function (build) {
-      return render.formatClaim(build.claim);
-    });
+    unstableProjects.select('.claim').call(render.formatClaim);
 
     unstableProjects.exit().remove();
 
