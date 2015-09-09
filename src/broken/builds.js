@@ -32,5 +32,15 @@ define([], function () {
     return findById(id, my.builds);
   };
 
+  my.testCasesForSuite = function (url) {
+    return my.builds.map(function (build) {
+      return build.testResult.failedTests || [];
+    }).reduce(concat)
+      .filter(function (testSuite) {
+        return testSuite.url === url;
+      })
+      .pop().cases;
+  };
+
   return my;
 });

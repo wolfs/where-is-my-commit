@@ -26,7 +26,7 @@ define(['broken/builds', 'common/util', 'common/buildInfo', 'jquery', 'app-confi
         testResult: buildInfo.getTestResult(build),
         warnings: buildInfo.getWarnings(build),
         status: build.result.toLowerCase(),
-        claim: claims.length === 1 ? claims[0] : { claimed: false },
+        claim: claims.length === 1 ? claims[0] : {claimed: false},
         id: buildId++
       };
       data.builds.push(buildData);
@@ -40,8 +40,8 @@ define(['broken/builds', 'common/util', 'common/buildInfo', 'jquery', 'app-confi
     });
   };
 
-  my.claim = function (objectToClaim, claim)  {
-    $.post(objectToClaim.url  + '/claim/claim', {
+  my.claim = function (objectToClaim, claim) {
+    $.post(objectToClaim.url + '/claim/claim', {
         Submit: "Claim",
         json: JSON.stringify(claim)
       }
@@ -54,16 +54,20 @@ define(['broken/builds', 'common/util', 'common/buildInfo', 'jquery', 'app-confi
       });
   };
 
-  my.unclaim = function (objectToClaim)  {
-    $.post(objectToClaim.url  + '/claim/unclaim').then(function () {
-      objectToClaim.claim = { claimed: false };
+  my.unclaim = function (objectToClaim) {
+    $.post(objectToClaim.url + '/claim/unclaim').then(function () {
+      objectToClaim.claim = {claimed: false};
       $(data).trigger(data.event);
     });
   };
 
-  my.users = $.getJSON(config.jenkinsUrl + '/asynchPeople/api/json?tree=users[user[fullName,id]]').then(function (jsonUsers) {
-    return jsonUsers.users.map(function (userInfo) { return userInfo.user; });
-  });
+  my.users = function () {
+    return $.getJSON(config.jenkinsUrl + '/asynchPeople/api/json?tree=users[user[fullName,id]]').then(function (jsonUsers) {
+      return jsonUsers.users.map(function (userInfo) {
+        return userInfo.user;
+      });
+    });
+  };
 
   return my;
 });

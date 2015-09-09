@@ -58,7 +58,12 @@ define(['jquery', 'bootstrap'], function ($) {
       .append("div")
       .attr("class", "suiteResult list-group")
       .append("div")
-      .attr("class", "list-group-item suite")
+      .attr("class", "input-group suite")
+      .html(function (suite) {
+        return '<span class="input-group-addon"><input class="testCaseSelect" data-suitename="' + suite.url + '" type="checkbox"></span>'
+      })
+      .append("div")
+      .attr("class", "list-group-item")
       .html(function (test) {
         return "<div class='h4'><a href='" + test.url + "'>" + test.name + "</a></div>";
       });

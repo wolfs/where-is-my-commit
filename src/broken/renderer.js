@@ -21,12 +21,12 @@ define(['d3', 'jquery', 'common/render', 'broken/builds', 'common/util'], functi
       })
       .html(function (build) {
         return '<div class="input-group panel-default">' +
-          '<span class="input-group-addon"><input class="buildSelect" data-buildId="' + build.id + '" type="checkbox"></span>' + "<div class='panel-heading'>" +   '<div class="row">' +
+          '<span class="input-group-addon"><input class="buildSelect" data-buildId="' + build.id + '" type="checkbox"></span>' + "<div class='panel-heading'>" + '<div class="row">' +
           "<div class='col-md-8'><h2 class='panel-title'><a class='h2' href='" + build.url + "'>" + build.name +
           "</a>, <span class='h3'>" + build.date.toLocaleString('de-DE', render.dateTimeFormat) +
           "</span></h2></div>" +
-            '<div class="col-md-4 claim"></div>' +
-            '</div>' +
+          '<div class="col-md-4 claim"></div>' +
+          '</div>' +
           "</div></div>" +
           "<div class='testResults panel-body'></div>";
       });
@@ -40,6 +40,21 @@ define(['d3', 'jquery', 'common/render', 'broken/builds', 'common/util'], functi
     render.renderTestresults(unstableProjects.select(".testResults"));
 
     d3.selectAll("#projects .loading").remove();
+
+    var suiteSelector = function (event) {
+      console.log(event);
+      var checkbox = event.target;
+      data.testCasesForSuite($(checkbox).data('suitename')).forEach(function (testCase) {
+        $('[data-testcaseid="' + testCase.id + '"]').prop('checked', checkbox.checked);
+      });
+
+    };
+
+    var suites = $('[data-suitename]');
+
+    suites.off('change');
+
+    suites.change(suiteSelector);
   };
 
   my.addUsers = function (users) {
@@ -53,7 +68,9 @@ define(['d3', 'jquery', 'common/render', 'broken/builds', 'common/util'], functi
       .append("option")
       .attr("class", "user")
       .attr("value", userId)
-      .text(function (user) { return user.fullName; })
+      .text(function (user) {
+        return user.fullName;
+      })
     ;
   };
 
