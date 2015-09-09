@@ -731,8 +731,9 @@ define('broken/updater', [
     'broken/builds',
     'common/util',
     'common/buildInfo',
-    'jquery'
-], function (data, util, buildInfo, $) {
+    'jquery',
+    'app-config'
+], function (data, util, buildInfo, $, config) {
     var my = {};
     var buildUrl = function (mybuildUrl) {
         return mybuildUrl + '/api/json?tree=' + buildInfo.buildKeys(['fullDisplayName'], []);
@@ -786,6 +787,11 @@ define('broken/updater', [
             $(data).trigger(data.event);
         });
     };
+    my.users = $.getJSON(config.jenkinsUrl + '/asynchPeople/api/json?tree=users[user[fullName,id]]').then(function (jsonUsers) {
+        return jsonUsers.users.map(function (userInfo) {
+            return userInfo.user;
+        });
+    });
     return my;
 });
 define('broken/renderer', [
@@ -814,6 +820,14 @@ define('broken/renderer', [
         unstableProjects.exit().remove();
         render.renderTestresults(unstableProjects.select('.testResults'));
         d3.selectAll('#projects .loading').remove();
+    };
+    my.addUsers = function (users) {
+        var userId = function (user) {
+            return user.id;
+        };
+        d3.select('#assignees').selectAll('.user').data(users, userId).enter().append('option').attr('class', 'user').attr('value', userId).text(function (user) {
+            return user.fullName;
+        });
     };
     my.renderLoop = function () {
         render.renderLoop(data, data.event, my.renderFailedTests);
@@ -879,6 +893,9 @@ define('broken/controller', [
         initFormSubmit();
         urlsDef.then(throttler.scheduleUpdates);
         renderer.renderLoop();
+        updater.users.then(function (users) {
+            renderer.addUsers(users);
+        });
     };
     return my;
 });
