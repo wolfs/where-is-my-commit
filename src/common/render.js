@@ -81,7 +81,7 @@ define(['jquery', 'bootstrap'], function ($) {
         return '<div class="row">' +
           [
             '<div class="h5 col-md-7">',
-            '<a href="', testCase.url, '">', testCase.name, '</a> ',
+            '<a href="', testCase.url, '">', testCase.name.substring(0, 400), '</a> ',
             ' <span class="glyphicon glyphicon-time"></span>',
             '<span class="badge" data-toggle="tooltip" title="age">', testCase.age, '</span>',
             '</div>'].join("") +
