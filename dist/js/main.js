@@ -225,7 +225,9 @@ define('common/render', [
         }, function (test) {
             return test.name + '-' + test.className;
         });
-        suiteResults.enter().append('div').attr('class', 'suiteResult list-group').append('div').attr('class', 'list-group-item suite').html(function (test) {
+        suiteResults.enter().append('div').attr('class', 'suiteResult list-group').append('div').attr('class', 'input-group suite').html(function (suite) {
+            return '<span class="input-group-addon"><input class="testCaseSelect" data-suitename="' + suite.url + '" type="checkbox"></span>';
+        }).append('div').attr('class', 'list-group-item').html(function (test) {
             return '<div class=\'h4\'><a href=\'' + test.url + '\'>' + test.name + '</a></div>';
         });
         var testResults = suiteResults.selectAll('.testResult').data(function (suite) {
@@ -241,7 +243,7 @@ define('common/render', [
                 '<a href="',
                 testCase.url,
                 '">',
-                testCase.name,
+                testCase.name.substring(0, 400),
                 '</a> ',
                 ' <span class="glyphicon glyphicon-time"></span>',
                 '<span class="badge" data-toggle="tooltip" title="age">',
@@ -254,13 +256,13 @@ define('common/render', [
         }, function (testCase) {
             return testCase.errorDetails.length > 1200;
         }, function (testCase) {
-            return testCase.errorDetails.replace(/\[(\d+(, )?)?\]/, '');
+            return testCase.errorDetails;
         })).call(appendTestCaseDetails('stacktrace', 'Stacktrace', function (testCase) {
             return testCase.errorStackTrace;
         }, function () {
             return true;
         }, function (testCase) {
-            return testCase.errorStackTrace.replace(/\[(\d+(, )?)?\]/, '');
+            return testCase.errorStackTrace;
         }));
         testResults.select('.claim').call(my.formatClaim);
         var warnings = projectSelection.selectAll('.warning').data(function (node) {
@@ -492,7 +494,7 @@ define('common/buildInfo', ['app-config'], function (config) {
                         cases: suite.cases.filter(function (test) {
                             return test.status !== 'PASSED' && test.status !== 'SKIPPED' && test.status !== 'FIXED';
                         }).map(function (testCase) {
-                            testCase.url = suiteUrl + testCase.name.replace(/[^a-zA-Z0-9_]/g, '_') + '/';
+                            testCase.url = suiteUrl + testCase.name.replace(/[^a-zA-Z0-9_$]/g, '_') + '/';
                             testCase.id = testCaseCount++;
                             if (testCase.testActions) {
                                 var claims = testCase.testActions.filter(function (c) {
@@ -725,15 +727,21 @@ define('broken/builds', [], function () {
     my.buildForId = function (id) {
         return findById(id, my.builds);
     };
+    my.testCasesForSuite = function (url) {
+        return my.builds.map(function (build) {
+            return build.testResult.failedTests || [];
+        }).reduce(concat).filter(function (testSuite) {
+            return testSuite.url === url;
+        }).pop().cases;
+    };
     return my;
 });
 define('broken/updater', [
     'broken/builds',
     'common/util',
     'common/buildInfo',
-    'jquery',
-    'app-config'
-], function (data, util, buildInfo, $, config) {
+    'jquery'
+], function (data, util, buildInfo, $) {
     var my = {};
     var buildUrl = function (mybuildUrl) {
         return mybuildUrl + '/api/json?tree=' + buildInfo.buildKeys(['fullDisplayName'], []);
@@ -787,11 +795,13 @@ define('broken/updater', [
             $(data).trigger(data.event);
         });
     };
-    my.users = $.getJSON(config.jenkinsUrl + '/asynchPeople/api/json?tree=users[user[fullName,id]]').then(function (jsonUsers) {
-        return jsonUsers.users.map(function (userInfo) {
-            return userInfo.user;
+    my.users = function () {
+        return $.getJSON(config.jenkinsUrl + '/asynchPeople/api/json?tree=users[user[fullName,id]]').then(function (jsonUsers) {
+            return jsonUsers.users.map(function (userInfo) {
+                return userInfo.user;
+            });
         });
-    });
+    };
     return my;
 });
 define('broken/renderer', [
@@ -820,6 +830,15 @@ define('broken/renderer', [
         unstableProjects.exit().remove();
         render.renderTestresults(unstableProjects.select('.testResults'));
         d3.selectAll('#projects .loading').remove();
+        var suiteSelector = function (event) {
+            var checkbox = event.target;
+            data.testCasesForSuite($(checkbox).data('suitename')).forEach(function (testCase) {
+                $('[data-testcaseid="' + testCase.id + '"]').prop('checked', checkbox.checked);
+            });
+        };
+        var suites = $('[data-suitename]');
+        suites.off('change');
+        suites.change(suiteSelector);
     };
     my.addUsers = function (users) {
         var userId = function (user) {
@@ -893,9 +912,6 @@ define('broken/controller', [
         initFormSubmit();
         urlsDef.then(throttler.scheduleUpdates);
         renderer.renderLoop();
-        updater.users.then(function (users) {
-            renderer.addUsers(users);
-        });
     };
     return my;
 });
