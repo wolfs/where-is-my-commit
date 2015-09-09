@@ -1,4 +1,4 @@
-define(['broken/builds', 'common/util', 'common/buildInfo', 'jquery', 'app-config'], function (data, util, buildInfo, $, config) {
+define(['broken/builds', 'common/util', 'common/buildInfo', 'jquery'], function (data, util, buildInfo, $) {
   var my = {};
 
   var buildUrl = function (mybuildUrl) {

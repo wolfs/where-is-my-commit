@@ -56,9 +56,6 @@ define(['jquery', 'common/util', 'app-config', 'broken/builds', 'broken/updater'
     initFormSubmit();
     urlsDef.then(throttler.scheduleUpdates);
     renderer.renderLoop();
-    updater.users.then(function (users) {
-      renderer.addUsers(users);
-    });
   };
 
   return my;
