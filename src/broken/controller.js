@@ -31,8 +31,8 @@ define(['jquery', 'common/util', 'app-config', 'broken/builds', 'broken/updater'
         $(this).serializeArray().forEach(function (field) {
           claim[field.name] = field.value;
         });
-        testCases.concat(builds).forEach(function (testCase) {
-          updater.claim(testCase, claim);
+        util.sequentially(testCases.concat(builds), function (testCase) {
+          return updater.claim(testCase, claim);
         });
       } catch (err) {
         console.log(err);

@@ -41,24 +41,28 @@ define(['broken/builds', 'common/util', 'common/buildInfo', 'jquery'], function 
   };
 
   my.claim = function (objectToClaim, claim) {
-    $.post(objectToClaim.url + '/claim/claim', {
+    var request = $.post(objectToClaim.url + '/claim/claim', {
         Submit: "Claim",
         json: JSON.stringify(claim)
       }
-    ).then(function () {
-        claim.claimed = true;
-        claim.claimDate = new Date().getTime();
-        claim.claimedBy = claim.assignee;
-        objectToClaim.claim = claim;
-        $(data).trigger(data.event);
-      });
+    );
+    request.then(function () {
+      claim.claimed = true;
+      claim.claimDate = new Date().getTime();
+      claim.claimedBy = claim.assignee;
+      objectToClaim.claim = claim;
+      $(data).trigger(data.event);
+    });
+    return request;
   };
 
   my.unclaim = function (objectToClaim) {
-    $.post(objectToClaim.url + '/claim/unclaim').then(function () {
+    var request = $.post(objectToClaim.url + '/claim/unclaim');
+    request.then(function () {
       objectToClaim.claim = {claimed: false};
       $(data).trigger(data.event);
     });
+    return request;
   };
 
   my.users = function () {

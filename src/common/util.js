@@ -63,5 +63,14 @@ define({
     };
 
     return throttler;
+  },
+
+  sequentially: function (args, requestFunction) {
+    args.reverse().reduce(function (previous, current) {
+      return function () {
+        requestFunction(current).always(previous);
+      };
+    }, function () {
+    })();
   }
 });
