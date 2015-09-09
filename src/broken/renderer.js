@@ -42,12 +42,10 @@ define(['d3', 'jquery', 'common/render', 'broken/builds', 'common/util'], functi
     d3.selectAll("#projects .loading").remove();
 
     var suiteSelector = function (event) {
-      console.log(event);
       var checkbox = event.target;
       data.testCasesForSuite($(checkbox).data('suitename')).forEach(function (testCase) {
         $('[data-testcaseid="' + testCase.id + '"]').prop('checked', checkbox.checked);
       });
-
     };
 
     var suites = $('[data-suitename]');
