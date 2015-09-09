@@ -70,7 +70,7 @@ define(['app-config'], function (config) {
               cases: suite.cases.filter(function (test) {
                 return (test.status !== 'PASSED') && (test.status !== 'SKIPPED') && (test.status !== 'FIXED');
               }).map(function (testCase) {
-                testCase.url = suiteUrl + testCase.name.replace(/[^a-zA-Z0-9_]/g, "_") + "/";
+                testCase.url = suiteUrl + testCase.name.replace(/[^a-zA-Z0-9_$]/g, "_") + "/";
                 testCase.id = testCaseCount++;
                 if (testCase.testActions) {
                   var claims = testCase.testActions.filter(function (c) {

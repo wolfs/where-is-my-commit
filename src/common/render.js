@@ -87,7 +87,8 @@ define(['jquery', 'bootstrap'], function ($) {
             '</div>'].join("") +
           '<div class="col-md-5 claim"/>' +
           '</div>';
-      }).call(appendTestCaseDetails("details", 'Details',
+      })
+      .call(appendTestCaseDetails("details", 'Details',
         function (testCase) {
           return testCase.errorDetails;
         },
@@ -95,7 +96,8 @@ define(['jquery', 'bootstrap'], function ($) {
           return testCase.errorDetails.length > 1200;
         },
         function (testCase) {
-          return testCase.errorDetails.replace(/\[(\d+(, )?)?\]/, "");
+          return testCase.errorDetails;
+          //.substring(0, 1200).replace(/\[\d+, (\d+(, )?)*\]/, "");
         }
       ))
       .call(appendTestCaseDetails("stacktrace", 'Stacktrace',
@@ -106,7 +108,8 @@ define(['jquery', 'bootstrap'], function ($) {
           return true;
         },
         function (testCase) {
-          return testCase.errorStackTrace.replace(/\[(\d+(, )?)?\]/, "");
+          return testCase.errorStackTrace;
+          //.replace(/\[\d+, (\d+(, )?)*\]/, "");
         }
       ));
 
