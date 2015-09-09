@@ -144,6 +144,14 @@ define('common/util', [], {
             nodes.forEach(throttler.scheduleUpdate);
         };
         return throttler;
+    },
+    sequentially: function (args, requestFunction) {
+        args.reverse().reduce(function (previous, current) {
+            return function () {
+                requestFunction(current).always(previous);
+            };
+        }, function () {
+        })();
     }
 });
 define('where/builds/node', [], function () {
@@ -778,22 +786,26 @@ define('broken/updater', [
         });
     };
     my.claim = function (objectToClaim, claim) {
-        $.post(objectToClaim.url + '/claim/claim', {
+        var request = $.post(objectToClaim.url + '/claim/claim', {
             Submit: 'Claim',
             json: JSON.stringify(claim)
-        }).then(function () {
+        });
+        request.then(function () {
             claim.claimed = true;
             claim.claimDate = new Date().getTime();
             claim.claimedBy = claim.assignee;
             objectToClaim.claim = claim;
             $(data).trigger(data.event);
         });
+        return request;
     };
     my.unclaim = function (objectToClaim) {
-        $.post(objectToClaim.url + '/claim/unclaim').then(function () {
+        var request = $.post(objectToClaim.url + '/claim/unclaim');
+        request.then(function () {
             objectToClaim.claim = { claimed: false };
             $(data).trigger(data.event);
         });
+        return request;
     };
     my.users = function () {
         return $.getJSON(config.jenkinsUrl + '/asynchPeople/api/json?tree=users[user[fullName,id]]').then(function (jsonUsers) {
@@ -889,8 +901,8 @@ define('broken/controller', [
                 $(this).serializeArray().forEach(function (field) {
                     claim[field.name] = field.value;
                 });
-                testCases.concat(builds).forEach(function (testCase) {
-                    updater.claim(testCase, claim);
+                util.sequentially(testCases.concat(builds), function (testCase) {
+                    return updater.claim(testCase, claim);
                 });
             } catch (err) {
                 console.log(err);
