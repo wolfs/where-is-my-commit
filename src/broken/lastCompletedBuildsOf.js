@@ -18,7 +18,7 @@ define(['jquery', 'app-config'], function ($, config) {
           return job.color !== 'blue';
         }).
         map(function (job) {
-          return job.url + 'lastSuccessfulBuild/';
+          return job.url + 'lastCompletedBuild/';
         });
     });
   };

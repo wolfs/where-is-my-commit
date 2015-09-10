@@ -8,14 +8,16 @@ define(['d3', 'jquery', 'common/render', 'broken/builds', 'common/util'], functi
   my.renderFailedTests = function () {
     var unstableNodes = data.builds
       .filter(function (build) {
-        return (build.status === "unstable");
+        return (build.status === "failure" || build.status === "unstable");
       });
 
     var unstableProjects = d3.select("#projects").selectAll(".unstableProject").data(unstableNodes, buildName);
 
     unstableProjects.enter()
       .append("div")
-      .attr("class", "panel panel-default unstableProject")
+      .attr("class", function (build) {
+        return "panel panel-default unstableProject " + build.status;
+      })
       .attr("name", function (el) {
         return el.name;
       })
