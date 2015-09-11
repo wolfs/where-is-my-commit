@@ -23,10 +23,6 @@
     shim: {
       bootstrap: {
         deps: ['jquery']
-      },
-      spin: {
-        deps: [],
-        exports: 'Spinner'
       }
     }
   };

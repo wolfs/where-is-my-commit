@@ -25,10 +25,6 @@ define([], function () {
       },
       'bootstrap': {
         "deps": ['jquery']
-      },
-      spin: {
-        deps: [],
-        exports: 'Spinner'
       }
     }
   });
