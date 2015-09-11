@@ -12,9 +12,8 @@ define(['common/util', 'where/builds/nodesData', 'where/builds/nodesRenderer', '
 
     my.init = function () {
       if (data.revision) {
-        throttler.scheduleUpdate(data.data);
-
         renderer.renderLoop();
+        throttler.scheduleUpdate(data.data);
       }
 
       $(document).ready(function () {

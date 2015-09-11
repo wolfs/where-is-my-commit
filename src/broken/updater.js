@@ -1,4 +1,4 @@
-define(['broken/builds', 'common/util', 'common/buildInfo', 'jquery'], function (data, util, buildInfo, $) {
+define(['broken/builds', 'common/util', 'common/buildInfo', 'jquery', 'app-config'], function (data, util, buildInfo, $, config) {
   var my = {};
 
   var buildUrl = function (mybuildUrl) {
@@ -69,6 +69,14 @@ define(['broken/builds', 'common/util', 'common/buildInfo', 'jquery'], function 
     return $.getJSON(config.jenkinsUrl + '/asynchPeople/api/json?tree=users[user[fullName,id]]').then(function (jsonUsers) {
       return jsonUsers.users.map(function (userInfo) {
         return userInfo.user;
+      });
+    });
+  };
+
+  my.views = function () {
+    return $.getJSON(config.jenkinsUrl + '/api/json?tree=views[name,url]').then(function (jenkins) {
+      return jenkins.views.sort(function (a, b) {
+        return a.name.localeCompare(b.name);
       });
     });
   };

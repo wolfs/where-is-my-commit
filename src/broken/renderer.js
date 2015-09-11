@@ -1,4 +1,4 @@
-define(['d3', 'jquery', 'common/render', 'broken/builds', 'common/util'], function (d3, $, render, data) {
+define(['d3', 'jquery', 'common/render', 'broken/builds', 'common/util'], function (d3, $, render, data, util) {
   var my = {};
 
   var buildName = function (build) {
@@ -72,6 +72,33 @@ define(['d3', 'jquery', 'common/render', 'broken/builds', 'common/util'], functi
         return user.fullName;
       })
     ;
+  };
+
+  my.addViews = function (views) {
+    var viewSelection = d3.select('#views').selectAll('.view').data(views);
+    viewSelection
+      .enter()
+      .append("li")
+      .attr("role", "presentation")
+      .attr("class", "view")
+      .append("a")
+      .attr("href", function (view) {
+        return "?view=" + view.name;
+      })
+      .attr("role", "menuitem")
+      .attr("name", function (view) {
+        return view.name;
+      })
+      .text(function (view) {
+        return view.name;
+      });
+
+    viewSelection.order();
+    viewSelection.exit().remove();
+
+    var selectedViewName = util.getQueryVariable('view');
+    $('#currentView').text(selectedViewName ? selectedViewName : 'Views');
+    d3.selectAll("#views .loading").remove();
   };
 
   my.renderLoop = function () {

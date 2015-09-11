@@ -54,8 +54,13 @@ define(['jquery', 'common/util', 'app-config', 'broken/builds', 'broken/updater'
 
   my.init = function (urlsDef) {
     initFormSubmit();
-    urlsDef.then(throttler.scheduleUpdates);
+    updater.views().then(renderer.addViews);
     renderer.renderLoop();
+    urlsDef.then(throttler.scheduleUpdates).then(function (urls) {
+      if (!urls) {
+        $(data).trigger(data.event);
+      }
+    });
   };
 
   return my;

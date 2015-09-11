@@ -156,7 +156,6 @@ define(['jquery', 'bootstrap'], function ($) {
         }
       }, 20);
     });
-    $(eventSource).trigger(eventName);
   };
 
   return my;
