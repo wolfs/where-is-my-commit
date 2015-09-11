@@ -1,4 +1,4 @@
-define(['where/changes/changes', 'd3'], function (changes, d3) {
+define(['jquery', 'd3', 'where/changes/changes', 'common/util'], function ($, d3, changes, util) {
   'use strict';
   var my = {};
 
@@ -13,7 +13,9 @@ define(['where/changes/changes', 'd3'], function (changes, d3) {
       .attr("class", "revision")
       .append("a")
       .attr("href", function (el) {
-        return "?revision=" + el.commitId;
+        var queryParams = util.queryVariables();
+        queryParams.revision = el.commitId;
+        return "?" + $.param(queryParams);
       })
       .attr("role", "menuitem")
       .attr("name", function (el) {
