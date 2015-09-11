@@ -83,7 +83,10 @@ define(['d3', 'jquery', 'common/render', 'broken/builds', 'common/util'], functi
       .attr("class", "view")
       .append("a")
       .attr("href", function (view) {
-        return "?view=" + view.name;
+        var queryVariables = util.queryVariables();
+        queryVariables.view = view.name;
+        delete queryVariables.multijob;
+        return "?" + $.param(queryVariables);
       })
       .attr("role", "menuitem")
       .attr("name", function (view) {

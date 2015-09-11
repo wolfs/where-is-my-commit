@@ -8,14 +8,26 @@ define({
   getQueryVariableFromSearch: function (variable, search) {
     'use strict';
     var query = search.substring(1);
-    var results = query.split("&").map(function (el) {
-      return el.split("=");
-    }).filter(function (el) {
-      return (el[0] === variable);
-    }).map(function (el) {
-      return el[1];
-    });
-    return results.length === 0 ? false : results[0];
+    var params = this.queryVariablesFromQuery(query);
+    return params[variable];
+  },
+
+  queryVariablesFromQuery: function (query) {
+    var params = {};
+    query
+      .split("&").map(function (el) {
+        return el.split("=");
+      })
+      .forEach(function (args) {
+        params[decodeURIComponent(args[0])] = decodeURIComponent(args[1].replace(/\+/g, ' '));
+      });
+    return params;
+  },
+
+  queryVariables: function () {
+    var search = window.location.search;
+    var query = search.substring(1);
+    return this.queryVariablesFromQuery(query);
   },
 
   newThrottler: function (updateFunction, bulkUpdateSizeParam, updateIntervalParam) {

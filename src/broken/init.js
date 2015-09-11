@@ -1,9 +1,10 @@
-define(['jquery', 'common/util', 'broken/controller', 'broken/lastBuildsOf', 'spin'], function ($, util, controller, lastCompletedBuildsOf, Spinner) {
+define(['jquery', 'common/util', 'broken/controller', 'broken/lastBuildsOf', 'spin'], function ($, util, controller, lastBuildsOf, Spinner) {
   var viewName = util.getQueryVariable('view'),
-    multijobName = util.getQueryVariable('multijob');
+    multijobName = util.getQueryVariable('multijob'),
+    buildSelector = util.getQueryVariable('buildSelector');
 
-  var urlsToCheck = viewName ? lastCompletedBuildsOf.view(viewName) :
-    (multijobName ? lastCompletedBuildsOf.multijob(multijobName) : $.Deferred().resolve([]));
+  var urlsToCheck = viewName ? lastBuildsOf.view(viewName, buildSelector) :
+    (multijobName ? lastBuildsOf.multijob(multijobName, buildSelector) : $.Deferred().resolve([]));
 
   var loading = $('#projects').find('.loading')[0];
   $(loading).text('');
