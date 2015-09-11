@@ -1471,3 +1471,5 @@ to{opacity:0}
 .scrollable-menu{height:auto;width:100%;max-height:80vh;overflow-x:hidden;word-wrap:break-word}
 .modal-xl{width:90%}
 .list-group-item.suite{background-color:#f5f5f5}
+.unstableProject.failure .panel-heading{background-color:#EF2929}
+.unstableProject.unstable .panel-heading{background-color:#FCE94F}

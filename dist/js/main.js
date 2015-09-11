@@ -829,10 +829,12 @@ define('broken/renderer', [
     };
     my.renderFailedTests = function () {
         var unstableNodes = data.builds.filter(function (build) {
-            return build.status === 'unstable';
+            return build.status === 'failure' || build.status === 'unstable';
         });
         var unstableProjects = d3.select('#projects').selectAll('.unstableProject').data(unstableNodes, buildName);
-        unstableProjects.enter().append('div').attr('class', 'panel panel-default unstableProject').attr('name', function (el) {
+        unstableProjects.enter().append('div').attr('class', function (build) {
+            return 'panel panel-default unstableProject ' + build.status;
+        }).attr('name', function (el) {
             return el.name;
         }).html(function (build) {
             return '<div class="input-group panel-default">' + '<span class="input-group-addon"><input class="buildSelect" data-buildId="' + build.id + '" type="checkbox"></span>' + '<div class=\'panel-heading\'>' + '<div class="row">' + '<div class=\'col-md-8\'><h2 class=\'panel-title\'><a class=\'h2\' href=\'' + build.url + '\'>' + build.name + '</a>, <span class=\'h3\'>' + build.date.toLocaleString('de-DE', render.dateTimeFormat) + '</span></h2></div>' + '<div class="col-md-4 claim"></div>' + '</div>' + '</div></div>' + '<div class=\'testResults panel-body\'></div>';
@@ -946,7 +948,7 @@ define('broken/lastCompletedBuildsOf', [
             return view.jobs.filter(function (job) {
                 return job.color !== 'blue';
             }).map(function (job) {
-                return job.url + 'lastSuccessfulBuild/';
+                return job.url + 'lastCompletedBuild/';
             });
         });
     };
