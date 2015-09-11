@@ -19,7 +19,7 @@ define({
         return el.split("=");
       })
       .forEach(function (args) {
-        params[decodeURIComponent(args[0])] = decodeURIComponent(args[1].replace(/\+/g, ' '));
+        params[decodeURIComponent(args[0])] = args[1] ? decodeURIComponent(args[1].replace(/\+/g, ' ')) : args[1];
       });
     return params;
   },
