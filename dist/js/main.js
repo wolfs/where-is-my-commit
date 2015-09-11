@@ -16,10 +16,82 @@ define('optional', [], {
     }
 });
 define('where/changes/changes', [], { commits: [] });
+define('common/util', [], {
+    getQueryVariable: function (variable) {
+        'use strict';
+        var search = window.location.search;
+        return this.getQueryVariableFromSearch(variable, search);
+    },
+    getQueryVariableFromSearch: function (variable, search) {
+        'use strict';
+        var query = search.substring(1);
+        var params = this.queryVariablesFromQuery(query);
+        return params[variable];
+    },
+    queryVariablesFromQuery: function (query) {
+        var params = {};
+        query.split('&').map(function (el) {
+            return el.split('=');
+        }).forEach(function (args) {
+            params[decodeURIComponent(args[0])] = args[1] ? decodeURIComponent(args[1].replace(/\+/g, ' ')) : args[1];
+        });
+        return params;
+    },
+    queryVariables: function () {
+        var search = window.location.search;
+        var query = search.substring(1);
+        return this.queryVariablesFromQuery(query);
+    },
+    newThrottler: function (updateFunction, bulkUpdateSizeParam, updateIntervalParam) {
+        var throttler = {}, toUpdate = [], currentTimer, timerRunning = false, bulkUpdateSize = bulkUpdateSizeParam || 10, updateInterval = updateIntervalParam || 2000;
+        var startTimer = function () {
+            updateNext();
+            currentTimer = setInterval(function () {
+                if (toUpdate.length === 0) {
+                    clearInterval(currentTimer);
+                    timerRunning = false;
+                } else {
+                    updateNext();
+                }
+            }, updateInterval);
+            timerRunning = true;
+        };
+        var startTimerIfNecessary = function () {
+            if (!timerRunning) {
+                startTimer();
+            }
+        };
+        var updateNext = function () {
+            if (toUpdate.length > 0) {
+                var toUpdateNow = toUpdate.slice(0, bulkUpdateSize);
+                toUpdate = toUpdate.slice(bulkUpdateSize);
+                toUpdateNow.forEach(updateFunction);
+            }
+        };
+        throttler.scheduleUpdate = function (node) {
+            throttler.scheduleUpdates([node]);
+        };
+        throttler.scheduleUpdates = function (nodes) {
+            Array.prototype.push.apply(toUpdate, nodes);
+            startTimerIfNecessary();
+        };
+        return throttler;
+    },
+    sequentially: function (args, requestFunction) {
+        args.reverse().reduce(function (previous, current) {
+            return function () {
+                requestFunction(current).always(previous);
+            };
+        }, function () {
+        })();
+    }
+});
 define('where/changes/changesRenderer', [
+    'jquery',
+    'd3',
     'where/changes/changes',
-    'd3'
-], function (changes, d3) {
+    'common/util'
+], function ($, d3, changes, util) {
     'use strict';
     var my = {};
     my.render = function () {
@@ -27,7 +99,9 @@ define('where/changes/changesRenderer', [
             return d.commitId;
         });
         revisions.enter().append('li').attr('role', 'presentation').attr('class', 'revision').append('a').attr('href', function (el) {
-            return '?revision=' + el.commitId;
+            var queryParams = util.queryVariables();
+            queryParams.revision = el.commitId;
+            return '?' + $.param(queryParams);
         }).attr('role', 'menuitem').attr('name', function (el) {
             return el.commitId;
         }).attr('class', 'list-group-item').html(function (el) {
@@ -92,68 +166,6 @@ define('where/changes/changesController', [
     };
     return my;
 });
-define('common/util', [], {
-    getQueryVariable: function (variable) {
-        'use strict';
-        var search = window.location.search;
-        return this.getQueryVariableFromSearch(variable, search);
-    },
-    getQueryVariableFromSearch: function (variable, search) {
-        'use strict';
-        var query = search.substring(1);
-        var results = query.split('&').map(function (el) {
-            return el.split('=');
-        }).filter(function (el) {
-            return el[0] === variable;
-        }).map(function (el) {
-            return el[1];
-        });
-        return results.length === 0 ? false : results[0];
-    },
-    newThrottler: function (updateFunction, bulkUpdateSizeParam, updateIntervalParam) {
-        var throttler = {}, toUpdate = [], currentTimer, timerRunning = false, bulkUpdateSize = bulkUpdateSizeParam || 10, updateInterval = updateIntervalParam || 2000;
-        var startTimer = function () {
-            updateNext();
-            currentTimer = setInterval(function () {
-                if (toUpdate.length === 0) {
-                    clearInterval(currentTimer);
-                    timerRunning = false;
-                } else {
-                    updateNext();
-                }
-            }, updateInterval);
-            timerRunning = true;
-        };
-        var startTimerIfNecessary = function () {
-            if (!timerRunning) {
-                startTimer();
-            }
-        };
-        var updateNext = function () {
-            if (toUpdate.length > 0) {
-                var toUpdateNow = toUpdate.slice(0, bulkUpdateSize);
-                toUpdate = toUpdate.slice(bulkUpdateSize);
-                toUpdateNow.forEach(updateFunction);
-            }
-        };
-        throttler.scheduleUpdate = function (node) {
-            toUpdate.push(node);
-            startTimerIfNecessary();
-        };
-        throttler.scheduleUpdates = function (nodes) {
-            nodes.forEach(throttler.scheduleUpdate);
-        };
-        return throttler;
-    },
-    sequentially: function (args, requestFunction) {
-        args.reverse().reduce(function (previous, current) {
-            return function () {
-                requestFunction(current).always(previous);
-            };
-        }, function () {
-        })();
-    }
-});
 define('where/builds/node', [], function () {
     'use strict';
     var my = {};
@@ -183,9 +195,9 @@ define('where/builds/nodesData', [
 ], function (node, config, util) {
     'use strict';
     var my = {};
-    var revisionString = util.getQueryVariable('revision');
+    var revisionString = util.getQueryVariable('revision'), startJob = util.getQueryVariable('startJob') || config.startJob;
     my.revision = parseInt(revisionString, 10);
-    my.data = node.create(config.startJob, my.revision);
+    my.data = node.create(startJob, my.revision);
     my.event = 'change';
     return my;
 });
@@ -300,7 +312,6 @@ define('common/render', [
                 }
             }, 20);
         });
-        $(eventSource).trigger(eventName);
     };
     return my;
 });
@@ -684,8 +695,8 @@ define('where/builds/nodesController', [
     var changeEvent = 'change';
     my.init = function () {
         if (data.revision) {
-            throttler.scheduleUpdate(data.data);
             renderer.renderLoop();
+            throttler.scheduleUpdate(data.data);
         }
         $(document).ready(function () {
             var revs = $('#revs');
@@ -748,8 +759,9 @@ define('broken/updater', [
     'broken/builds',
     'common/util',
     'common/buildInfo',
-    'jquery'
-], function (data, util, buildInfo, $) {
+    'jquery',
+    'app-config'
+], function (data, util, buildInfo, $, config) {
     var my = {};
     var buildUrl = function (mybuildUrl) {
         return mybuildUrl + '/api/json?tree=' + buildInfo.buildKeys(['fullDisplayName'], []);
@@ -814,6 +826,13 @@ define('broken/updater', [
             });
         });
     };
+    my.views = function () {
+        return $.getJSON(config.jenkinsUrl + '/api/json?tree=views[name,url]').then(function (jenkins) {
+            return jenkins.views.sort(function (a, b) {
+                return a.name.localeCompare(b.name);
+            });
+        });
+    };
     return my;
 });
 define('broken/renderer', [
@@ -822,7 +841,7 @@ define('broken/renderer', [
     'common/render',
     'broken/builds',
     'common/util'
-], function (d3, $, render, data) {
+], function (d3, $, render, data, util) {
     var my = {};
     var buildName = function (build) {
         return build.name;
@@ -861,6 +880,24 @@ define('broken/renderer', [
         d3.select('#assignees').selectAll('.user').data(users, userId).enter().append('option').attr('class', 'user').attr('value', userId).text(function (user) {
             return user.fullName;
         });
+    };
+    my.addViews = function (views) {
+        var viewSelection = d3.select('#views').selectAll('.view').data(views);
+        viewSelection.enter().append('li').attr('role', 'presentation').attr('class', 'view').append('a').attr('href', function (view) {
+            var queryVariables = util.queryVariables();
+            queryVariables.view = view.name;
+            delete queryVariables.multijob;
+            return '?' + $.param(queryVariables);
+        }).attr('role', 'menuitem').attr('name', function (view) {
+            return view.name;
+        }).text(function (view) {
+            return view.name;
+        });
+        viewSelection.order();
+        viewSelection.exit().remove();
+        var selectedViewName = util.getQueryVariable('view');
+        $('#currentView').text(selectedViewName ? selectedViewName : 'Views');
+        d3.selectAll('#views .loading').remove();
     };
     my.renderLoop = function () {
         render.renderLoop(data, data.event, my.renderFailedTests);
@@ -924,43 +961,265 @@ define('broken/controller', [
     };
     my.init = function (urlsDef) {
         initFormSubmit();
-        urlsDef.then(throttler.scheduleUpdates);
+        updater.views().then(renderer.addViews);
         renderer.renderLoop();
+        urlsDef.then(throttler.scheduleUpdates, function (error, statusCode, statusText) {
+            var loading = $('#projects').find('.loading')[0];
+            loading.innerHTML = '<div class="alert alert-danger" role="alert">Loading Failed: ' + statusText + '</div>';
+        }).then(function (urls) {
+            if (!urls) {
+                $(data).trigger(data.event);
+            }
+        });
     };
     return my;
 });
-define('broken/lastCompletedBuildsOf', [
+define('broken/lastBuildsOf', [
     'jquery',
     'app-config'
 ], function ($, config) {
     var my = {};
-    my.multijob = function (multijobName) {
-        var multijobUrl = config.jenkinsUrl + '/job/' + multijobName + '/lastSuccessfulBuild/api/json?tree=subBuilds[url]';
+    var defaultSelector = 'lastCompletedBuild';
+    my.multijob = function (multijobName, selectorArg) {
+        var selector = selectorArg || defaultSelector, multijobUrl = config.jenkinsUrl + '/job/' + multijobName + '/' + selector + '/api/json?tree=subBuilds[url]';
         return $.getJSON(multijobUrl).then(function (multijobBuild) {
             return multijobBuild.subBuilds.map(function (subBuild) {
                 return config.jenkinsUrl + '/' + subBuild.url;
             });
         });
     };
-    my.view = function (viewName) {
-        var viewUrl = config.jenkinsUrl + '/view/' + viewName + '/api/json?tree=jobs[url,color]';
+    my.view = function (viewName, selectorArg) {
+        var selector = selectorArg || defaultSelector, viewUrl = config.jenkinsUrl + '/view/' + viewName + '/api/json?tree=jobs[url,color]';
         return $.getJSON(viewUrl).then(function (view) {
             return view.jobs.filter(function (job) {
                 return job.color !== 'blue';
             }).map(function (job) {
-                return job.url + 'lastCompletedBuild/';
+                return job.url + selector + '/';
             });
         });
     };
     return my;
 });
+(function () {
+    !function (a, b) {
+        'object' == typeof module && module.exports ? module.exports = b() : 'function' == typeof define && define.amd ? define('spin', [], b) : a.Spinner = b();
+    }(this, function () {
+        'use strict';
+        function a(a, b) {
+            var c, d = document.createElement(a || 'div');
+            for (c in b)
+                d[c] = b[c];
+            return d;
+        }
+        function b(a) {
+            for (var b = 1, c = arguments.length; c > b; b++)
+                a.appendChild(arguments[b]);
+            return a;
+        }
+        function c(a, b, c, d) {
+            var e = [
+                    'opacity',
+                    b,
+                    ~~(100 * a),
+                    c,
+                    d
+                ].join('-'), f = 0.01 + c / d * 100, g = Math.max(1 - (1 - a) / b * (100 - f), a), h = j.substring(0, j.indexOf('Animation')).toLowerCase(), i = h && '-' + h + '-' || '';
+            return m[e] || (k.insertRule('@' + i + 'keyframes ' + e + '{0%{opacity:' + g + '}' + f + '%{opacity:' + a + '}' + (f + 0.01) + '%{opacity:1}' + (f + b) % 100 + '%{opacity:' + a + '}100%{opacity:' + g + '}}', k.cssRules.length), m[e] = 1), e;
+        }
+        function d(a, b) {
+            var c, d, e = a.style;
+            if (b = b.charAt(0).toUpperCase() + b.slice(1), void 0 !== e[b])
+                return b;
+            for (d = 0; d < l.length; d++)
+                if (c = l[d] + b, void 0 !== e[c])
+                    return c;
+        }
+        function e(a, b) {
+            for (var c in b)
+                a.style[d(a, c) || c] = b[c];
+            return a;
+        }
+        function f(a) {
+            for (var b = 1; b < arguments.length; b++) {
+                var c = arguments[b];
+                for (var d in c)
+                    void 0 === a[d] && (a[d] = c[d]);
+            }
+            return a;
+        }
+        function g(a, b) {
+            return 'string' == typeof a ? a : a[b % a.length];
+        }
+        function h(a) {
+            this.opts = f(a || {}, h.defaults, n);
+        }
+        function i() {
+            function c(b, c) {
+                return a('<' + b + ' xmlns="urn:schemas-microsoft.com:vml" class="spin-vml">', c);
+            }
+            k.addRule('.spin-vml', 'behavior:url(#default#VML)'), h.prototype.lines = function (a, d) {
+                function f() {
+                    return e(c('group', {
+                        coordsize: k + ' ' + k,
+                        coordorigin: -j + ' ' + -j
+                    }), {
+                        width: k,
+                        height: k
+                    });
+                }
+                function h(a, h, i) {
+                    b(m, b(e(f(), {
+                        rotation: 360 / d.lines * a + 'deg',
+                        left: ~~h
+                    }), b(e(c('roundrect', { arcsize: d.corners }), {
+                        width: j,
+                        height: d.scale * d.width,
+                        left: d.scale * d.radius,
+                        top: -d.scale * d.width >> 1,
+                        filter: i
+                    }), c('fill', {
+                        color: g(d.color, a),
+                        opacity: d.opacity
+                    }), c('stroke', { opacity: 0 }))));
+                }
+                var i, j = d.scale * (d.length + d.width), k = 2 * d.scale * j, l = -(d.width + d.length) * d.scale * 2 + 'px', m = e(f(), {
+                        position: 'absolute',
+                        top: l,
+                        left: l
+                    });
+                if (d.shadow)
+                    for (i = 1; i <= d.lines; i++)
+                        h(i, -2, 'progid:DXImageTransform.Microsoft.Blur(pixelradius=2,makeshadow=1,shadowopacity=.3)');
+                for (i = 1; i <= d.lines; i++)
+                    h(i);
+                return b(a, m);
+            }, h.prototype.opacity = function (a, b, c, d) {
+                var e = a.firstChild;
+                d = d.shadow && d.lines || 0, e && b + d < e.childNodes.length && (e = e.childNodes[b + d], e = e && e.firstChild, e = e && e.firstChild, e && (e.opacity = c));
+            };
+        }
+        var j, k, l = [
+                'webkit',
+                'Moz',
+                'ms',
+                'O'
+            ], m = {}, n = {
+                lines: 12,
+                length: 7,
+                width: 5,
+                radius: 10,
+                scale: 1,
+                corners: 1,
+                color: '#000',
+                opacity: 0.25,
+                rotate: 0,
+                direction: 1,
+                speed: 1,
+                trail: 100,
+                fps: 20,
+                zIndex: 2000000000,
+                className: 'spinner',
+                top: '50%',
+                left: '50%',
+                shadow: !1,
+                hwaccel: !1,
+                position: 'absolute'
+            };
+        if (h.defaults = {}, f(h.prototype, {
+                spin: function (b) {
+                    this.stop();
+                    var c = this, d = c.opts, f = c.el = a(null, { className: d.className });
+                    if (e(f, {
+                            position: d.position,
+                            width: 0,
+                            zIndex: d.zIndex,
+                            left: d.left,
+                            top: d.top
+                        }), b && b.insertBefore(f, b.firstChild || null), f.setAttribute('role', 'progressbar'), c.lines(f, c.opts), !j) {
+                        var g, h = 0, i = (d.lines - 1) * (1 - d.direction) / 2, k = d.fps, l = k / d.speed, m = (1 - d.opacity) / (l * d.trail / 100), n = l / d.lines;
+                        !function o() {
+                            h++;
+                            for (var a = 0; a < d.lines; a++)
+                                g = Math.max(1 - (h + (d.lines - a) * n) % l * m, d.opacity), c.opacity(f, a * d.direction + i, g, d);
+                            c.timeout = c.el && setTimeout(o, ~~(1000 / k));
+                        }();
+                    }
+                    return c;
+                },
+                stop: function () {
+                    var a = this.el;
+                    return a && (clearTimeout(this.timeout), a.parentNode && a.parentNode.removeChild(a), this.el = void 0), this;
+                },
+                lines: function (d, f) {
+                    function h(b, c) {
+                        return e(a(), {
+                            position: 'absolute',
+                            width: f.scale * (f.length + f.width) + 'px',
+                            height: f.scale * f.width + 'px',
+                            background: b,
+                            boxShadow: c,
+                            transformOrigin: 'left',
+                            transform: 'rotate(' + ~~(360 / f.lines * k + f.rotate) + 'deg) translate(' + f.scale * f.radius + 'px,0)',
+                            borderRadius: (f.corners * f.scale * f.width >> 1) + 'px'
+                        });
+                    }
+                    for (var i, k = 0, l = (f.lines - 1) * (1 - f.direction) / 2; k < f.lines; k++)
+                        i = e(a(), {
+                            position: 'absolute',
+                            top: 1 + ~(f.scale * f.width / 2) + 'px',
+                            transform: f.hwaccel ? 'translate3d(0,0,0)' : '',
+                            opacity: f.opacity,
+                            animation: j && c(f.opacity, f.trail, l + k * f.direction, f.lines) + ' ' + 1 / f.speed + 's linear infinite'
+                        }), f.shadow && b(i, e(h('#000', '0 0 4px #000'), { top: '2px' })), b(d, b(i, h(g(f.color, k), '0 0 1px rgba(0,0,0,.1)')));
+                    return d;
+                },
+                opacity: function (a, b, c) {
+                    b < a.childNodes.length && (a.childNodes[b].style.opacity = c);
+                }
+            }), 'undefined' != typeof document) {
+            k = function () {
+                var c = a('style', { type: 'text/css' });
+                return b(document.getElementsByTagName('head')[0], c), c.sheet || c.styleSheet;
+            }();
+            var o = e(a('group'), { behavior: 'url(#default#VML)' });
+            !d(o, 'transform') && o.adj ? i() : j = d(o, 'animation');
+        }
+        return h;
+    });
+}.call(this));
 define('broken/init', [
+    'jquery',
     'common/util',
     'broken/controller',
-    'broken/lastCompletedBuildsOf'
-], function (util, controller, lastCompletedBuildsOf) {
-    var viewName = util.getQueryVariable('view'), multijobName = util.getQueryVariable('multijob');
-    var urlsToCheck = viewName ? lastCompletedBuildsOf.view(viewName) : lastCompletedBuildsOf.multijob(multijobName);
+    'broken/lastBuildsOf',
+    'spin'
+], function ($, util, controller, lastBuildsOf, Spinner) {
+    var viewName = util.getQueryVariable('view'), multijobName = util.getQueryVariable('multijob'), buildSelector = util.getQueryVariable('buildSelector');
+    var urlsToCheck = viewName ? lastBuildsOf.view(viewName, buildSelector) : multijobName ? lastBuildsOf.multijob(multijobName, buildSelector) : $.Deferred().resolve([]);
+    var loading = $('#projects').find('.loading')[0];
+    $(loading).text('');
+    new Spinner({
+        lines: 13,
+        length: 28,
+        width: 14,
+        radius: 42,
+        scale: 1,
+        corners: 1,
+        color: '#000',
+        opacity: 0.25,
+        rotate: 0,
+        direction: 1,
+        speed: 1,
+        trail: 60,
+        fps: 20,
+        zIndex: 2000000000,
+        className: 'spinner',
+        top: '50%',
+        left: '50%',
+        shadow: false,
+        hwaccel: false,
+        position: 'absolute'
+    }).spin(loading);
     controller.init(urlsToCheck);
 });
 (function (config) {
@@ -982,11 +1241,16 @@ define('broken/init', [
     paths: {
       jquery: lib('jquery/dist', 'jquery.min'),
       d3: lib('d3', 'd3.min'),
-      bootstrap: lib('bootstrap/dist/js', 'bootstrap.min')
+      bootstrap: lib('bootstrap/dist/js', 'bootstrap.min'),
+      spin: lib('spin.js', 'spin.min')
     },
     shim: {
       bootstrap: {
         deps: ['jquery']
+      },
+      spin: {
+        deps: [],
+        exports: 'Spinner'
       }
     }
   };
