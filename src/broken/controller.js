@@ -63,12 +63,13 @@ define(['jquery', 'common/util', 'app-config', 'broken/builds', 'broken/updater'
           var loading = $('#projects').find('.loading')[0];
           loading.innerHTML = '<div class="alert alert-danger" role="alert">Loading Failed: ' + statusText + '</div>';
         }
-      )
-        .then(function (urls) {
-          if (!urls) {
-            $(data).trigger(data.event);
-          }
-        });
+      );
+
+      urlsDef.then(function (urls) {
+        if (!urls) {
+          $(data).trigger(data.event);
+        }
+      });
     };
 
     return my;
