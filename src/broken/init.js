@@ -1,4 +1,4 @@
-define(['common/util', 'broken/controller', 'broken/lastCompletedBuildsOf'], function (util, controller, lastCompletedBuildsOf) {
+define(['common/util', 'broken/controller', 'broken/lastBuildsOf'], function (util, controller, lastCompletedBuildsOf) {
   var viewName = util.getQueryVariable('view'),
     multijobName = util.getQueryVariable('multijob');
 
