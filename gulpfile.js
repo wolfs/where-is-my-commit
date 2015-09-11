@@ -9,7 +9,7 @@ var gulp = require("gulp"),
   debug = require('gulp-debug'),
   del = require('del'),
   shims = require('./src/shims.js')
-;
+  ;
 
 
 gulp.task("scripts", function () {
@@ -28,16 +28,17 @@ gulp.task("lib", function () {
     'bower_components/requirejs/require.js',
     'bower_components/jquery/dist/jquery.min.js',
     'bower_components/d3/d3.min.js',
-    'bower_components/bootstrap/dist/js/bootstrap.min.js'
+    'bower_components/bootstrap/dist/js/bootstrap.min.js',
+    'bower_components/spin.js/spin.min.js'
   ])
     .pipe(gulp.dest("dist/js"));
 });
 
 gulp.task("fonts", function () {
-   return gulp.src([
-     'bower_components/bootstrap/dist/fonts/*'
-   ])
-     .pipe(gulp.dest("dist/fonts"));
+  return gulp.src([
+    'bower_components/bootstrap/dist/fonts/*'
+  ])
+    .pipe(gulp.dest("dist/fonts"));
 });
 
 gulp.task('minify-css', function () {
