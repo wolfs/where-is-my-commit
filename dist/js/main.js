@@ -966,7 +966,8 @@ define('broken/controller', [
         urlsDef.then(throttler.scheduleUpdates, function (error, statusCode, statusText) {
             var loading = $('#projects').find('.loading')[0];
             loading.innerHTML = '<div class="alert alert-danger" role="alert">Loading Failed: ' + statusText + '</div>';
-        }).then(function (urls) {
+        });
+        urlsDef.then(function (urls) {
             if (!urls) {
                 $(data).trigger(data.event);
             }
