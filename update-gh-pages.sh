@@ -16,8 +16,9 @@ if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
   #using token clone gh-pages branch
   git clone --quiet --branch=gh-pages $FULL_REPO gh-pages > /dev/null
 
-  #go into diractory and copy data we're interested in to that directory
+  #go into directory and copy data we're interested in to that directory
   cd gh-pages
+  rm -rf dist
   cp -Rf $HOME/dist/ .
 
   #add, commit and push files
