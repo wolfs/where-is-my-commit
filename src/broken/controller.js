@@ -1,4 +1,5 @@
-define(['jquery', 'common/util', 'app-config', 'broken/builds', 'broken/updater', 'broken/renderer'], function ($, util, config, data, updater, renderer) {
+define(['jquery', 'common/util', 'app-config', 'broken/builds', 'broken/updater', 'broken/renderer'],
+  function ($, util, config, data, updater, renderer) {
   var my = {},
     throttler = util.newThrottler(updater.addForUrl, config.bulkUpdateSize, config.updateInterval);
 
@@ -56,11 +57,18 @@ define(['jquery', 'common/util', 'app-config', 'broken/builds', 'broken/updater'
     initFormSubmit();
     updater.views().then(renderer.addViews);
     renderer.renderLoop();
-    urlsDef.then(throttler.scheduleUpdates).then(function (urls) {
-      if (!urls) {
-        $(data).trigger(data.event);
+    urlsDef.then(
+      throttler.scheduleUpdates,
+      function (error, statusCode, statusText) {
+        var loading = $('#projects').find('.loading')[0];
+        loading.innerHTML = '<div class="alert alert-danger" role="alert">Loading Failed: ' + statusText + '</div>';
       }
-    });
+    )
+      .then(function (urls) {
+        if (!urls) {
+          $(data).trigger(data.event);
+        }
+      });
   };
 
   return my;

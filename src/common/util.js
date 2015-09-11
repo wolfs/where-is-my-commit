@@ -54,12 +54,12 @@ define({
     };
 
     throttler.scheduleUpdate = function (node) {
-      toUpdate.push(node);
-      startTimerIfNecessary();
+      throttler.scheduleUpdates([node]);
     };
 
     throttler.scheduleUpdates = function (nodes) {
-      nodes.forEach(throttler.scheduleUpdate);
+      Array.prototype.push.apply(toUpdate, nodes);
+      startTimerIfNecessary();
     };
 
     return throttler;

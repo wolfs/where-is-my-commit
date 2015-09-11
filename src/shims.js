@@ -17,11 +17,16 @@
     paths: {
       jquery: lib('jquery/dist', 'jquery.min'),
       d3: lib('d3', 'd3.min'),
-      bootstrap: lib('bootstrap/dist/js', 'bootstrap.min')
+      bootstrap: lib('bootstrap/dist/js', 'bootstrap.min'),
+      spin: lib('spin.js', 'spin.min')
     },
     shim: {
       bootstrap: {
         deps: ['jquery']
+      },
+      spin: {
+        deps: [],
+        exports: 'Spinner'
       }
     }
   };
