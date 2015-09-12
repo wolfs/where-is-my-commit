@@ -66,8 +66,9 @@ define(['jquery', 'common/util', 'app-config', 'broken/builds', 'broken/updater'
       );
 
       urlsDef.then(function (urls) {
-        if (!urls) {
-          $(data).trigger(data.event);
+        if (urls.length === 0) {
+          var loading = $('#projects').find('.loading')[0];
+          loading.innerHTML = '<div class="alert alert-warning" role="alert">No projects found - please select a view</div>';
         }
       });
     };
