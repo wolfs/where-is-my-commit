@@ -3,15 +3,16 @@ define(['common/util', 'where/builds/nodesData', 'where/builds/nodesRenderer', '
     'use strict';
     var my = {};
 
+    var coreThrottler = util.newThrottler(config.bulkUpdateSize, config.coreUpdateInterval || config.updateInterval);
     var throttler = util.newThrottler(config.bulkUpdateSize, config.updateInterval);
-    var updateFunction = updater.updateFunction(throttler.scheduleUpdate);
+    var updateFunction = updater.updateFunction(coreThrottler.scheduleUpdate, throttler.scheduleUpdate);
 
     var changeEvent = "change";
 
     my.init = function () {
       if (data.revision) {
         renderer.renderLoop();
-        throttler.scheduleUpdate(function () {
+        coreThrottler.scheduleUpdate(function () {
           updateFunction(data.data);
         });
       }

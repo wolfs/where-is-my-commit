@@ -6,6 +6,7 @@ define(['jquery', 'optional!my-config'], function ($, globalConfig) {
     jenkinsUrl: globalConfig.jenkinsUrl || "http://localhost:8080",
     startJob: globalConfig.startJob || "chain-start",
     updateInterval: globalConfig.updateInterval || 2000,
+    coreUpdateInterval: globalConfig.coreUpdateInterval || globalConfig.updateInterval || 2000,
     commitUpdateInterval: globalConfig.commitUpdateInterval || 20000,
     bulkUpdateSize: globalConfig.bulkUpdateSize || 10,
     filterWarnings: globalConfig.filterWarnings || []
