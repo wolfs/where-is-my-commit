@@ -3,17 +3,17 @@ define(['common/util', 'where/builds/nodesData', 'where/builds/nodesRenderer', '
     'use strict';
     var my = {};
 
-    var throttler = util.newThrottler(function (node) {
-      updater.update(node, throttler.scheduleUpdate);
-    }, config.bulkUpdateSize, config.updateInterval);
-
+    var throttler = util.newThrottler(config.bulkUpdateSize, config.updateInterval);
+    var updateFunction = updater.updateFunction(throttler.scheduleUpdate);
 
     var changeEvent = "change";
 
     my.init = function () {
       if (data.revision) {
         renderer.renderLoop();
-        throttler.scheduleUpdate(data.data);
+        throttler.scheduleUpdate(function () {
+          updateFunction(data.data);
+        });
       }
 
       $(document).ready(function () {

@@ -20,7 +20,6 @@ define(['where/builds/nodeUpdater', 'where/builds/node', 'app-config', 'common/u
   });
 
 
-
   var jobUrl = function () {
     return config.jenkinsUrl + '/job/' + currentJobName + '/';
   };
@@ -89,15 +88,21 @@ define(['where/builds/nodeUpdater', 'where/builds/node', 'app-config', 'common/u
     };
   };
 
-  var throttler = function () {
-    return util.newThrottler(function (node) {
-      updater.update(node, throttler.scheduleUpdate);
-    });
+  var update = function (node) {
+    updater.updateFunction(function (work) {
+      work();
+    })(node);
+  };
+
+  var delayedUpdate = function (node) {
+    updater.updateFunction(function (work) {
+      setTimeout(work, 0);
+    })(node);
   };
 
   describe("NodeUpdater", function () {
     it("should first load the project", function () {
-      throttler().scheduleUpdate(nodeToUpdate);
+      update(nodeToUpdate);
 
       var jobRequest = jasmine.Ajax.requests.mostRecent();
       expect(jobRequest.url).toBe(jobApiUrl());
@@ -110,7 +115,7 @@ define(['where/builds/nodeUpdater', 'where/builds/node', 'app-config', 'common/u
         jsonResponse(jobJson(buildJson(5)))
       );
 
-      throttler().scheduleUpdate(nodeToUpdate);
+      update(nodeToUpdate);
 
       var requests = jasmine.Ajax.requests;
       expect(requests.count()).toBe(3);
@@ -132,7 +137,9 @@ define(['where/builds/nodeUpdater', 'where/builds/node', 'app-config', 'common/u
     });
 
     var setupBuilds = function (results, givenRevisionFun) {
-      var revisionFun = givenRevisionFun || function (buildNumber) { return buildNumber; };
+      var revisionFun = givenRevisionFun || function (buildNumber) {
+          return buildNumber;
+        };
       var builds = results.map(function (result, idx) {
         var buildNumber = idx + 1;
         var build = buildJson(buildNumber, result);
@@ -156,7 +163,7 @@ define(['where/builds/nodeUpdater', 'where/builds/node', 'app-config', 'common/u
       setupBuilds([success, aborted, success]);
       nodeToUpdate.revision = 2;
 
-      throttler().scheduleUpdate(nodeToUpdate);
+      update(nodeToUpdate);
 
       expect(nodeToUpdate.revision).toBe(3);
       expect(nodeToUpdate.previousRevision).toBe(1);
@@ -166,13 +173,13 @@ define(['where/builds/nodeUpdater', 'where/builds/node', 'app-config', 'common/u
       setupBuilds([success, success]);
       nodeToUpdate.revision = 3;
 
-      updater.update(nodeToUpdate, function () {});
+      delayedUpdate(nodeToUpdate);
 
       expect(nodeToUpdate.url).toBe(jobUrl());
 
       setupLastBuild(success, 3);
 
-      updater.update(nodeToUpdate, function () {});
+      update(nodeToUpdate);
 
       expect(nodeToUpdate.url).toBe(buildUrl(3));
     });
@@ -181,7 +188,7 @@ define(['where/builds/nodeUpdater', 'where/builds/node', 'app-config', 'common/u
       setupBuilds([success, success, aborted]);
       nodeToUpdate.revision = 3;
 
-      updater.update(nodeToUpdate, function () {});
+      delayedUpdate(nodeToUpdate);
 
       expect(nodeToUpdate.url).toBe(jobUrl());
     });
@@ -192,7 +199,7 @@ define(['where/builds/nodeUpdater', 'where/builds/node', 'app-config', 'common/u
       });
       nodeToUpdate.revision = 3;
 
-      throttler().scheduleUpdate(nodeToUpdate);
+      update(nodeToUpdate);
 
       expect(nodeToUpdate.revision).toBe(5);
       expect(nodeToUpdate.previousRevision).toBe(1);

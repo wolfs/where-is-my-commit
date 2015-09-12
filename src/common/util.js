@@ -30,9 +30,9 @@ define({
     return this.queryVariablesFromQuery(query);
   },
 
-  newThrottler: function (updateFunction, bulkUpdateSizeParam, updateIntervalParam) {
+  newThrottler: function (bulkUpdateSizeParam, updateIntervalParam) {
     var throttler = {},
-      toUpdate = [],
+      workUnits = [],
       currentTimer,
       timerRunning = false,
       bulkUpdateSize = bulkUpdateSizeParam || 10,
@@ -41,7 +41,7 @@ define({
     var startTimer = function () {
       updateNext();
       currentTimer = setInterval(function () {
-        if (toUpdate.length === 0) {
+        if (workUnits.length === 0) {
           clearInterval(currentTimer);
           timerRunning = false;
         } else {
@@ -58,19 +58,21 @@ define({
     };
 
     var updateNext = function () {
-      if (toUpdate.length > 0) {
-        var toUpdateNow = toUpdate.slice(0, bulkUpdateSize);
-        toUpdate = toUpdate.slice(bulkUpdateSize);
-        toUpdateNow.forEach(updateFunction);
+      if (workUnits.length > 0) {
+        var workForNow = workUnits.slice(0, bulkUpdateSize);
+        workUnits = workUnits.slice(bulkUpdateSize);
+        workForNow.forEach(function (workUnit) {
+          workUnit();
+        });
       }
     };
 
-    throttler.scheduleUpdate = function (node) {
-      throttler.scheduleUpdates([node]);
+    throttler.scheduleUpdate = function (workUnit) {
+      throttler.scheduleUpdates([workUnit]);
     };
 
-    throttler.scheduleUpdates = function (nodes) {
-      Array.prototype.push.apply(toUpdate, nodes);
+    throttler.scheduleUpdates = function (newWorkUnits) {
+      Array.prototype.push.apply(workUnits, newWorkUnits);
       startTimerIfNecessary();
     };
 
