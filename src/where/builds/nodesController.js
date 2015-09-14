@@ -3,7 +3,7 @@ define(['common/util', 'where/builds/nodesData', 'where/builds/nodesRenderer', '
     'use strict';
     var my = {};
 
-    var coreThrottler = util.newThrottler(config.bulkUpdateSize, config.coreUpdateInterval || config.updateInterval);
+    var coreThrottler = util.newThrottler(config.bulkUpdateSize, config.coreUpdateInterval);
     var throttler = util.newThrottler(config.bulkUpdateSize, config.updateInterval);
     var updateFunction = updater.updateFunction(coreThrottler.scheduleUpdate, throttler.scheduleUpdate);
 

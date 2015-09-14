@@ -88,16 +88,20 @@ define(['where/builds/nodeUpdater', 'where/builds/node', 'app-config', 'common/u
     };
   };
 
+  var doNow = function (work) {
+    work();
+  };
+
+  var scheduleNow = function (work) {
+    setTimeout(work, 0);
+  };
+
   var update = function (node) {
-    updater.updateFunction(function (work) {
-      work();
-    })(node);
+    updater.updateFunction(doNow, doNow)(node);
   };
 
   var delayedUpdate = function (node) {
-    updater.updateFunction(function (work) {
-      setTimeout(work, 0);
-    })(node);
+    updater.updateFunction(scheduleNow, scheduleNow)(node);
   };
 
   describe("NodeUpdater", function () {
