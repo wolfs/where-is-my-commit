@@ -53,16 +53,35 @@ define(['jquery', 'common/util', 'app-config', 'broken/builds', 'broken/updater'
       });
     };
 
+    var progressUpdater = function (number) {
+       var my = {};
+
+       my.total = number;
+       my.current = 0;
+
+       my.callback = function () {
+         my.current++;
+         my.updateProgress();
+       }
+
+       my.updateProgress = function () {
+          $('#loadingProgress').width((my.current*100 / my.total) + '%')
+       }
+
+       return my;
+    }
+
     my.init = function (urlsDef) {
       initFormSubmit();
       updater.views().then(renderer.addViews);
       renderer.renderLoop();
       urlsDef.then(
         function (urls) {
+          var progress = progressUpdater(urls.length * 2);
           throttler.scheduleUpdates(
             urls.map(function (url) {
               return function () {
-                updater.addForUrl(url);
+                updater.addForUrl(url, progress.callback);
               };
             }));
         },

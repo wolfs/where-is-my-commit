@@ -14,7 +14,8 @@ define(['broken/builds', 'common/util', 'common/buildInfo', 'jquery', 'app-confi
     });
   };
 
-  my.addForUrl = function (url) {
+  my.addForUrl = function (url, progressCallbackParm) {
+    var progressCallback = progressCallbackParm || function () {};
     getBuildDef(url).then(function (build) {
       var claims = build.actions.filter(function (c) {
         return c.claimed === true;
@@ -31,11 +32,15 @@ define(['broken/builds', 'common/util', 'common/buildInfo', 'jquery', 'app-confi
       };
       data.builds.push(buildData);
       $(data).trigger(data.event);
+      progressCallback('build', buildData);
       if (buildData.status === "unstable" && buildData.testResult.totalCount > 0) {
         buildInfo.addFailedTests(buildData, function (failedTests) {
           buildData.testResult.failedTests = failedTests;
           $(data).trigger(data.event);
-        });
+          progressCallback('testResult', failedTests);
+        }, progressCallback);
+      } else {
+          progressCallback('testResult', false);
       }
     });
   };

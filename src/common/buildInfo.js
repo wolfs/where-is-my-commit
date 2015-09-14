@@ -56,7 +56,8 @@ define(['app-config'], function (config) {
     };
   };
 
-  my.addFailedTests = function (build, callback) {
+  my.addFailedTests = function (build, callback, failureCallbackArg) {
+    var failureCallback = failureCallbackArg || function () {};
     $.getJSON(build.url + "testReport/api/json?tree=suites[name,cases[age,className,name,status,errorDetails,errorStackTrace,testActions[claimDate,claimed,claimedBy,reason]]]")
       .then(function (testReport) {
         if (testReport.suites) {
@@ -87,8 +88,10 @@ define(['app-config'], function (config) {
             return suite.cases.length > 0;
           });
           callback(failedTests);
+        } else {
+          callback();
         }
-      });
+      }, failureCallback);
   };
 
 
