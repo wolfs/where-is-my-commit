@@ -101,8 +101,7 @@ define(['jquery', 'bootstrap'], function ($) {
           return testCase.errorDetails.length > 1200;
         },
         function (testCase) {
-          return testCase.errorDetails;
-          //.substring(0, 1200).replace(/\[\d+, (\d+(, )?)*\]/, "");
+          return testCase.errorDetails.replace(/<\[\d+, [0-9, -]+\]>/, "");
         }
       ))
       .call(appendTestCaseDetails("stacktrace", 'Stacktrace',
@@ -113,8 +112,7 @@ define(['jquery', 'bootstrap'], function ($) {
           return true;
         },
         function (testCase) {
-          return testCase.errorStackTrace;
-          //.replace(/\[\d+, (\d+(, )?)*\]/, "");
+          return testCase.errorStackTrace.replace(/<\[\d+, [0-9, -]+\]>/, "");
         }
       ));
 
