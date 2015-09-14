@@ -14,13 +14,15 @@ define({
 
   queryVariablesFromQuery: function (query) {
     var params = {};
-    query
-      .split("&").map(function (el) {
-        return el.split("=");
-      })
-      .forEach(function (args) {
-        params[decodeURIComponent(args[0])] = args[1] ? decodeURIComponent(args[1].replace(/\+/g, ' ')) : args[1];
-      });
+    if (query !== "") {
+      query
+        .split("&").map(function (el) {
+          return el.split("=");
+        })
+        .forEach(function (args) {
+          params[decodeURIComponent(args[0])] = args[1] ? decodeURIComponent(args[1].replace(/\+/g, ' ')) : args[1];
+        });
+    }
     return params;
   },
 

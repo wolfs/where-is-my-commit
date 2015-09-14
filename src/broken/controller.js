@@ -1,7 +1,7 @@
 define(['jquery', 'common/util', 'app-config', 'broken/builds', 'broken/updater', 'broken/renderer'],
   function ($, util, config, data, updater, renderer) {
     var my = {},
-      throttler = util.newThrottler(config.bulkUpdateSize, config.updateInterval);
+      throttler = util.newThrottler(config.bulkUpdateSize, config.coreUpdateInterval);
 
     var initFormSubmit = function () {
       var selectedTestCases = function () {
