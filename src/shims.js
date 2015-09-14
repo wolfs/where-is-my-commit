@@ -1,7 +1,7 @@
 (function (config) {
   if (typeof define === 'function' && define.amd) {
     define('shims', [], function () {
-      var dev = ("window" in this && window.location.pathname.includes('src'));
+      var dev = ("window" in this && (window.location.pathname.indexOf('src') > -1));
       require.config(config(dev ? ".." : ".", dev));
     });
   } else {
