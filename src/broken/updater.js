@@ -42,6 +42,9 @@ define(['broken/builds', 'common/util', 'common/buildInfo', 'jquery', 'app-confi
       } else {
           progressCallback('testResult', false);
       }
+    }, function () {
+      progressCallback();
+      progressCallback();
     });
   };
 
