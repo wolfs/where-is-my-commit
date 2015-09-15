@@ -30,11 +30,13 @@ define('common/util', [], {
     },
     queryVariablesFromQuery: function (query) {
         var params = {};
-        query.split('&').map(function (el) {
-            return el.split('=');
-        }).forEach(function (args) {
-            params[decodeURIComponent(args[0])] = args[1] ? decodeURIComponent(args[1].replace(/\+/g, ' ')) : args[1];
-        });
+        if (query !== '') {
+            query.split('&').map(function (el) {
+                return el.split('=');
+            }).forEach(function (args) {
+                params[decodeURIComponent(args[0])] = args[1] ? decodeURIComponent(args[1].replace(/\+/g, ' ')) : args[1];
+            });
+        }
         return params;
     },
     queryVariables: function () {
@@ -135,12 +137,13 @@ define('app-config', [
 define('where/changes/changesUpdater', [
     'where/changes/changes',
     'app-config',
-    'jquery'
-], function (changes, config, $) {
+    'jquery',
+    'common/util'
+], function (changes, config, $, util) {
     'use strict';
     var my = {};
     my.update = function () {
-        var jobRequest = $.getJSON(config.jenkinsUrl + '/job/' + config.startJob + '/api/json?tree=builds[changeSet[*[*]]]{,10}');
+        var startJob = util.getQueryVariable('startJob') || config.startJob, jobRequest = $.getJSON(config.jenkinsUrl + '/job/' + startJob + '/api/json?tree=builds[changeSet[*[*]]]{,10}');
         jobRequest.then(function (job) {
             var builds = job.builds;
             changes.commits = builds.map(function (build) {
@@ -279,13 +282,13 @@ define('common/render', [
         }, function (testCase) {
             return testCase.errorDetails.length > 1200;
         }, function (testCase) {
-            return testCase.errorDetails;
+            return testCase.errorDetails.replace(/<\[\d+, [0-9, -]+\]>/, '');
         })).call(appendTestCaseDetails('stacktrace', 'Stacktrace', function (testCase) {
             return testCase.errorStackTrace;
         }, function () {
             return true;
         }, function (testCase) {
-            return testCase.errorStackTrace;
+            return testCase.errorStackTrace.replace(/<\[\d+, [0-9, -]+\]>/, '');
         }));
         testResults.select('.claim').call(my.formatClaim);
         var warnings = projectSelection.selectAll('.warning').data(function (node) {
@@ -503,7 +506,9 @@ define('common/buildInfo', ['app-config'], function (config) {
             totalCount: 0
         };
     };
-    my.addFailedTests = function (build, callback) {
+    my.addFailedTests = function (build, callback, failureCallbackArg) {
+        var failureCallback = failureCallbackArg || function () {
+        };
         $.getJSON(build.url + 'testReport/api/json?tree=suites[name,cases[age,className,name,status,errorDetails,errorStackTrace,testActions[claimDate,claimed,claimedBy,reason]]]').then(function (testReport) {
             if (testReport.suites) {
                 var failedTests = testReport.suites.map(function (suite) {
@@ -533,8 +538,10 @@ define('common/buildInfo', ['app-config'], function (config) {
                     return suite.cases.length > 0;
                 });
                 callback(failedTests);
+            } else {
+                callback();
             }
-        });
+        }, failureCallback);
     };
     return my;
 });
@@ -547,152 +554,144 @@ define('where/builds/nodeUpdater', [
 ], function ($, node, config, nodes, buildInfo) {
     'use strict';
     var my = {};
-    my.updateFunction = function (scheduleCoreWork, scheduleWork) {
-        var coreUpdate, update, scheduleUpdate = function (node) {
-                scheduleWork(function () {
-                    update(node);
+    my.updateFunction = function (scheduleWork, scheduleLowPrioWork) {
+        var scheduleUpdate = function (node) {
+            scheduleWork(function () {
+                my.updateFunction(scheduleWork, scheduleLowPrioWork)(node);
+            });
+        };
+        return function (nodeToUpdate) {
+            var jobName = nodeToUpdate.jobName;
+            var resultDef = $.Deferred();
+            var findRevision = function (envVars) {
+                var revision = envVars.REV;
+                return revision === undefined ? undefined : parseInt(revision, 10);
+            };
+            var nodeFromProject = function (project) {
+                return node.create(project.name, nodeToUpdate.revision, project.url);
+            };
+            var buildKeys = buildInfo.buildKeys([], ['triggeredProjects[name,url,downstreamProjects[url,name]]']);
+            var jobRequest = $.getJSON(config.jenkinsUrl + '/job/' + jobName + '/api/json?tree=url,downstreamProjects[url,name],lastCompletedBuild[' + buildKeys + ']').then(function (job) {
+                return job;
+            });
+            var buildDef = jobRequest.then(function (job) {
+                if (nodeToUpdate.url === undefined) {
+                    nodeToUpdate.url = job.url;
+                    $(nodes.data).trigger('change');
+                }
+                return job.lastCompletedBuild;
+            });
+            var getEnvVars = function (build) {
+                return build === undefined ? undefined : $.getJSON(build.url + 'injectedEnvVars/api/json?tree=envMap[REV]');
+            };
+            var getRevision = function (build) {
+                if (build === undefined) {
+                    return undefined;
+                }
+                return getEnvVars(build).then(function (envVars) {
+                    return findRevision(envVars.envMap);
                 });
-            }, scheduleCoreUpdate = function (node) {
-                scheduleCoreWork(function () {
-                    coreUpdate(node);
+            };
+            var buildUrl = function (buildNumber) {
+                return config.jenkinsUrl + '/job/' + nodeToUpdate.jobName + '/' + buildNumber + '/api/json?tree=' + buildKeys;
+            };
+            var getBuildDef = function (buildNumber) {
+                return $.getJSON(buildUrl(buildNumber)).then(function (build) {
+                    return build;
                 });
-            }, updateForScheduler = function (scheduleUpdate) {
-                return function (nodeToUpdate) {
-                    var jobName = nodeToUpdate.jobName;
-                    var resultDef = $.Deferred();
-                    var findRevision = function (envVars) {
-                        var revision = envVars.REV;
-                        return revision === undefined ? undefined : parseInt(revision, 10);
-                    };
-                    var nodeFromProject = function (project) {
-                        return node.create(project.name, nodeToUpdate.revision, project.url);
-                    };
-                    var buildKeys = buildInfo.buildKeys([], ['triggeredProjects[name,url,downstreamProjects[url,name]]']);
-                    var jobRequest = $.getJSON(config.jenkinsUrl + '/job/' + jobName + '/api/json?tree=url,downstreamProjects[url,name],lastCompletedBuild[' + buildKeys + ']').then(function (job) {
-                        return job;
-                    });
-                    var buildDef = jobRequest.then(function (job) {
-                        if (nodeToUpdate.url === undefined) {
-                            nodeToUpdate.url = job.url;
-                            $(nodes.data).trigger('change');
-                        }
-                        return job.lastCompletedBuild;
-                    });
-                    var getEnvVars = function (build) {
-                        return build === undefined ? undefined : $.getJSON(build.url + 'injectedEnvVars/api/json?tree=envMap[REV]');
-                    };
-                    var getRevision = function (build) {
-                        if (build === undefined) {
-                            return undefined;
-                        }
-                        return getEnvVars(build).then(function (envVars) {
-                            return findRevision(envVars.envMap);
-                        });
-                    };
-                    var buildUrl = function (buildNumber) {
-                        return config.jenkinsUrl + '/job/' + nodeToUpdate.jobName + '/' + buildNumber + '/api/json?tree=' + buildKeys;
-                    };
-                    var getBuildDef = function (buildNumber) {
-                        return $.getJSON(buildUrl(buildNumber)).then(function (build) {
+            };
+            var getPreviousBuildDef = function (build) {
+                if (build === undefined) {
+                    return undefined;
+                }
+                return build ? build.number > 1 ? getBuildDef(build.number - 1) : undefined : undefined;
+            };
+            var buildForRevision = function (buildDef, revisionDef) {
+                var prevBuildDef = buildDef.then(getPreviousBuildDef);
+                var prevRevisionDef = prevBuildDef.then(getRevision);
+                return $.when(buildDef, revisionDef, prevBuildDef, prevRevisionDef).then(function (build, revision, prevBuildParam, prevRevision) {
+                    if (build === undefined) {
+                        return undefined;
+                    }
+                    var prevBuild = prevBuildParam === undefined ? build : prevBuildParam;
+                    build.revision = revision;
+                    prevBuild.revision = prevRevision;
+                    if (revision < nodeToUpdate.revision) {
+                        if (build.result === 'ABORTED') {
+                            build.prevBuild = prevBuild;
                             return build;
-                        });
-                    };
-                    var getPreviousBuildDef = function (build) {
-                        if (build === undefined) {
-                            return undefined;
                         }
-                        return build ? build.number > 1 ? getBuildDef(build.number - 1) : undefined : undefined;
-                    };
-                    var buildForRevision = function (buildDef, revisionDef) {
-                        var prevBuildDef = buildDef.then(getPreviousBuildDef);
-                        var prevRevisionDef = prevBuildDef.then(getRevision);
-                        return $.when(buildDef, revisionDef, prevBuildDef, prevRevisionDef).then(function (build, revision, prevBuildParam, prevRevision) {
-                            if (build === undefined) {
-                                return undefined;
-                            }
-                            var prevBuild = prevBuildParam === undefined ? build : prevBuildParam;
-                            build.revision = revision;
-                            prevBuild.revision = prevRevision;
-                            if (revision < nodeToUpdate.revision) {
-                                if (build.result === 'ABORTED') {
-                                    build.prevBuild = prevBuild;
-                                    return build;
-                                }
-                                return undefined;
-                            } else if (revision >= nodeToUpdate.revision && nodeToUpdate.revision > prevRevision && prevBuild.result !== 'ABORTED') {
-                                build.prevBuild = prevBuild;
+                        return undefined;
+                    } else if (revision >= nodeToUpdate.revision && nodeToUpdate.revision > prevRevision && prevBuild.result !== 'ABORTED') {
+                        build.prevBuild = prevBuild;
+                        return build;
+                    } else {
+                        return buildForRevision(prevBuildDef, prevRevisionDef).then(function (previousBuild) {
+                            if (previousBuild === undefined) {
                                 return build;
                             } else {
-                                return buildForRevision(prevBuildDef, prevRevisionDef).then(function (previousBuild) {
-                                    if (previousBuild === undefined) {
-                                        return build;
-                                    } else {
-                                        if (previousBuild.result === 'ABORTED') {
-                                            build.prevBuild = previousBuild.prevBuild;
-                                            return build;
-                                        }
-                                        return previousBuild;
-                                    }
-                                });
+                                if (previousBuild.result === 'ABORTED') {
+                                    build.prevBuild = previousBuild.prevBuild;
+                                    return build;
+                                }
+                                return previousBuild;
                             }
                         });
-                    };
-                    var getTriggeredProjects = function (build) {
-                        return build.actions.filter(function (el) {
-                            return el.triggeredProjects;
-                        }).map(function (el) {
-                            return el.triggeredProjects;
-                        }).reduce(function (a, b) {
-                            return a.concat(b);
-                        }, []);
-                    };
-                    var updateNodeToUpdateFromBuild = function (nodeToUpdate, build) {
-                        nodeToUpdate.status = build.result.toLowerCase();
-                        nodeToUpdate.revision = build.revision;
-                        nodeToUpdate.previousRevision = build.prevBuild.revision;
-                        nodeToUpdate.url = build.url;
-                        nodeToUpdate.date = new Date(build.timestamp);
-                        nodeToUpdate.testResult = buildInfo.getTestResult(build);
-                        nodeToUpdate.warnings = buildInfo.getWarnings(build);
-                        if (build.prevBuild !== undefined) {
-                            var previousTestResult = buildInfo.getTestResult(build.prevBuild);
-                            nodeToUpdate.newFailCount = nodeToUpdate.testResult.failCount - previousTestResult.failCount;
-                        }
-                        if (nodeToUpdate.status === 'unstable' && nodeToUpdate.testResult.totalCount > 0) {
-                            buildInfo.addFailedTests(nodeToUpdate, function (failedTests) {
-                                nodeToUpdate.testResult.failedTests = failedTests;
-                                $(nodes.data).trigger(nodes.event);
-                            });
-                        }
-                    };
-                    var foundBuildDef = buildForRevision(buildDef, buildDef.then(getRevision));
-                    $.when(foundBuildDef).then(function (build) {
-                        var isBuildUndefined = build === undefined || build.result.toLowerCase() == 'aborted';
-                        if (isBuildUndefined) {
-                            scheduleUpdate(nodeToUpdate);
-                        } else {
-                            updateNodeToUpdateFromBuild(nodeToUpdate, build);
-                            var triggeredProjects = getTriggeredProjects(build);
-                            var children = triggeredProjects.map(function (project) {
-                                var node = nodeFromProject(project);
-                                node.downstreamProjects = project.downstreamProjects.map(nodeFromProject);
-                                return node;
-                            });
-                            children.map(coreUpdate);
-                            nodeToUpdate.downstreamProjects.map(update);
-                            nodeToUpdate.children = children;
-                            $(nodes.data).trigger(nodes.event);
-                        }
-                        resultDef.resolve(nodeToUpdate);
-                    }, function () {
-                        scheduleUpdate(nodeToUpdate);
-                    });
-                    return resultDef;
-                };
+                    }
+                });
             };
-        update = updateForScheduler(scheduleUpdate);
-        coreUpdate = updateForScheduler(scheduleCoreUpdate);
-        return coreUpdate;
+            var getTriggeredProjects = function (build) {
+                return build.actions.filter(function (el) {
+                    return el.triggeredProjects;
+                }).map(function (el) {
+                    return el.triggeredProjects;
+                }).reduce(function (a, b) {
+                    return a.concat(b);
+                }, []);
+            };
+            var updateNodeToUpdateFromBuild = function (nodeToUpdate, build) {
+                nodeToUpdate.status = build.result.toLowerCase();
+                nodeToUpdate.revision = build.revision;
+                nodeToUpdate.previousRevision = build.prevBuild.revision;
+                nodeToUpdate.url = build.url;
+                nodeToUpdate.date = new Date(build.timestamp);
+                nodeToUpdate.testResult = buildInfo.getTestResult(build);
+                nodeToUpdate.warnings = buildInfo.getWarnings(build);
+                if (build.prevBuild !== undefined) {
+                    var previousTestResult = buildInfo.getTestResult(build.prevBuild);
+                    nodeToUpdate.newFailCount = nodeToUpdate.testResult.failCount - previousTestResult.failCount;
+                }
+                if (nodeToUpdate.status === 'unstable' && nodeToUpdate.testResult.totalCount > 0) {
+                    buildInfo.addFailedTests(nodeToUpdate, function (failedTests) {
+                        nodeToUpdate.testResult.failedTests = failedTests;
+                        $(nodes.data).trigger(nodes.event);
+                    });
+                }
+            };
+            var foundBuildDef = buildForRevision(buildDef, buildDef.then(getRevision));
+            $.when(foundBuildDef).then(function (build) {
+                var isBuildUndefined = build === undefined || build.result.toLowerCase() == 'aborted';
+                if (isBuildUndefined) {
+                    scheduleUpdate(nodeToUpdate);
+                } else {
+                    updateNodeToUpdateFromBuild(nodeToUpdate, build);
+                    var triggeredProjects = getTriggeredProjects(build);
+                    var children = triggeredProjects.map(function (project) {
+                        var node = nodeFromProject(project);
+                        node.downstreamProjects = project.downstreamProjects.map(nodeFromProject);
+                        return node;
+                    });
+                    children.map(my.updateFunction(scheduleWork, scheduleLowPrioWork));
+                    nodeToUpdate.downstreamProjects.map(my.updateFunction(scheduleLowPrioWork, scheduleLowPrioWork));
+                    nodeToUpdate.children = children;
+                    $(nodes.data).trigger(nodes.event);
+                }
+                resultDef.resolve(nodeToUpdate);
+            }, function () {
+                scheduleUpdate(nodeToUpdate);
+            });
+            return resultDef;
+        };
     };
     return my;
 });
@@ -707,7 +706,7 @@ define('where/builds/nodesController', [
 ], function (util, data, renderer, updater, config, $, bs) {
     'use strict';
     var my = {};
-    var coreThrottler = util.newThrottler(config.bulkUpdateSize, config.coreUpdateInterval || config.updateInterval);
+    var coreThrottler = util.newThrottler(config.bulkUpdateSize, config.coreUpdateInterval);
     var throttler = util.newThrottler(config.bulkUpdateSize, config.updateInterval);
     var updateFunction = updater.updateFunction(coreThrottler.scheduleUpdate, throttler.scheduleUpdate);
     var changeEvent = 'change';
@@ -792,7 +791,9 @@ define('broken/updater', [
             return build;
         });
     };
-    my.addForUrl = function (url) {
+    my.addForUrl = function (url, progressCallbackParm) {
+        var progressCallback = progressCallbackParm || function () {
+        };
         getBuildDef(url).then(function (build) {
             var claims = build.actions.filter(function (c) {
                 return c.claimed === true;
@@ -809,12 +810,19 @@ define('broken/updater', [
             };
             data.builds.push(buildData);
             $(data).trigger(data.event);
+            progressCallback('build', buildData);
             if (buildData.status === 'unstable' && buildData.testResult.totalCount > 0) {
                 buildInfo.addFailedTests(buildData, function (failedTests) {
                     buildData.testResult.failedTests = failedTests;
                     $(data).trigger(data.event);
-                });
+                    progressCallback('testResult', failedTests);
+                }, progressCallback);
+            } else {
+                progressCallback('testResult', false);
             }
+        }, function () {
+            progressCallback();
+            progressCallback();
         });
     };
     my.claim = function (objectToClaim, claim) {
@@ -932,7 +940,7 @@ define('broken/controller', [
     'broken/updater',
     'broken/renderer'
 ], function ($, util, config, data, updater, renderer) {
-    var my = {}, throttler = util.newThrottler(config.bulkUpdateSize, config.updateInterval);
+    var my = {}, throttler = util.newThrottler(config.bulkUpdateSize, config.coreUpdateInterval);
     var initFormSubmit = function () {
         var selectedTestCases = function () {
             var selected = $('input.testCaseSelect:checked');
@@ -979,14 +987,28 @@ define('broken/controller', [
             event.preventDefault();
         });
     };
+    var progressUpdater = function (number) {
+        var my = {};
+        my.total = number;
+        my.current = 0;
+        my.callback = function () {
+            my.current++;
+            my.updateProgress();
+        };
+        my.updateProgress = function () {
+            $('#loadingProgress').width(my.current * 100 / my.total + '%');
+        };
+        return my;
+    };
     my.init = function (urlsDef) {
         initFormSubmit();
         updater.views().then(renderer.addViews);
         renderer.renderLoop();
         urlsDef.then(function (urls) {
+            var progress = progressUpdater(urls.length * 2);
             throttler.scheduleUpdates(urls.map(function (url) {
                 return function () {
-                    updater.addForUrl(url);
+                    updater.addForUrl(url, progress.callback);
                 };
             }));
         }, function (error, statusCode, statusText) {
@@ -1251,7 +1273,7 @@ define('broken/init', [
 (function (config) {
   if (typeof define === 'function' && define.amd) {
     define('shims', [], function () {
-      var dev = ("window" in this && window.location.pathname.includes('src'));
+      var dev = ("window" in this && (window.location.pathname.indexOf('src') > -1));
       require.config(config(dev ? ".." : ".", dev));
     });
   } else {
