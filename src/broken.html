@@ -2,10 +2,10 @@
 <html>
 <meta charset="utf-8">
 <head>
-    <!-- build:css-->
-    <link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet"/>
-    <link href="styles.css" rel="stylesheet"/>
-    <!-- endbuild -->
+  <!-- build:css-->
+  <link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="styles.css" rel="stylesheet"/>
+  <!-- endbuild -->
 </head>
 <body>
 <!-- build:js-->
@@ -15,275 +15,78 @@
   require(['shims'], function () {
     require(['bootstrap', 'broken/init']);
   });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 </script>
 <style scoped="">
-    body {
+  body {
     padding-top: 70px;
-    }
+  }
 </style>
 
 <nav class="navbar navbar-default navbar-fixed-top">
-    <div class="container-fluid">
-        <div class="dropdown navbar-left col-md-3">
-            <button type="button" class="dropdown-toggle btn btn-default navbar-btn" data-toggle="dropdown"
-                    id="dropdownView"
-                    aria-haspopup="true" aria-expanded="true">
-                <span id="currentView">Views</span> <span class="caret"></span>
-            </button>
-            <ul id="views" class="dropdown-menu scrollable-menu" role="menu" aria-labelledby="dropdownView">
-                <li class="loading">Loading...</li>
-            </ul>
-        </div>
+  <div class="container-fluid">
+    <div class="dropdown navbar-left col-md-3">
+      <button type="button" class="dropdown-toggle btn btn-default navbar-btn" data-toggle="dropdown"
+              id="dropdownView"
+              aria-haspopup="true" aria-expanded="true">
+        <span id="currentView">Views</span> <span class="caret"></span>
+      </button>
+      <ul id="views" class="dropdown-menu scrollable-menu" role="menu" aria-labelledby="dropdownView">
+        <li class="loading">Loading...</li>
+      </ul>
     </div>
+  </div>
 </nav>
 
 <div class="container-fluid">
-    <div id="projects">
-        <div class="loading">Loading...</div>
-    </div>
+  <div id="projects">
+    <div class="loading">Loading...</div>
+  </div>
 </div>
 
 <nav id="claimBar" class="navbar navbar-default navbar-fixed-bottom"><!-- hidden -->
-    <div class="container-fluid">
-        <div>
-            <div class="collapse navbar-collapse">
-                <div class="row">
-                    <div class="col-md-8">
-                        <form class="form-inline navbar-form navbar-left" id="claimForm">
-                            <div class="form-group">
-                                <input type="text" name="assignee" class="form-control" placeholder="Assignee">
-                            </div>
-                            <div class="form-group">
-                                <textarea class="form-control" rows="1" name="reason" placeholder="Reason"></textarea>
-                            </div>
-                            <div class="checkbox">
-                                <label>
-                                    <input type='hidden' value='false' name='sticky'>
-                                    <input name="sticky" type="checkbox" value="true"> Sticky
-                                </label>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Claim</button>
-                        </form>
-                        <form class="form-inline navbar-form navbar-left" id="dropClaimsForm">
-                            <button type="submit" class="btn btn-primary">Drop Claims</button>
-                        </form>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="navbar-text" style="width: 100%">
-                            <div class="progress">
-                                <div id="loadingProgress" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
-                                    <span class="sr-only">0% Complete</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+  <div class="container-fluid">
+    <div>
+      <div class="collapse navbar-collapse">
+        <div class="row">
+          <div class="col-md-8">
+            <form class="form-inline navbar-form navbar-left" id="claimForm">
+              <div class="form-group">
+                <input type="text" name="assignee" class="form-control" placeholder="Assignee">
+              </div>
+              <div class="form-group">
+                <textarea class="form-control" rows="1" name="reason" placeholder="Reason"></textarea>
+              </div>
+              <div class="checkbox">
+                <label>
+                  <input type='hidden' value='false' name='sticky'>
+                  <input name="sticky" type="checkbox" value="true"> Sticky
+                </label>
+              </div>
+              <button type="submit" class="btn btn-primary">Claim</button>
+            </form>
+            <form class="form-inline navbar-form navbar-left" id="dropClaimsForm">
+              <button type="submit" class="btn btn-primary">Drop Claims</button>
+            </form>
+          </div>
+          <div class="col-md-1">
+            <div class="navbar-text navbar-right" id="loadingSpinner">
+              <span class="invisible">H</span>
             </div>
+          </div>
+          <div class="col-md-3">
+            <div class="navbar-text" style="width: 80%">
+              <div class="progress">
+                <div id="loadingProgress" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0"
+                     aria-valuemax="100" style="width: 0%;">
+                  <span class="sr-only">0% Complete</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
     </div>
+  </div>
 </nav>
 
 </body>
