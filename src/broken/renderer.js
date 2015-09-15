@@ -27,10 +27,11 @@ define(['d3', 'jquery', 'common/render', 'broken/builds', 'common/util'], functi
           "<div class='col-md-8'><h2 class='panel-title'><a class='h2' href='" + build.url + "'>" + build.name +
           "</a>, <span class='h3'>" + build.date.toLocaleString('de-DE', render.dateTimeFormat) +
           "</span></h2></div>" +
-          '<div class="col-md-4 claim"></div>' +
+          '<div class="col-md-3 claim"></div>' +
+          '<div class="col-md-1"><a data-toggle="collapse" href="#collapseProject' + build.id + '">collapse<span class="caret"></span></a></div>' +
           '</div>' +
           "</div></div>" +
-          "<div class='testResults panel-body'></div>";
+          "<div class='testResults panel-body collapse in' id='collapseProject" + build.id + "'></div>";
       });
 
     unstableProjects.order();
