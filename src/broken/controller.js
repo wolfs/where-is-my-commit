@@ -124,6 +124,13 @@ define(['jquery', 'common/util', 'app-config', 'broken/builds', 'broken/updater'
           loading.innerHTML = '<div class="alert alert-warning" role="alert">No projects found - please select a view</div>';
         }
       });
+
+      var collapsed = false;
+
+      $('#collapseAll').click(function (event) {
+        $('.testResults').collapse(collapsed ? 'show' : 'hide');
+        collapsed = ! collapsed;
+      });
     };
 
     return my;

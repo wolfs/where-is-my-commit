@@ -24,18 +24,23 @@
 </style>
 
 <nav class="navbar navbar-default navbar-fixed-top">
-  <div class="container-fluid">
-    <div class="dropdown navbar-left col-md-3">
-      <button type="button" class="dropdown-toggle btn btn-default navbar-btn" data-toggle="dropdown"
-              id="dropdownView"
-              aria-haspopup="true" aria-expanded="true">
-        <span id="currentView">Views</span> <span class="caret"></span>
-      </button>
-      <ul id="views" class="dropdown-menu scrollable-menu" role="menu" aria-labelledby="dropdownView">
-        <li class="loading">Loading...</li>
-      </ul>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="dropdown navbar-left col-md-3">
+                <button type="button" class="dropdown-toggle btn btn-default navbar-btn" data-toggle="dropdown"
+                        id="dropdownView"
+                        aria-haspopup="true" aria-expanded="true">
+                    <span id="currentView">Views</span> <span class="caret"></span>
+                </button>
+                <ul id="views" class="dropdown-menu scrollable-menu" role="menu" aria-labelledby="dropdownView">
+                    <li class="loading">Loading...</li>
+                </ul>
+            </div>
+            <div class="col-md-1 col-md-offset-8">
+                <button type="button" class="btn btn-default navbar-btn" id="collapseAll"><span class="glyphicon glyphicon-resize-small"></span></button>
+            </div>
+        </div>
     </div>
-  </div>
 </nav>
 
 <div class="container-fluid">
