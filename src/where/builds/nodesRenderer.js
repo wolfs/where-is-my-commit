@@ -140,14 +140,14 @@ define(['app-config', 'where/builds/nodesData', 'common/render', 'd3'], function
       });
 
     var downstreamNodes = node.selectAll(".downstream").data(function (coreNode) {
-      return coreNode.downstreamProjects;
+      return coreNode.downstreamProjects.map(function (proj) { proj.num = coreNode.downstreamProjects.length; return proj });
     }, jobName);
 
     var downstreamContainer = downstreamNodes.enter()
       .append("a")
       .attr("class", "downstream")
       .attr("transform", function (d, i) {
-        return "rotate(" + (-10 + 35 * i) + ")translate(-40,0)";
+        return "rotate(" + (-10 + i * Math.min(35, 360/(Math.max(1,d.num)))) + ")translate(" + (-Math.max(4 * d.num, 40)) + ",0)";
       });
 
     addBuildNode(downstreamContainer, 10, "downstream");
