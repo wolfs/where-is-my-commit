@@ -58,13 +58,19 @@ define(['app-config'], function (config) {
 
   my.addFailedTests = function (build, callback, failureCallbackArg) {
     var failureCallback = failureCallbackArg || function () {};
-    $.getJSON(build.url + "testReport/api/json?tree=suites[name,cases[age,className,name,status,errorDetails,errorStackTrace,testActions[claimDate,claimed,claimedBy,reason]]]")
+    var suiteTree = "suites[name,cases[age,className,name,status,errorDetails,errorStackTrace,testActions[claimDate,claimed,claimedBy,reason]]]";
+    $.getJSON(build.url + "testReport/api/json?tree=" + suiteTree + ",childReports[child[number,url],result[" + suiteTree + "]]")
       .then(function (testReport) {
-        if (testReport.suites) {
-          var failedTests = testReport.suites.map(function (suite) {
+        if (testReport.suites || testReport.childReports) {
+          var suites = testReport.suites ? testReport.suites : [].concat.apply([], testReport.childReports.map(function (child) {
+            var suites = child.result.suites
+            suites.forEach(function (suite) { suite.url = child.child.url });
+            return suites
+          }))
+          var failedTests = suites.map(function (suite) {
             var dotBeforeClass = suite.name.lastIndexOf(".");
             var packageOfSuite = suite.name.substring(0, dotBeforeClass);
-            var suiteUrl = build.url + "testReport/" + (packageOfSuite ? packageOfSuite : "(root)") + "/" + suite.name.substring(dotBeforeClass + 1) + "/";
+            var suiteUrl = (suite.url ? suite.url : build.url) + "testReport/" + (packageOfSuite ? packageOfSuite : "(root)") + "/" + suite.name.substring(dotBeforeClass + 1) + "/";
             return {
               name: suite.name,
               url: suiteUrl,
