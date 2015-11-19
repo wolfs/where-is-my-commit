@@ -402,10 +402,13 @@ define('where/builds/nodesRenderer', [
             return d.revision;
         });
         var downstreamNodes = node.selectAll('.downstream').data(function (coreNode) {
-            return coreNode.downstreamProjects;
+            return coreNode.downstreamProjects.map(function (proj) {
+                proj.num = coreNode.downstreamProjects.length;
+                return proj;
+            });
         }, jobName);
         var downstreamContainer = downstreamNodes.enter().append('a').attr('class', 'downstream').attr('transform', function (d, i) {
-            return 'rotate(' + (-10 + 35 * i) + ')translate(-40,0)';
+            return 'rotate(' + (-10 + i * Math.min(35, 360 / Math.max(1, d.num))) + ')translate(' + -Math.max(4 * d.num, 40) + ',0)';
         });
         addBuildNode(downstreamContainer, 10, 'downstream');
         downstreamContainer.append('text').text(function (d) {
@@ -509,12 +512,20 @@ define('common/buildInfo', ['app-config'], function (config) {
     my.addFailedTests = function (build, callback, failureCallbackArg) {
         var failureCallback = failureCallbackArg || function () {
         };
-        $.getJSON(build.url + 'testReport/api/json?tree=suites[name,cases[age,className,name,status,errorDetails,errorStackTrace,testActions[claimDate,claimed,claimedBy,reason]]]').then(function (testReport) {
-            if (testReport.suites) {
-                var failedTests = testReport.suites.map(function (suite) {
+        var suiteTree = 'suites[name,cases[age,className,name,status,errorDetails,errorStackTrace,testActions[claimDate,claimed,claimedBy,reason]]]';
+        $.getJSON(build.url + 'testReport/api/json?tree=' + suiteTree + ',childReports[child[number,url],result[' + suiteTree + ']]').then(function (testReport) {
+            if (testReport.suites || testReport.childReports) {
+                var suites = testReport.suites ? testReport.suites : [].concat.apply([], testReport.childReports.map(function (child) {
+                    var suites = child.result.suites;
+                    suites.forEach(function (suite) {
+                        suite.url = child.child.url;
+                    });
+                    return suites;
+                }));
+                var failedTests = suites.map(function (suite) {
                     var dotBeforeClass = suite.name.lastIndexOf('.');
                     var packageOfSuite = suite.name.substring(0, dotBeforeClass);
-                    var suiteUrl = build.url + 'testReport/' + (packageOfSuite ? packageOfSuite : '(root)') + '/' + suite.name.substring(dotBeforeClass + 1) + '/';
+                    var suiteUrl = (suite.url ? suite.url : build.url) + 'testReport/' + (packageOfSuite ? packageOfSuite : '(root)') + '/' + suite.name.substring(dotBeforeClass + 1) + '/';
                     return {
                         name: suite.name,
                         url: suiteUrl,
