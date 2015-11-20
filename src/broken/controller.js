@@ -35,6 +35,9 @@ define(['jquery', 'common/util', 'app-config', 'broken/builds', 'broken/updater'
           util.sequentially(testCases.concat(builds), function (testCase) {
             return updater.claim(testCase, claim);
           });
+          $('input.testCaseSelect:checked').each(function () {
+            $(this).prop("checked", false);
+          });
         } catch (err) {
           console.log(err);
         }
@@ -46,6 +49,9 @@ define(['jquery', 'common/util', 'app-config', 'broken/builds', 'broken/updater'
           var testCases = selectedTestCases();
           var builds = selectedBuilds();
           testCases.concat(builds).forEach(updater.unclaim);
+          $('input.testCaseSelect:checked').each(function () {
+            $(this).prop("checked", false);
+          });
         } catch (err) {
           console.log(err);
         }
