@@ -1,14 +1,10 @@
 language: node_js
 node_js:
-  - "0.12"
+  - "5.3.0"
 before_install:
   - chmod 755 ./update-gh-pages.sh
 before_script:
-  - npm install -g gulp
-  - npm install -g bower
-  - bower install
+  - npm install
 script:
- - gulp clean
- - npm test
- - gulp build
+ - npm run build
 after_success: ./update-gh-pages.sh
