@@ -50,7 +50,8 @@
   "scripts": {
     "test": "./node_modules/karma/bin/karma start --single-run --browsers PhantomJS",
     "build": "webpack --progress --colors",
-    "dev": "webpack-dev-server --devtool eval --progress --colors --hot --content-base dist --port 8000"
+    "dev": "webpack-dev-server --devtool eval --progress --colors --hot --content-base dist --port 8000",
+    "mock": "MOCK_COMMITS=true webpack-dev-server --devtool eval --progress --colors --hot --content-base dist --port 8000"
   },
   "repository": {
     "type": "git",

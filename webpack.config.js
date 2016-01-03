@@ -60,3 +60,9 @@ module.exports = {
     new Clean(['dist'])
   ]
 };
+
+if (process.env.MOCK_COMMITS) {
+  module.exports.resolve.modulesDirectories.push('test');
+  module.exports.resolve.alias['where/changes/changes'] = 'mock-changes';
+  module.exports.resolve.alias['where/changes/changesUpdater'] = 'mock-changesUpdater';
+}
