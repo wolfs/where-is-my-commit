@@ -1,6 +1,11 @@
 // Karma configuration
 // Generated on Wed Apr 08 2015 14:18:11 GMT+0200 (Mitteleuropäische Sommerzeit)
 
+var webpackConf = require('./webpack.config.js');
+webpackConf.entry = {};
+webpackConf.module = {};
+webpackConf.plugins = {};
+
 module.exports = function(config) {
   config.set({
 
@@ -10,35 +15,22 @@ module.exports = function(config) {
 
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-    frameworks: ['jasmine-ajax', 'jasmine', 'requirejs'],
+    frameworks: ['jasmine-ajax', 'jasmine'],
 
 
     // list of files / patterns to load in the browser
     files: [
-      {pattern: 'bower_components/jquery/dist/*.js', included: false},
-      {pattern: 'bower_components/jasmine/lib/jasmine-core/*.js', included: false},
-      {pattern: 'bower_components/jasmine-ajax/lib/*.js', included: false},
-      {pattern: 'src/**/*.js', included: false},
-      {pattern: 'test/**/*Spec.js', included: false},
-      'test/karma-test-main.js'
-    ],
-
-
-    // list of files to exclude
-    exclude: [
-      'src/main.js',
-      'src/init.js',
-      'test/main.js',
-      'test/boot.js',
-      'test/specs.js',
-      'test/test-config.js'
+      'test/**/*Spec.js'
     ],
 
 
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
+      'test/**/*Spec.js': ['webpack']
     },
+
+    webpack: webpackConf,
 
 
     // test results reporter to use
@@ -71,6 +63,6 @@ module.exports = function(config) {
 
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
-    singleRun: true
+    singleRun: true,
   });
 };

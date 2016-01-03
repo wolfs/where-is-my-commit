@@ -1,9 +1,5 @@
-require(['squire'], function (Squire) {
-  'use strict';
-  var injector = new Squire();
-
-  var changes = {};
-  changes.commits = [
+module.exports = {
+  commits: [
     {
       commitId: "1234660",
       user: "Menninger Alexander, GF Öffentliche Sicherheit & Ordnung",
@@ -84,39 +80,5 @@ require(['squire'], function (Squire) {
       user: "wolfs",
       msg: "Some other commit"
     }
-  ].reverse();
-
-  injector
-    .mock({
-      'where/changes/changes': changes,
-      'where/changes/changesUpdater': function () {
-        var my = {};
-        var firstCall = true;
-        my.update = function () {
-          if (!firstCall) {
-            changes.commits.splice(0,0,
-              {
-                commitId: "1234710",
-                user: "wolfs",
-                msg: "Some third commit"
-              },
-              {
-                commitId: "1234700",
-                user: "wolfs",
-                msg: "Some third commit"
-              });
-          }
-
-          firstCall = false;
-
-          $(changes).trigger("change");
-        };
-        return my;
-      }(),
-      'my-config': {}
-    });
-  injector.require(["where/changes/changesController", 'where/builds/nodesController'], function (changes, nodes) {
-    changes.init();
-    nodes.init();
-  });
-});
+  ].reverse()
+};

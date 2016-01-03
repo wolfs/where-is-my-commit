@@ -2,20 +2,8 @@
 <html>
 <meta charset="utf-8">
 <head>
-  <!-- build:css-->
-  <link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet"/>
-  <link href="styles.css" rel="stylesheet"/>
-  <!-- endbuild -->
 </head>
 <body>
-<!-- build:js-->
-<script src="../bower_components/requirejs/require.js"></script>
-<!-- endbuild -->
-<script>
-  require(['shims'], function () {
-    require(['bootstrap', 'broken/init']);
-  });
-</script>
 <style scoped="">
   body {
     padding-top: 70px;
@@ -95,5 +83,6 @@
   </div>
 </nav>
 
+<script type="text/javascript" src="my-config.js"></script>
 </body>
 </html>
