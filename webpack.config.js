@@ -1,9 +1,9 @@
 var ExtractTextPlugin = require("extract-text-webpack-plugin");
 var path = require('path');
 var node_modules = path.resolve(__dirname, 'node_modules');
-var pathToBootstrap = path.resolve(node_modules, 'bootstrap/dist/js/bootstrap.min.js');
+
 var webpack = require("webpack");
-var HtmlWebpackPlugin = require('html-webpack-plugin')
+var HtmlWebpackPlugin = require('html-webpack-plugin');
 var Clean = require('clean-webpack-plugin');
 
 module.exports = {
@@ -37,10 +37,9 @@ module.exports = {
       { test: /\.(woff|woff2)(\?v=\d+\.\d+\.\d+)?$/,   loader: "url?limit=10000&mimetype=application/font-woff&name=fonts/[name].[ext]" },
       { test: /\.ttf(\?v=\d+\.\d+\.\d+)?$/,    loader: "file?name=fonts/[name].[ext]" },
       { test: /\.eot(\?v=\d+\.\d+\.\d+)?$/,    loader: "file?name=fonts/[name].[ext]" },
-      { test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,    loader: "file?name=fonts/[name].[ext]" }
-    ],
-    //noParse: [/\.(woff|woff2)(\?v=\d+\.\d+\.\d+)?$/]
-    //noParse: [/bootstrap\.min\./]
+      { test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,    loader: "file?name=fonts/[name].[ext]" },
+      { test: /\.js$/, exclude: /node_modules/, loader: "babel-loader"}
+    ]
   },
   //// Use the plugin to specify the resulting filename (and add needed behavior to the compiler)
   plugins: [

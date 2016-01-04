@@ -8,5 +8,6 @@
     "afterEach"  : false,
     "define"     : false,
     "require"    : false
-  }
+  },
+  "esnext": true
 }
