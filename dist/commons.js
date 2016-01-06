@@ -96,11 +96,12 @@
 /* 1 */
 /***/ function(module, exports, __webpack_require__) {
 
+	'use strict';
+
 	__webpack_require__(2);
 	__webpack_require__(11);
 	__webpack_require__(13);
 	__webpack_require__(17);
-
 
 /***/ },
 /* 2 */
@@ -172,49 +173,51 @@
 /* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
+	'use strict';
+
 	!(module.exports = {
-	  getQueryVariable: function (variable) {
+	  getQueryVariable: function getQueryVariable(variable) {
 	    'use strict';
+
 	    var search = window.location.search;
 	    return this.getQueryVariableFromSearch(variable, search);
 	  },
 
-	  getQueryVariableFromSearch: function (variable, search) {
+	  getQueryVariableFromSearch: function getQueryVariableFromSearch(variable, search) {
 	    'use strict';
+
 	    var query = search.substring(1);
 	    var params = this.queryVariablesFromQuery(query);
 	    return params[variable];
 	  },
 
-	  queryVariablesFromQuery: function (query) {
+	  queryVariablesFromQuery: function queryVariablesFromQuery(query) {
 	    var params = {};
 	    if (query !== "") {
-	      query
-	        .split("&").map(function (el) {
-	          return el.split("=");
-	        })
-	        .forEach(function (args) {
-	          params[decodeURIComponent(args[0])] = args[1] ? decodeURIComponent(args[1].replace(/\+/g, ' ')) : args[1];
-	        });
+	      query.split("&").map(function (el) {
+	        return el.split("=");
+	      }).forEach(function (args) {
+	        params[decodeURIComponent(args[0])] = args[1] ? decodeURIComponent(args[1].replace(/\+/g, ' ')) : args[1];
+	      });
 	    }
 	    return params;
 	  },
 
-	  queryVariables: function () {
+	  queryVariables: function queryVariables() {
 	    var search = window.location.search;
 	    var query = search.substring(1);
 	    return this.queryVariablesFromQuery(query);
 	  },
 
-	  newThrottler: function (bulkUpdateSizeParam, updateIntervalParam) {
+	  newThrottler: function newThrottler(bulkUpdateSizeParam, updateIntervalParam) {
 	    var throttler = {},
-	      workUnits = [],
-	      currentTimer,
-	      timerRunning = false,
-	      bulkUpdateSize = bulkUpdateSizeParam || 10,
-	      updateInterval = updateIntervalParam || 2000;
+	        workUnits = [],
+	        currentTimer,
+	        timerRunning = false,
+	        bulkUpdateSize = bulkUpdateSizeParam || 10,
+	        updateInterval = updateIntervalParam || 2000;
 
-	    var startTimer = function () {
+	    var startTimer = function startTimer() {
 	      updateNext();
 	      currentTimer = setInterval(function () {
 	        if (workUnits.length === 0) {
@@ -227,13 +230,13 @@
 	      timerRunning = true;
 	    };
 
-	    var startTimerIfNecessary = function () {
+	    var startTimerIfNecessary = function startTimerIfNecessary() {
 	      if (!timerRunning) {
 	        startTimer();
 	      }
 	    };
 
-	    var updateNext = function () {
+	    var updateNext = function updateNext() {
 	      if (workUnits.length > 0) {
 	        var workForNow = workUnits.slice(0, bulkUpdateSize);
 	        workUnits = workUnits.slice(bulkUpdateSize);
@@ -255,13 +258,12 @@
 	    return throttler;
 	  },
 
-	  sequentially: function (args, requestFunction) {
+	  sequentially: function sequentially(args, requestFunction) {
 	    args.reverse().reduce(function (previous, current) {
 	      return function () {
 	        requestFunction(current).always(previous);
 	      };
-	    }, function () {
-	    })();
+	    }, function () {})();
 	  }
 	});
 
@@ -270,13 +272,16 @@
 /* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(15)], __WEBPACK_AMD_DEFINE_RESULT__ = function ($) {
-	  'use strict';
-	  var globalConfig = (window && window.whereIsMyCommit) || {};
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;'use strict';
 
-	  var mergeWithDefault = function (globalConfig) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(15)], __WEBPACK_AMD_DEFINE_RESULT__ = function ($) {
+	  'use strict';
+
+	  var globalConfig = window && window.whereIsMyCommit || {};
+
+	  var mergeWithDefault = function mergeWithDefault(globalConfig) {
 	    return {
-	      width: globalConfig.width || ($("#graph").width()),
+	      width: globalConfig.width || $("#graph").width(),
 	      height: globalConfig.height || 2000,
 	      jenkinsUrl: globalConfig.jenkinsUrl || "http://localhost:8080",
 	      startJob: globalConfig.startJob || "chain-start",
@@ -291,118 +296,112 @@
 	  return mergeWithDefault(globalConfig);
 	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
-
 /***/ },
 /* 22 */,
 /* 23 */,
 /* 24 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(21)], __WEBPACK_AMD_DEFINE_RESULT__ = function (config) {
-	  var my = {};
-	  var testCaseCount = 1;
-	  var defaultBuildKeys = [
-	    'number',
-	    'url',
-	    'result',
-	    'timestamp'
-	  ];
-	  var defaultActionKeys = [
-	    'failCount',
-	    'skipCount',
-	    'totalCount',
-	    'urlName',
-	    'name',
-	    'result[warnings[message,fileName]]',
-	    'claimDate,claimed,claimedBy,reason'
-	  ];
+	'use strict';
 
-	  my.buildKeys = function (buildKeys, actionKeys) {
-	    return defaultBuildKeys.concat(buildKeys, ['actions[' + defaultActionKeys.concat(actionKeys).join(',') + "]"]).join(',');
-	  };
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.addFailedTests = exports.getTestResult = exports.getWarnings = exports.buildKeys = undefined;
 
-	  my.getWarnings = function (build) {
-	    var actions = build.actions;
+	var _appConfig = __webpack_require__(21);
 
-	    var warningsActions = actions.filter(function (action) {
-	      return action.name === "findbugs" || action.name === "pmd" || action.name === "warnings";
+	var config = _interopRequireWildcard(_appConfig);
+
+	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+	var testCaseCount = 1;
+	var defaultBuildKeys = ['number', 'url', 'result', 'timestamp'];
+	var defaultActionKeys = ['failCount', 'skipCount', 'totalCount', 'urlName', 'name', 'result[warnings[message,fileName]]', 'claimDate,claimed,claimedBy,reason'];
+
+	var buildKeys = exports.buildKeys = function buildKeys(_buildKeys, actionKeys) {
+	  return defaultBuildKeys.concat(_buildKeys, ['actions[' + defaultActionKeys.concat(actionKeys).join(',') + "]"]).join(',');
+	};
+
+	var getWarnings = exports.getWarnings = function getWarnings(build) {
+	  var actions = build.actions;
+
+	  var warningsActions = actions.filter(function (action) {
+	    return action.name === "findbugs" || action.name === "pmd" || action.name === "warnings";
+	  });
+
+	  return Array.prototype.concat.apply([], warningsActions.map(function (action) {
+	    return action.result.warnings.map(function (warning) {
+	      return { name: action.name, message: warning.message, fileName: warning.fileName, id: testCaseCount++ };
+	    }).filter(function (warning) {
+	      return !(warning.name === "warnings" && config.filterWarnings.some(function (filterWarning) {
+	        return warning.message.indexOf(filterWarning) > -1;
+	      }));
 	    });
+	  }));
+	};
 
-	    return Array.prototype.concat.apply([], warningsActions.map(function (action) {
-	      return action.result.warnings.map(function (warning) {
-	        return {name: action.name, message: warning.message, fileName: warning.fileName, id: testCaseCount++ };
-	      }).filter(function (warning) {
-	        return !(warning.name === "warnings" && config.filterWarnings.some(function (filterWarning) {
-	          return warning.message.indexOf(filterWarning) > -1;
-	        }));
+	var getTestResult = exports.getTestResult = function getTestResult(build) {
+	  var actions = build.actions;
+
+	  var testReports = actions.filter(function (action) {
+	    return action.urlName === "testReport";
+	  });
+
+	  if (testReports.length > 0) {
+	    return testReports[0];
+	  }
+	  return {
+	    failCount: 0,
+	    skipCount: 0,
+	    totalCount: 0
+	  };
+	};
+
+	var addFailedTests = exports.addFailedTests = function addFailedTests(build, callback, failureCallbackArg) {
+	  var failureCallback = failureCallbackArg || function () {};
+	  var suiteTree = "suites[name,cases[age,className,name,status,errorDetails,errorStackTrace,testActions[claimDate,claimed,claimedBy,reason]]]";
+	  $.getJSON(build.url + "testReport/api/json?tree=" + suiteTree + ",childReports[child[number,url],result[" + suiteTree + "]]").then(function (testReport) {
+	    if (testReport.suites || testReport.childReports) {
+	      var suites = testReport.suites ? testReport.suites : [].concat.apply([], testReport.childReports.map(function (child) {
+	        var suites = child.result.suites;
+	        suites.forEach(function (suite) {
+	          suite.url = child.child.url;
+	        });
+	        return suites;
+	      }));
+	      var failedTests = suites.map(function (suite) {
+	        var dotBeforeClass = suite.name.lastIndexOf(".");
+	        var packageOfSuite = suite.name.substring(0, dotBeforeClass);
+	        var suiteUrl = (suite.url ? suite.url : build.url) + "testReport/" + (packageOfSuite ? packageOfSuite : "(root)") + "/" + suite.name.substring(dotBeforeClass + 1) + "/";
+	        return {
+	          name: suite.name,
+	          url: suiteUrl,
+	          cases: suite.cases.filter(function (test) {
+	            return test.status !== 'PASSED' && test.status !== 'SKIPPED' && test.status !== 'FIXED';
+	          }).map(function (testCase) {
+	            testCase.url = suiteUrl + testCase.name.replace(/[^a-zA-Z0-9_$]/g, "_") + "/";
+	            testCase.id = testCaseCount++;
+	            if (testCase.testActions) {
+	              var claims = testCase.testActions.filter(function (c) {
+	                return c.claimed === true;
+	              });
+	              testCase.claim = claims.length == 1 ? claims[0] : { claimed: false };
+	            } else {
+	              testCase.claim = { claimed: false };
+	            }
+	            return testCase;
+	          })
+	        };
+	      }).filter(function (suite) {
+	        return suite.cases.length > 0;
 	      });
-	    }));
-	  };
-
-	  my.getTestResult = function (build) {
-	    var actions = build.actions;
-
-	    var testReports = actions.filter(function (action) {
-	      return action.urlName === "testReport";
-	    });
-
-	    if (testReports.length > 0) {
-	      return testReports[0];
+	      callback(failedTests);
+	    } else {
+	      callback();
 	    }
-	    return {
-	      failCount: 0,
-	      skipCount: 0,
-	      totalCount: 0
-	    };
-	  };
-
-	  my.addFailedTests = function (build, callback, failureCallbackArg) {
-	    var failureCallback = failureCallbackArg || function () {};
-	    var suiteTree = "suites[name,cases[age,className,name,status,errorDetails,errorStackTrace,testActions[claimDate,claimed,claimedBy,reason]]]";
-	    $.getJSON(build.url + "testReport/api/json?tree=" + suiteTree + ",childReports[child[number,url],result[" + suiteTree + "]]")
-	      .then(function (testReport) {
-	        if (testReport.suites || testReport.childReports) {
-	          var suites = testReport.suites ? testReport.suites : [].concat.apply([], testReport.childReports.map(function (child) {
-	            var suites = child.result.suites
-	            suites.forEach(function (suite) { suite.url = child.child.url });
-	            return suites
-	          }))
-	          var failedTests = suites.map(function (suite) {
-	            var dotBeforeClass = suite.name.lastIndexOf(".");
-	            var packageOfSuite = suite.name.substring(0, dotBeforeClass);
-	            var suiteUrl = (suite.url ? suite.url : build.url) + "testReport/" + (packageOfSuite ? packageOfSuite : "(root)") + "/" + suite.name.substring(dotBeforeClass + 1) + "/";
-	            return {
-	              name: suite.name,
-	              url: suiteUrl,
-	              cases: suite.cases.filter(function (test) {
-	                return (test.status !== 'PASSED') && (test.status !== 'SKIPPED') && (test.status !== 'FIXED');
-	              }).map(function (testCase) {
-	                testCase.url = suiteUrl + testCase.name.replace(/[^a-zA-Z0-9_$]/g, "_") + "/";
-	                testCase.id = testCaseCount++;
-	                if (testCase.testActions) {
-	                  var claims = testCase.testActions.filter(function (c) {
-	                    return c.claimed === true;
-	                  });
-	                  testCase.claim = claims.length == 1 ? claims[0] : { claimed: false };
-	                } else {
-	                  testCase.claim = { claimed: false };
-	                }
-	                return testCase;
-	              })
-	            };
-	          }).filter(function (suite) {
-	            return suite.cases.length > 0;
-	          });
-	          callback(failedTests);
-	        } else {
-	          callback();
-	        }
-	      }, failureCallback);
-	  };
-
-
-	  return my;
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	  }, failureCallback);
+	};
 
 /***/ },
 /* 25 */,
@@ -419,52 +418,39 @@
 /* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(15), __webpack_require__(17)], __WEBPACK_AMD_DEFINE_RESULT__ = function ($) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;'use strict';
+
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(15), __webpack_require__(17)], __WEBPACK_AMD_DEFINE_RESULT__ = function ($) {
 	  'use strict';
+
 	  var my = {};
 
-	  my.dateTimeFormat = {year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric'};
+	  my.dateTimeFormat = { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric' };
 
 	  my.formatClaim = function (el) {
 	    el.html(function (claimedObject) {
 	      var claim = claimedObject.claim;
 	      if (claim.claimed) {
-	        return '<span class="glyphicon glyphicon-lock"> </span>' + (claim.reason ? (' <span>' + claim.reason + '</span><br /> ') : '') +
-	          ' <span class="label label-default">' + claim.claimedBy + '</span>' +
-	          ' <span>' + new Date(claim.claimDate).toLocaleString('de-DE', my.dateTimeFormat) + '</span>';
+	        return '<span class="glyphicon glyphicon-lock"> </span>' + (claim.reason ? ' <span>' + claim.reason + '</span><br /> ' : '') + ' <span class="label label-default">' + claim.claimedBy + '</span>' + ' <span>' + new Date(claim.claimDate).toLocaleString('de-DE', my.dateTimeFormat) + '</span>';
 	      } else {
 	        return '';
 	      }
 	    });
 	  };
 
-	  var appendTestCaseDetails = function (name, description, present, collapse, text) {
+	  var appendTestCaseDetails = function appendTestCaseDetails(name, description, present, collapse, text) {
 	    return function (hull) {
-	      hull
-	        .filter(present)
-	        .append("div").call(function (div) {
-	          div.append("h6")
-	            .append("a")
-	            .attr("data-toggle", "collapse")
-	            .attr("href", function (testCase) {
-	              return "#" + name + testCase.id;
-	            })
-	            .text(description)
-	            .append("span")
-	            .attr("class", "caret")
-	          ;
-	        })
-	        .append("div")
-	        .attr("class", function (testCase) {
-	          return collapse(testCase) ? "panel-collapse collapse" : "panel-collapse collapse in";
-	        })
-	        .attr("id", function (testCase) {
-	          return name + testCase.id;
-	        })
-	        .append("pre")
-	        .text(function (testCase) {
-	          return text(testCase);
-	        });
+	      hull.filter(present).append("div").call(function (div) {
+	        div.append("h6").append("a").attr("data-toggle", "collapse").attr("href", function (testCase) {
+	          return "#" + name + testCase.id;
+	        }).text(description).append("span").attr("class", "caret");
+	      }).append("div").attr("class", function (testCase) {
+	        return collapse(testCase) ? "panel-collapse collapse" : "panel-collapse collapse in";
+	      }).attr("id", function (testCase) {
+	        return name + testCase.id;
+	      }).append("pre").text(function (testCase) {
+	        return text(testCase);
+	      });
 	    };
 	  };
 
@@ -475,19 +461,11 @@
 	      return test.name + "-" + test.className;
 	    });
 
-	    suiteResults.enter()
-	      .append("div")
-	      .attr("class", "suiteResult list-group")
-	      .append("div")
-	      .attr("class", "input-group suite")
-	      .html(function (suite) {
-	        return '<span class="input-group-addon"><input class="testCaseSelect" data-suitename="' + suite.url + '" type="checkbox"></span>'
-	      })
-	      .append("div")
-	      .attr("class", "list-group-item")
-	      .html(function (test) {
-	        return "<div class='h4'><a href='" + test.url + "'>" + test.name + "</a></div>";
-	      });
+	    suiteResults.enter().append("div").attr("class", "suiteResult list-group").append("div").attr("class", "input-group suite").html(function (suite) {
+	      return '<span class="input-group-addon"><input class="testCaseSelect" data-suitename="' + suite.url + '" type="checkbox"></span>';
+	    }).append("div").attr("class", "list-group-item").html(function (test) {
+	      return "<div class='h4'><a href='" + test.url + "'>" + test.name + "</a></div>";
+	    });
 
 	    var testResults = suiteResults.selectAll(".testResult").data(function (suite) {
 	      return suite.cases;
@@ -495,47 +473,23 @@
 	      return testCase.name;
 	    });
 
-	    testResults.enter()
-	      .append("div")
-	      .attr("class", "input-group testResult")
-	      .html(function (testCase) {
-	        return '<span class="input-group-addon"><input class="testCaseSelect" data-testCaseId="' + testCase.id + '" type="checkbox"></span>';
-	      })
-	      .append("div")
-	      .attr("class", "list-group-item")
-	      .html(function (testCase) {
-	        return '<div class="row">' +
-	          [
-	            '<div class="h5 col-md-7">',
-	            '<a href="', testCase.url, '">', testCase.name.substring(0, 400), '</a> ',
-	            ' <span class="glyphicon glyphicon-time"></span>',
-	            '<span class="badge" data-toggle="tooltip" title="age">', testCase.age, '</span>',
-	            '</div>'].join("") +
-	          '<div class="col-md-5 claim"/>' +
-	          '</div>';
-	      })
-	      .call(appendTestCaseDetails("details", 'Details',
-	        function (testCase) {
-	          return testCase.errorDetails;
-	        },
-	        function (testCase) {
-	          return testCase.errorDetails.length > 1200;
-	        },
-	        function (testCase) {
-	          return testCase.errorDetails.replace(/<\[\d+, [0-9, -]+\]>/, "");
-	        }
-	      ))
-	      .call(appendTestCaseDetails("stacktrace", 'Stacktrace',
-	        function (testCase) {
-	          return testCase.errorStackTrace;
-	        },
-	        function () {
-	          return true;
-	        },
-	        function (testCase) {
-	          return testCase.errorStackTrace.replace(/<\[\d+, [0-9, -]+\]>/, "");
-	        }
-	      ));
+	    testResults.enter().append("div").attr("class", "input-group testResult").html(function (testCase) {
+	      return '<span class="input-group-addon"><input class="testCaseSelect" data-testCaseId="' + testCase.id + '" type="checkbox"></span>';
+	    }).append("div").attr("class", "list-group-item").html(function (testCase) {
+	      return '<div class="row">' + ['<div class="h5 col-md-7">', '<a href="', testCase.url, '">', testCase.name.substring(0, 400), '</a> ', ' <span class="glyphicon glyphicon-time"></span>', '<span class="badge" data-toggle="tooltip" title="age">', testCase.age, '</span>', '</div>'].join("") + '<div class="col-md-5 claim"/>' + '</div>';
+	    }).call(appendTestCaseDetails("details", 'Details', function (testCase) {
+	      return testCase.errorDetails;
+	    }, function (testCase) {
+	      return testCase.errorDetails.length > 1200;
+	    }, function (testCase) {
+	      return testCase.errorDetails.replace(/<\[\d+, [0-9, -]+\]>/, "");
+	    })).call(appendTestCaseDetails("stacktrace", 'Stacktrace', function (testCase) {
+	      return testCase.errorStackTrace;
+	    }, function () {
+	      return true;
+	    }, function (testCase) {
+	      return testCase.errorStackTrace.replace(/<\[\d+, [0-9, -]+\]>/, "");
+	    }));
 
 	    testResults.select('.claim').call(my.formatClaim);
 
@@ -543,21 +497,15 @@
 	      return node.warnings || [];
 	    });
 
-	    warnings.enter()
-	      .append("div")
-	      .attr("class", "warning")
-	      .append("div")
-	      .attr("class", "list-group-item")
-	      .html(function (warning) {
-	        return "<h5 class='list-group-item-heading'>" + warning.fileName + "</h5>";
-	      })
-	      .call(appendTestCaseDetails("warning", "Warning", function () {
-	        return true;
-	      }, function () {
-	        return false;
-	      }, function (warning) {
-	        return warning.message;
-	      }));
+	    warnings.enter().append("div").attr("class", "warning").append("div").attr("class", "list-group-item").html(function (warning) {
+	      return "<h5 class='list-group-item-heading'>" + warning.fileName + "</h5>";
+	    }).call(appendTestCaseDetails("warning", "Warning", function () {
+	      return true;
+	    }, function () {
+	      return false;
+	    }, function (warning) {
+	      return warning.message;
+	    }));
 
 	    $(function () {
 	      $('[data-toggle="tooltip"]').tooltip();

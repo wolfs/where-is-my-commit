@@ -2,9 +2,10 @@ webpackJsonp([0],[
 /* 0 */
 /***/ function(module, exports, __webpack_require__) {
 
+	'use strict';
+
 	__webpack_require__(1);
 	__webpack_require__(18);
-
 
 /***/ },
 /* 1 */,
@@ -27,13 +28,14 @@ webpackJsonp([0],[
 /* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(15), __webpack_require__(19), __webpack_require__(20), __webpack_require__(29), __webpack_require__(28)], __WEBPACK_AMD_DEFINE_RESULT__ = function ($, util, controller, lastBuildsOf, Spinner) {
-	  var viewName = util.getQueryVariable('view'),
-	    multijobName = util.getQueryVariable('multijob'),
-	    buildSelector = util.getQueryVariable('buildSelector');
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;'use strict';
 
-	  var urlsToCheck = viewName ? lastBuildsOf.view(viewName, buildSelector) :
-	    (multijobName ? lastBuildsOf.multijob(multijobName, buildSelector) : $.Deferred().resolve([]));
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(15), __webpack_require__(19), __webpack_require__(20), __webpack_require__(29), __webpack_require__(28)], __WEBPACK_AMD_DEFINE_RESULT__ = function ($, util, controller, lastBuildsOf, Spinner) {
+	  var viewName = util.getQueryVariable('view'),
+	      multijobName = util.getQueryVariable('multijob'),
+	      buildSelector = util.getQueryVariable('buildSelector');
+
+	  var urlsToCheck = viewName ? lastBuildsOf.view(viewName, buildSelector) : multijobName ? lastBuildsOf.multijob(multijobName, buildSelector) : $.Deferred().resolve([]);
 
 	  var loading = $('#projects').find('.loading')[0];
 	  $(loading).text('');
@@ -68,169 +70,167 @@ webpackJsonp([0],[
 /* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(15), __webpack_require__(19), __webpack_require__(21), __webpack_require__(22), __webpack_require__(23), __webpack_require__(25), __webpack_require__(28)], __WEBPACK_AMD_DEFINE_RESULT__ = function ($, util, config, data, updater, renderer, Spinner) {
-	    var my = {},
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;'use strict';
+
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(15), __webpack_require__(19), __webpack_require__(21), __webpack_require__(22), __webpack_require__(23), __webpack_require__(25), __webpack_require__(28)], __WEBPACK_AMD_DEFINE_RESULT__ = function ($, util, config, data, updater, renderer, Spinner) {
+	  var my = {},
 	      throttler = util.newThrottler(config.bulkUpdateSize, config.coreUpdateInterval);
 
-	    var initFormSubmit = function () {
-	      var selectedTestCases = function () {
-	        var selected = $('input.testCaseSelect:checked');
-	        var ids = $.makeArray(selected.map(function () {
-	          return $(this).data('testcaseid');
-	        }));
-	        return ids.map(function (id) {
-	          return data.testCaseForId(id);
+	  var initFormSubmit = function initFormSubmit() {
+	    var selectedTestCases = function selectedTestCases() {
+	      var selected = $('input.testCaseSelect:checked');
+	      var ids = $.makeArray(selected.map(function () {
+	        return $(this).data('testcaseid');
+	      }));
+	      return ids.map(function (id) {
+	        return data.testCaseForId(id);
+	      });
+	    };
+
+	    var selectedBuilds = function selectedBuilds() {
+	      var selected = $('input.buildSelect:checked');
+	      var ids = $.makeArray(selected.map(function () {
+	        return $(this).data('buildid');
+	      }));
+	      return ids.map(function (id) {
+	        return data.buildForId(id);
+	      });
+	    };
+
+	    $('#claimForm').submit(function (event) {
+	      try {
+	        var testCases = selectedTestCases();
+	        var builds = selectedBuilds();
+	        var claim = {};
+	        $(this).serializeArray().forEach(function (field) {
+	          claim[field.name] = field.value;
 	        });
-	      };
-
-	      var selectedBuilds = function () {
-	        var selected = $('input.buildSelect:checked');
-	        var ids = $.makeArray(selected.map(function () {
-	          return $(this).data('buildid');
-	        }));
-	        return ids.map(function (id) {
-	          return data.buildForId(id);
+	        util.sequentially(testCases.concat(builds), function (testCase) {
+	          return updater.claim(testCase, claim);
 	        });
-	      };
+	      } catch (err) {
+	        console.log(err);
+	      }
+	      event.preventDefault();
+	    });
 
-	      $('#claimForm').submit(function (event) {
-	        try {
-	          var testCases = selectedTestCases();
-	          var builds = selectedBuilds();
-	          var claim = {};
-	          $(this).serializeArray().forEach(function (field) {
-	            claim[field.name] = field.value;
-	          });
-	          util.sequentially(testCases.concat(builds), function (testCase) {
-	            return updater.claim(testCase, claim);
-	          });
-	        } catch (err) {
-	          console.log(err);
-	        }
-	        event.preventDefault();
-	      });
+	    $('#dropClaimsForm').submit(function (event) {
+	      try {
+	        var testCases = selectedTestCases();
+	        var builds = selectedBuilds();
+	        testCases.concat(builds).forEach(updater.unclaim);
+	      } catch (err) {
+	        console.log(err);
+	      }
+	      event.preventDefault();
+	    });
+	  };
 
-	      $('#dropClaimsForm').submit(function (event) {
-	        try {
-	          var testCases = selectedTestCases();
-	          var builds = selectedBuilds();
-	          testCases.concat(builds).forEach(updater.unclaim);
-	        } catch (err) {
-	          console.log(err);
-	        }
-	        event.preventDefault();
-	      });
+	  var progressUpdater = function progressUpdater(number) {
+	    var my = {};
+
+	    my.total = number;
+	    my.current = 0;
+
+	    my.callback = function () {
+	      my.current++;
+	      my.updateProgress();
 	    };
 
-	    var progressUpdater = function (number) {
-	      var my = {};
+	    my.updateProgress = function () {
+	      $('#loadingProgress').width(my.current * 100 / my.total + '%');
 
-	      my.total = number;
-	      my.current = 0;
-
-	      my.callback = function () {
-	        my.current++;
-	        my.updateProgress();
-	      };
-
-	      my.updateProgress = function () {
-	        $('#loadingProgress').width((my.current * 100 / my.total) + '%');
-
-	        if (my.current === my.total) {
-	          $('#loadingSpinner').html('<span class="label label-success"><span class="glyphicon glyphicon-ok"></span></span>');
-	        }
-	      };
-
-	      new Spinner({
-	        lines: 13, // The number of lines to draw
-	        length: 28, // The length of each line
-	        width: 14, // The line thickness
-	        radius: 42, // The radius of the inner circle
-	        scale: 0.1, // Scales overall size of the spinner
-	        corners: 1, // Corner roundness (0..1)
-	        color: '#000', // #rgb or #rrggbb or array of colors
-	        opacity: 0.25, // Opacity of the lines
-	        rotate: 0, // The rotation offset
-	        direction: 1, // 1: clockwise, -1: counterclockwise
-	        speed: 1, // Rounds per second
-	        trail: 60, // Afterglow percentage
-	        fps: 20, // Frames per second when using setTimeout() as a fallback for CSS
-	        zIndex: 2e9, // The z-index (defaults to 2000000000)
-	        className: 'spinner', // The CSS class to assign to the spinner
-	        top: '50%', // Top position relative to parent
-	        left: '100%', // Left position relative to parent
-	        shadow: false, // Whether to render a shadow
-	        hwaccel: false, // Whether to use hardware acceleration
-	        position: 'absolute' // Element positioning
-	      }).spin($('#loadingSpinner')[0]);
-
-	      return my;
+	      if (my.current === my.total) {
+	        $('#loadingSpinner').html('<span class="label label-success"><span class="glyphicon glyphicon-ok"></span></span>');
+	      }
 	    };
 
-	    my.init = function (urlsDef) {
-	      initFormSubmit();
-	      updater.views().then(renderer.addViews);
-	      renderer.renderLoop();
-	      urlsDef.then(
-	        function (urls) {
-	          var progress = progressUpdater(urls.length * 2);
-	          throttler.scheduleUpdates(
-	            urls.map(function (url) {
-	              return function () {
-	                updater.addForUrl(url, progress.callback);
-	              };
-	            }));
-	        },
-	        function (error, statusCode, statusText) {
-	          var loading = $('#projects').find('.loading')[0];
-	          loading.innerHTML = '<div class="alert alert-danger" role="alert">Loading Failed: ' + statusText + '</div>';
-	        }
-	      );
-
-	      urlsDef.then(function (urls) {
-	        if (urls.length === 0) {
-	          var loading = $('#projects').find('.loading')[0];
-	          loading.innerHTML = '<div class="alert alert-warning" role="alert">No projects found - please select a view</div>';
-	        }
-	      });
-
-	      var collapsed = false;
-
-	      $('#collapseAll').click(function (event) {
-	        $('.testResults').collapse(collapsed ? 'show' : 'hide');
-	        collapsed = ! collapsed;
-	      });
-	    };
+	    new Spinner({
+	      lines: 13, // The number of lines to draw
+	      length: 28, // The length of each line
+	      width: 14, // The line thickness
+	      radius: 42, // The radius of the inner circle
+	      scale: 0.1, // Scales overall size of the spinner
+	      corners: 1, // Corner roundness (0..1)
+	      color: '#000', // #rgb or #rrggbb or array of colors
+	      opacity: 0.25, // Opacity of the lines
+	      rotate: 0, // The rotation offset
+	      direction: 1, // 1: clockwise, -1: counterclockwise
+	      speed: 1, // Rounds per second
+	      trail: 60, // Afterglow percentage
+	      fps: 20, // Frames per second when using setTimeout() as a fallback for CSS
+	      zIndex: 2e9, // The z-index (defaults to 2000000000)
+	      className: 'spinner', // The CSS class to assign to the spinner
+	      top: '50%', // Top position relative to parent
+	      left: '100%', // Left position relative to parent
+	      shadow: false, // Whether to render a shadow
+	      hwaccel: false, // Whether to use hardware acceleration
+	      position: 'absolute' // Element positioning
+	    }).spin($('#loadingSpinner')[0]);
 
 	    return my;
-	  }.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	  };
+
+	  my.init = function (urlsDef) {
+	    initFormSubmit();
+	    updater.views().then(renderer.addViews);
+	    renderer.renderLoop();
+	    urlsDef.then(function (urls) {
+	      var progress = progressUpdater(urls.length * 2);
+	      throttler.scheduleUpdates(urls.map(function (url) {
+	        return function () {
+	          updater.addForUrl(url, progress.callback);
+	        };
+	      }));
+	    }, function (error, statusCode, statusText) {
+	      var loading = $('#projects').find('.loading')[0];
+	      loading.innerHTML = '<div class="alert alert-danger" role="alert">Loading Failed: ' + statusText + '</div>';
+	    });
+
+	    urlsDef.then(function (urls) {
+	      if (urls.length === 0) {
+	        var loading = $('#projects').find('.loading')[0];
+	        loading.innerHTML = '<div class="alert alert-warning" role="alert">No projects found - please select a view</div>';
+	      }
+	    });
+
+	    var collapsed = false;
+
+	    $('#collapseAll').click(function (event) {
+	      $('.testResults').collapse(collapsed ? 'show' : 'hide');
+	      collapsed = !collapsed;
+	    });
+	  };
+
+	  return my;
+	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 /***/ },
 /* 21 */,
 /* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_RESULT__ = function () {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;'use strict';
+
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_RESULT__ = function () {
 	  var my = {
 	    builds: [],
 	    event: 'change'
 	  };
 
-	  var concat = function (a, b) {
+	  var concat = function concat(a, b) {
 	    return a.concat(b);
 	  };
 
 	  my.testCases = function () {
 	    return my.builds.map(function (build) {
 	      return build.testResult.failedTests || [];
-	    }).reduce(concat)
-	      .map(function (testSuite) {
-	        return testSuite.cases;
-	      })
-	      .reduce(concat);
+	    }).reduce(concat).map(function (testSuite) {
+	      return testSuite.cases;
+	    }).reduce(concat);
 	  };
 
-	  var findById = function (id, list) {
+	  var findById = function findById(id, list) {
 	    return list.filter(function (objectWithId) {
 	      return objectWithId.id === id;
 	    }).pop();
@@ -247,11 +247,9 @@ webpackJsonp([0],[
 	  my.testCasesForSuite = function (url) {
 	    return my.builds.map(function (build) {
 	      return build.testResult.failedTests || [];
-	    }).reduce(concat)
-	      .filter(function (testSuite) {
-	        return testSuite.url === url;
-	      })
-	      .pop().cases;
+	    }).reduce(concat).filter(function (testSuite) {
+	      return testSuite.url === url;
+	    }).pop().cases;
 	  };
 
 	  return my;
@@ -261,17 +259,18 @@ webpackJsonp([0],[
 /* 23 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(22), __webpack_require__(19), __webpack_require__(24), __webpack_require__(15), __webpack_require__(21)], __WEBPACK_AMD_DEFINE_RESULT__ = function (data, util, buildInfo, $, config) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;'use strict';
+
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(22), __webpack_require__(19), __webpack_require__(24), __webpack_require__(15), __webpack_require__(21)], __WEBPACK_AMD_DEFINE_RESULT__ = function (data, util, buildInfo, $, config) {
 	  var my = {};
 
-	  var buildUrl = function (mybuildUrl) {
-	    return mybuildUrl +
-	      "/api/json?tree=" + buildInfo.buildKeys(['fullDisplayName'], []);
+	  var buildUrl = function buildUrl(mybuildUrl) {
+	    return mybuildUrl + "/api/json?tree=" + buildInfo.buildKeys(['fullDisplayName'], []);
 	  };
 
 	  var buildId = 0;
 
-	  var getBuildDef = function (myBuildUrl) {
+	  var getBuildDef = function getBuildDef(myBuildUrl) {
 	    return $.getJSON(buildUrl(myBuildUrl)).then(function (build) {
 	      return build;
 	    });
@@ -290,7 +289,7 @@ webpackJsonp([0],[
 	        testResult: buildInfo.getTestResult(build),
 	        warnings: buildInfo.getWarnings(build),
 	        status: build.result.toLowerCase(),
-	        claim: claims.length === 1 ? claims[0] : {claimed: false},
+	        claim: claims.length === 1 ? claims[0] : { claimed: false },
 	        id: buildId++
 	      };
 	      data.builds.push(buildData);
@@ -303,7 +302,7 @@ webpackJsonp([0],[
 	          progressCallback('testResult', failedTests);
 	        }, progressCallback);
 	      } else {
-	          progressCallback('testResult', false);
+	        progressCallback('testResult', false);
 	      }
 	    }, function () {
 	      progressCallback();
@@ -313,10 +312,9 @@ webpackJsonp([0],[
 
 	  my.claim = function (objectToClaim, claim) {
 	    var request = $.post(objectToClaim.url + '/claim/claim', {
-	        Submit: "Claim",
-	        json: JSON.stringify(claim)
-	      }
-	    );
+	      Submit: "Claim",
+	      json: JSON.stringify(claim)
+	    });
 	    request.then(function () {
 	      claim.claimed = true;
 	      claim.claimDate = new Date().getTime();
@@ -330,7 +328,7 @@ webpackJsonp([0],[
 	  my.unclaim = function (objectToClaim) {
 	    var request = $.post(objectToClaim.url + '/claim/unclaim');
 	    request.then(function () {
-	      objectToClaim.claim = {claimed: false};
+	      objectToClaim.claim = { claimed: false };
 	      $(data).trigger(data.event);
 	    });
 	    return request;
@@ -360,41 +358,29 @@ webpackJsonp([0],[
 /* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(26), __webpack_require__(15), __webpack_require__(27), __webpack_require__(22), __webpack_require__(19)], __WEBPACK_AMD_DEFINE_RESULT__ = function (d3, $, render, data, util) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;'use strict';
+
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(26), __webpack_require__(15), __webpack_require__(27), __webpack_require__(22), __webpack_require__(19)], __WEBPACK_AMD_DEFINE_RESULT__ = function (d3, $, render, data, util) {
 	  var my = {};
 
-	  var buildName = function (build) {
+	  var buildName = function buildName(build) {
 	    return build.name;
 	  };
 
 	  my.renderFailedTests = function () {
-	    var unstableNodes = data.builds
-	      .filter(function (build) {
-	        return (build.status === "failure" || build.status === "unstable");
-	      });
+	    var unstableNodes = data.builds.filter(function (build) {
+	      return build.status === "failure" || build.status === "unstable";
+	    });
 
 	    var unstableProjects = d3.select("#projects").selectAll(".unstableProject").data(unstableNodes, buildName);
 
-	    unstableProjects.enter()
-	      .append("div")
-	      .attr("class", function (build) {
-	        return "panel panel-default unstableProject " + build.status;
-	      })
-	      .attr("name", function (el) {
-	        return el.name;
-	      })
-	      .html(function (build) {
-	        return '<div class="input-group panel-default">' +
-	          '<span class="input-group-addon"><input class="buildSelect" data-buildId="' + build.id + '" type="checkbox"></span>' + "<div class='panel-heading'>" + '<div class="row">' +
-	          "<div class='col-md-8'><h2 class='panel-title'><a class='h2' href='" + build.url + "'>" + build.name +
-	          "</a>, <span class='h3'>" + build.date.toLocaleString('de-DE', render.dateTimeFormat) +
-	          "</span></h2></div>" +
-	          '<div class="col-md-3 claim"></div>' +
-	          '<div class="col-md-1"><a data-toggle="collapse" href="#collapseProject' + build.id + '">collapse<span class="caret"></span></a></div>' +
-	          '</div>' +
-	          "</div></div>" +
-	          "<div class='testResults panel-body collapse in' id='collapseProject" + build.id + "'></div>";
-	      });
+	    unstableProjects.enter().append("div").attr("class", function (build) {
+	      return "panel panel-default unstableProject " + build.status;
+	    }).attr("name", function (el) {
+	      return el.name;
+	    }).html(function (build) {
+	      return '<div class="input-group panel-default">' + '<span class="input-group-addon"><input class="buildSelect" data-buildId="' + build.id + '" type="checkbox"></span>' + "<div class='panel-heading'>" + '<div class="row">' + "<div class='col-md-8'><h2 class='panel-title'><a class='h2' href='" + build.url + "'>" + build.name + "</a>, <span class='h3'>" + build.date.toLocaleString('de-DE', render.dateTimeFormat) + "</span></h2></div>" + '<div class="col-md-3 claim"></div>' + '<div class="col-md-1"><a data-toggle="collapse" href="#collapseProject' + build.id + '">collapse<span class="caret"></span></a></div>' + '</div>' + "</div></div>" + "<div class='testResults panel-body collapse in' id='collapseProject" + build.id + "'></div>";
+	    });
 
 	    unstableProjects.order();
 
@@ -406,7 +392,7 @@ webpackJsonp([0],[
 
 	    d3.selectAll("#projects .loading").remove();
 
-	    var suiteSelector = function (event) {
+	    var suiteSelector = function suiteSelector(event) {
 	      var checkbox = event.target;
 	      data.testCasesForSuite($(checkbox).data('suitename')).forEach(function (testCase) {
 	        $('[data-testcaseid="' + testCase.id + '"]').prop('checked', checkbox.checked);
@@ -421,43 +407,26 @@ webpackJsonp([0],[
 	  };
 
 	  my.addUsers = function (users) {
-	    var userId = function (user) {
+	    var userId = function userId(user) {
 	      return user.id;
 	    };
-	    d3.select('#assignees')
-	      .selectAll('.user')
-	      .data(users, userId)
-	      .enter()
-	      .append("option")
-	      .attr("class", "user")
-	      .attr("value", userId)
-	      .text(function (user) {
-	        return user.fullName;
-	      })
-	    ;
+	    d3.select('#assignees').selectAll('.user').data(users, userId).enter().append("option").attr("class", "user").attr("value", userId).text(function (user) {
+	      return user.fullName;
+	    });
 	  };
 
 	  my.addViews = function (views) {
 	    var viewSelection = d3.select('#views').selectAll('.view').data(views);
-	    viewSelection
-	      .enter()
-	      .append("li")
-	      .attr("role", "presentation")
-	      .attr("class", "view")
-	      .append("a")
-	      .attr("href", function (view) {
-	        var queryVariables = util.queryVariables();
-	        queryVariables.view = view.name;
-	        delete queryVariables.multijob;
-	        return "?" + $.param(queryVariables);
-	      })
-	      .attr("role", "menuitem")
-	      .attr("name", function (view) {
-	        return view.name;
-	      })
-	      .text(function (view) {
-	        return view.name;
-	      });
+	    viewSelection.enter().append("li").attr("role", "presentation").attr("class", "view").append("a").attr("href", function (view) {
+	      var queryVariables = util.queryVariables();
+	      queryVariables.view = view.name;
+	      delete queryVariables.multijob;
+	      return "?" + $.param(queryVariables);
+	    }).attr("role", "menuitem").attr("name", function (view) {
+	      return view.name;
+	    }).text(function (view) {
+	      return view.name;
+	    });
 
 	    viewSelection.order();
 	    viewSelection.exit().remove();
@@ -487,14 +456,16 @@ webpackJsonp([0],[
 /* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(15), __webpack_require__(21)], __WEBPACK_AMD_DEFINE_RESULT__ = function ($, config) {
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;'use strict';
+
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(15), __webpack_require__(21)], __WEBPACK_AMD_DEFINE_RESULT__ = function ($, config) {
 	  var my = {};
 
 	  var defaultSelector = 'lastCompletedBuild';
 
 	  my.multijob = function (multijobName, selectorArg) {
 	    var selector = selectorArg || defaultSelector,
-	      multijobUrl = config.jenkinsUrl + '/job/' + multijobName + '/' + selector + '/api/json?tree=subBuilds[url]';
+	        multijobUrl = config.jenkinsUrl + '/job/' + multijobName + '/' + selector + '/api/json?tree=subBuilds[url]';
 	    return $.getJSON(multijobUrl).then(function (multijobBuild) {
 	      return multijobBuild.subBuilds.map(function (subBuild) {
 	        return config.jenkinsUrl + "/" + subBuild.url;
@@ -504,21 +475,18 @@ webpackJsonp([0],[
 
 	  my.view = function (viewName, selectorArg) {
 	    var selector = selectorArg || defaultSelector,
-	      viewUrl = config.jenkinsUrl + '/view/' + viewName + '/api/json?tree=jobs[url,color]';
+	        viewUrl = config.jenkinsUrl + '/view/' + viewName + '/api/json?tree=jobs[url,color]';
 	    return $.getJSON(viewUrl).then(function (view) {
-	      return view.jobs.
-	        filter(function (job) {
-	          return job.color !== 'blue';
-	        }).
-	        map(function (job) {
-	          return job.url + selector + '/';
-	        });
+	      return view.jobs.filter(function (job) {
+	        return job.color !== 'blue';
+	      }).map(function (job) {
+	        return job.url + selector + '/';
+	      });
 	    });
 	  };
 
 	  return my;
 	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
 
 /***/ }
 ]);
