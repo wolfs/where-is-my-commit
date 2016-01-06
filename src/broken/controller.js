@@ -24,6 +24,12 @@ define(['jquery', 'common/util', 'app-config', 'broken/builds', 'broken/updater'
         });
       };
 
+      var uncheckAllCheckboxes = function() {
+        $('input.testCaseSelect:checked,input.buildSelect:checked').each(function () {
+          $(this).prop("checked", false);
+        });
+      };
+
       $('#claimForm').submit(function (event) {
         try {
           var testCases = selectedTestCases();
@@ -35,6 +41,7 @@ define(['jquery', 'common/util', 'app-config', 'broken/builds', 'broken/updater'
           util.sequentially(testCases.concat(builds), function (testCase) {
             return updater.claim(testCase, claim);
           });
+          uncheckAllCheckboxes();
         } catch (err) {
           console.log(err);
         }
@@ -46,6 +53,7 @@ define(['jquery', 'common/util', 'app-config', 'broken/builds', 'broken/updater'
           var testCases = selectedTestCases();
           var builds = selectedBuilds();
           testCases.concat(builds).forEach(updater.unclaim);
+          uncheckAllCheckboxes();
         } catch (err) {
           console.log(err);
         }
