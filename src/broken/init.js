@@ -1,4 +1,4 @@
-define(['jquery', 'common/util', 'broken/controller', 'broken/lastBuildsOf', 'spin'], function ($, util, controller, lastBuildsOf, Spinner) {
+define(['jquery', 'common/util', 'broken/controller', 'broken/lastBuildsOf', 'spin.js'], function ($, util, controller, lastBuildsOf, Spinner) {
   var viewName = util.getQueryVariable('view'),
     multijobName = util.getQueryVariable('multijob'),
     buildSelector = util.getQueryVariable('buildSelector');

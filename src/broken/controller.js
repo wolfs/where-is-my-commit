@@ -1,4 +1,4 @@
-define(['jquery', 'common/util', 'app-config', 'broken/builds', 'broken/updater', 'broken/renderer', 'spin'],
+define(['jquery', 'common/util', 'app-config', 'broken/builds', 'broken/updater', 'broken/renderer', 'spin.js'],
   function ($, util, config, data, updater, renderer, Spinner) {
     var my = {},
       throttler = util.newThrottler(config.bulkUpdateSize, config.coreUpdateInterval);

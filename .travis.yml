@@ -7,5 +7,5 @@ before_script:
   - npm install
 script:
  - npm run test
- - npm run build
+ - npm run dist
 after_success: ./update-gh-pages.sh

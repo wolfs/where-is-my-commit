@@ -12,13 +12,7 @@ module.exports = {
     broken: './src/entry-broken.js'
   },
   resolve: {
-    modulesDirectories: ['node_modules', 'src'],
-    alias: {
-      'bootstrap': 'bootstrap/dist/js/bootstrap.min',
-      'jquery': 'jquery/dist/jquery.min',
-      'd3': 'd3/d3.min',
-      'spin': 'spin.js/spin.min'
-    }
+    modulesDirectories: ['node_modules', 'src']
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
@@ -30,6 +24,10 @@ module.exports = {
       {
         test: /\.css$/,
         loader: ExtractTextPlugin.extract("style-loader", "css-loader")
+      },
+      {
+        test: /\.less$/,
+        loader: ExtractTextPlugin.extract("style-loader", "css-loader!less-loader")
       },
 
       // Needed for the css-loader when [bootstrap-webpack](https://github.com/bline/bootstrap-webpack)
