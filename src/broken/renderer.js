@@ -118,5 +118,14 @@ export let addViews = function (views) {
 };
 
 export let renderLoop = function () {
-  store.subscribe(renderFailedTests);
+  let viewNeedsUpdate = true;
+  store.subscribe(function () {
+    viewNeedsUpdate = true;
+    setTimeout(function () {
+      if (viewNeedsUpdate) {
+        renderFailedTests();
+        viewNeedsUpdate = false;
+      }
+    }, 20);
+  });
 };
