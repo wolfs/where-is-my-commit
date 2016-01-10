@@ -31,5 +31,5 @@ define(['jquery', 'common/util', 'broken/controller', 'broken/lastBuildsOf', 'sp
     position: 'absolute' // Element positioning
   }).spin(loading);
 
-  controller.init(urlsToCheck);
+  controller.default(urlsToCheck);
 });

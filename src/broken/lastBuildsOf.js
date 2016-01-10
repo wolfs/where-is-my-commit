@@ -19,7 +19,7 @@ define(['jquery', 'app-config'], function ($, config) {
     return $.getJSON(viewUrl).then(function (view) {
       return view.jobs.
         filter(function (job) {
-          return job.color !== 'blue';
+          return job.color && job.color !== 'blue' && job.color !== 'notbuilt';
         }).
         map(function (job) {
           return job.url + selector + '/';

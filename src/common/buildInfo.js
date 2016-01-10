@@ -1,5 +1,6 @@
 import * as config from 'app-config';
 
+var suiteId = 0;
 var testCaseCount = 1;
 var defaultBuildKeys = [
   'number',
@@ -47,12 +48,13 @@ export var getTestResult = function (build) {
   });
 
   if (testReports.length > 0) {
-    return testReports[0];
+    return Object.assign({}, testReports[0], { failedTests: [] });
   }
   return {
     failCount: 0,
     skipCount: 0,
-    totalCount: 0
+    totalCount: 0,
+    failedTests: []
   };
 };
 
@@ -74,6 +76,7 @@ export var addFailedTests = function (build, callback, failureCallbackArg) {
           return {
             name: suite.name,
             url: suiteUrl,
+            id: suiteId++,
             cases: suite.cases.filter(function (test) {
               return (test.status !== 'PASSED') && (test.status !== 'SKIPPED') && (test.status !== 'FIXED');
             }).map(function (testCase) {
