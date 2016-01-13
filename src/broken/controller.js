@@ -1,18 +1,18 @@
-import data from 'broken/builds';
-import util from 'common/util';
-import $ from 'jquery';
-import config from 'app-config';
-import * as renderer from 'broken/renderer';
-import Spinner from 'spin.js';
-import * as updater from 'broken/updater';
+import data from "broken/builds";
+import util from "common/util";
+import $ from "jquery";
+import config from "app-config";
+import * as renderer from "broken/renderer";
+import Spinner from "spin.js";
+import * as updater from "broken/updater";
 
 var throttler = util.newThrottler(config.bulkUpdateSize, config.coreUpdateInterval);
 
 var initFormSubmit = function () {
   var selectedTestCases = function () {
-    var selected = $('input.testCaseSelect:checked');
+    var selected = $("input.testCaseSelect:checked");
     var ids = $.makeArray(selected.map(function () {
-      return $(this).data('testcaseid');
+      return $(this).data("testcaseid");
     }));
     return ids.map(function (id) {
       return data.testCaseForId(id);
@@ -20,9 +20,9 @@ var initFormSubmit = function () {
   };
 
   var selectedBuilds = function () {
-    var selected = $('input.buildSelect:checked');
+    var selected = $("input.buildSelect:checked");
     var ids = $.makeArray(selected.map(function () {
-      return $(this).data('buildid');
+      return $(this).data("buildid");
     }));
     return ids.map(function (id) {
       return data.buildForId(id);
@@ -30,12 +30,12 @@ var initFormSubmit = function () {
   };
 
   var uncheckAllCheckboxes = function () {
-    $('input.testCaseSelect:checked,input.buildSelect:checked').each(function () {
+    $("input.testCaseSelect:checked,input.buildSelect:checked").each(function () {
       $(this).prop("checked", false);
     });
   };
 
-  $('#claimForm').submit(function (event) {
+  $("#claimForm").submit(function (event) {
     try {
       var testCases = selectedTestCases();
       var builds = selectedBuilds();
@@ -48,19 +48,19 @@ var initFormSubmit = function () {
       });
       uncheckAllCheckboxes();
     } catch (err) {
-      console.log(err);
+      console.log(err); // eslint-disable-line no-console
     }
     event.preventDefault();
   });
 
-  $('#dropClaimsForm').submit(function (event) {
+  $("#dropClaimsForm").submit(function (event) {
     try {
       var testCases = selectedTestCases();
       var builds = selectedBuilds();
       testCases.concat(builds).forEach(updater.unclaim);
       uncheckAllCheckboxes();
     } catch (err) {
-      console.log(err);
+      console.log(err); // eslint-disable-line no-console
     }
     event.preventDefault();
   });
@@ -78,10 +78,10 @@ var progressUpdater = function (number) {
   };
 
   my.updateProgress = function () {
-    $('#loadingProgress').width((my.current * 100 / my.total) + '%');
+    $("#loadingProgress").width((my.current * 100 / my.total) + "%");
 
     if (my.current === my.total) {
-      $('#loadingSpinner').html('<span class="label label-success"><span class="glyphicon glyphicon-ok"></span></span>');
+      $("#loadingSpinner").html("<span class='label label-success'><span class='glyphicon glyphicon-ok'></span></span>");
     }
   };
 
@@ -92,7 +92,7 @@ var progressUpdater = function (number) {
     radius: 42, // The radius of the inner circle
     scale: 0.1, // Scales overall size of the spinner
     corners: 1, // Corner roundness (0..1)
-    color: '#000', // #rgb or #rrggbb or array of colors
+    color: "#000", // #rgb or #rrggbb or array of colors
     opacity: 0.25, // Opacity of the lines
     rotate: 0, // The rotation offset
     direction: 1, // 1: clockwise, -1: counterclockwise
@@ -100,13 +100,13 @@ var progressUpdater = function (number) {
     trail: 60, // Afterglow percentage
     fps: 20, // Frames per second when using setTimeout() as a fallback for CSS
     zIndex: 2e9, // The z-index (defaults to 2000000000)
-    className: 'spinner', // The CSS class to assign to the spinner
-    top: '50%', // Top position relative to parent
-    left: '100%', // Left position relative to parent
+    className: "spinner", // The CSS class to assign to the spinner
+    top: "50%", // Top position relative to parent
+    left: "100%", // Left position relative to parent
     shadow: false, // Whether to render a shadow
     hwaccel: false, // Whether to use hardware acceleration
-    position: 'absolute' // Element positioning
-  }).spin($('#loadingSpinner')[0]);
+    position: "absolute" // Element positioning
+  }).spin($("#loadingSpinner")[0]);
 
   return my;
 };
@@ -123,22 +123,22 @@ export default function init(urlsDef) {
       );
     },
     (error, statusCode, statusText) => {
-      var loading = $('#projects').find('.loading')[0];
-      loading.innerHTML = '<div class="alert alert-danger" role="alert">Loading Failed: ' + statusText + '</div>';
+      var loading = $("#projects").find(".loading")[0];
+      loading.innerHTML = "<div class='alert alert-danger' role='alert'>Loading Failed: " + statusText + "</div>";
     }
   );
 
   urlsDef.then(urls => {
     if (urls.length === 0) {
-      var loading = $('#projects').find('.loading')[0];
-      loading.innerHTML = '<div class="alert alert-warning" role="alert">No projects found - please select a view</div>';
+      var loading = $("#projects").find(".loading")[0];
+      loading.innerHTML = "<div class='alert alert-warning' role='alert'>No projects found - please select a view</div>";
     }
   });
 
   var collapsed = false;
 
-  $('#collapseAll').click(event => {
-    $('.testResults').collapse(collapsed ? 'show' : 'hide');
+  $("#collapseAll").click(() => {
+    $(".testResults").collapse(collapsed ? "show" : "hide");
     collapsed = !collapsed;
   });
-};
+}

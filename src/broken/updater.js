@@ -1,15 +1,14 @@
-import data from 'broken/builds';
-import util from 'common/util';
-import * as buildInfo from 'common/buildInfo';
-import $ from 'jquery';
-import config from 'app-config';
-import { addBuildData, addTestResults, failedGettingTestResults } from './actions';
+import data from "broken/builds";
+import * as buildInfo from "common/buildInfo";
+import $ from "jquery";
+import config from "app-config";
+import { addBuildData, addTestResults, failedGettingTestResults } from "./actions";
 
-import store from './store';
+import store from "./store";
 
 const buildUrl = function (mybuildUrl) {
   return mybuildUrl +
-    "/api/json?tree=" + buildInfo.buildKeys(['fullDisplayName'], []);
+    "/api/json?tree=" + buildInfo.buildKeys(["fullDisplayName"], []);
 };
 
 let buildId = 0;
@@ -21,8 +20,7 @@ const getBuildDef = function (myBuildUrl) {
 };
 
 export const addForUrl = function (url, progressCallbackParm) {
-  var progressCallback = progressCallbackParm || function () {
-    };
+  var progressCallback = progressCallbackParm || function () {};
   getBuildDef(url).then(function (build) {
     var claims = build.actions.filter(function (c) {
       return c.claimed === true;
@@ -39,24 +37,24 @@ export const addForUrl = function (url, progressCallbackParm) {
       status,
       claim: claims.length === 1 ? claims[0] : {claimed: false},
       id: buildId++,
-      hasFailedTests: status === "unstable" && testResult.totalCount > 0,
+      hasFailedTests: status === "unstable" && testResult.totalCount > 0
     };
     data.builds.push(buildData);
     $(data).trigger(data.event);
     store.dispatch(addBuildData(buildData));
-    progressCallback('build', buildData);
+    progressCallback("build", buildData);
     if (buildData.hasFailedTests) {
       buildInfo.addFailedTests(buildData, function (failedTests) {
         buildData.testResult.failedTests = failedTests;
         $(data).trigger(data.event);
         store.dispatch(addTestResults(buildData.id, failedTests));
-        progressCallback('testResult', failedTests);
+        progressCallback("testResult", failedTests);
       }, function() {
         progressCallback();
         store.dispatch(failedGettingTestResults(buildData.id));
       });
     } else {
-      progressCallback('testResult', false);
+      progressCallback("testResult", false);
     }
   }, function () {
     progressCallback();
@@ -65,7 +63,8 @@ export const addForUrl = function (url, progressCallbackParm) {
 };
 
 export const claim = function (objectToClaim, claim) {
-  var request = $.post(objectToClaim.url + '/claim/claim', {
+  var request = $.post(objectToClaim.url + "/claim/claim",
+    {
       Submit: "Claim",
       json: JSON.stringify(claim)
     }
@@ -81,7 +80,7 @@ export const claim = function (objectToClaim, claim) {
 };
 
 export const unclaim = function (objectToClaim) {
-  var request = $.post(objectToClaim.url + '/claim/unclaim');
+  var request = $.post(objectToClaim.url + "/claim/unclaim");
   request.then(function () {
     objectToClaim.claim = {claimed: false};
     $(data).trigger(data.event);
@@ -90,7 +89,7 @@ export const unclaim = function (objectToClaim) {
 };
 
 export const users = function () {
-  return $.getJSON(config.jenkinsUrl + '/asynchPeople/api/json?tree=users[user[fullName,id]]').then(function (jsonUsers) {
+  return $.getJSON(config.jenkinsUrl + "/asynchPeople/api/json?tree=users[user[fullName,id]]").then(function (jsonUsers) {
     return jsonUsers.users.map(function (userInfo) {
       return userInfo.user;
     });
@@ -98,7 +97,7 @@ export const users = function () {
 };
 
 export const views = function () {
-  return $.getJSON(config.jenkinsUrl + '/api/json?tree=views[name,url]').then(function (jenkins) {
+  return $.getJSON(config.jenkinsUrl + "/api/json?tree=views[name,url]").then(function (jenkins) {
     return jenkins.views.sort(function (a, b) {
       return a.name.localeCompare(b.name);
     });

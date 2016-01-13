@@ -1,8 +1,9 @@
-import d3 from 'd3';
-import $ from 'jquery';
-import render from 'common/render';
-import util from 'common/util';
-import store from './store';
+import d3 from "d3";
+import $ from "jquery";
+import render from "common/render";
+import util from "common/util";
+import store from "./store";
+import { suiteSelected } from "./actions";
 
 var buildName = function (build) {
   return build.name;
@@ -34,21 +35,21 @@ export let renderFailedTests = function () {
       return el.name;
     })
     .html(function (build) {
-      return '<div class="input-group panel-default">' +
-        '<span class="input-group-addon"><input class="buildSelect" data-buildId="' + build.id + '" type="checkbox"></span>' + "<div class='panel-heading'>" + '<div class="row">' +
+      return "<div class='input-group panel-default'>" +
+        "<span class='input-group-addon'><input class='buildSelect' data-buildId='" + build.id + "' type='checkbox'></span>" + "<div class='panel-heading'>" + "<div class='row'>" +
         "<div class='col-md-8'><h2 class='panel-title'><a class='h2' href='" + build.url + "'>" + build.name +
-        "</a>, <span class='h3'>" + build.date.toLocaleString('de-DE', render.dateTimeFormat) +
+        "</a>, <span class='h3'>" + build.date.toLocaleString("de-DE", render.dateTimeFormat) +
         "</span></h2></div>" +
-        '<div class="col-md-3 claim"></div>' +
-        '<div class="col-md-1"><a data-toggle="collapse" href="#collapseProject' + build.id + '">collapse<span class="caret"></span></a></div>' +
-        '</div>' +
+        "<div class='col-md-3 claim'></div>" +
+        "<div class='col-md-1'><a data-toggle='collapse' href='#collapseProject" + build.id + "'>collapse<span class='caret'></span></a></div>" +
+        "</div>" +
         "</div></div>" +
         "<div class='testResults panel-body collapse in' id='collapseProject" + build.id + "'></div>";
     });
 
   unstableProjects.order();
 
-  unstableProjects.select('.claim').call(render.formatClaim);
+  unstableProjects.select(".claim").call(render.formatClaim);
 
   unstableProjects.exit().remove();
 
@@ -58,14 +59,12 @@ export let renderFailedTests = function () {
 
   var suiteSelector = function (event) {
     var checkbox = event.target;
-    store.getState().testCasesForSuite($(checkbox).data('suitename')).forEach(function (testCase) {
-      $('[data-testcaseid="' + testCase.id + '"]').prop('checked', checkbox.checked);
-    });
+    store.dispatch(suiteSelected($(checkbox).data("suitename"), checkbox.checked));
   };
 
-  var suites = $('[data-suitename]');
+  var suites = $("[data-suitename]");
 
-  suites.off('change');
+  suites.off("change");
 
   suites.change(suiteSelector);
 };
@@ -74,8 +73,8 @@ export let addUsers = function (users) {
   var userId = function (user) {
     return user.id;
   };
-  d3.select('#assignees')
-    .selectAll('.user')
+  d3.select("#assignees")
+    .selectAll(".user")
     .data(users, userId)
     .enter()
     .append("option")
@@ -88,7 +87,7 @@ export let addUsers = function (users) {
 };
 
 export let addViews = function (views) {
-  var viewSelection = d3.select('#views').selectAll('.view').data(views);
+  var viewSelection = d3.select("#views").selectAll(".view").data(views);
   viewSelection
     .enter()
     .append("li")
@@ -112,8 +111,8 @@ export let addViews = function (views) {
   viewSelection.order();
   viewSelection.exit().remove();
 
-  var selectedViewName = util.getQueryVariable('view');
-  $('#currentView').text(selectedViewName ? selectedViewName : 'Views');
+  var selectedViewName = util.getQueryVariable("view");
+  $("#currentView").text(selectedViewName ? selectedViewName : "Views");
   d3.selectAll("#views .loading").remove();
 };
 

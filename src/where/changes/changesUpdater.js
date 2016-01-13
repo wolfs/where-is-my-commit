@@ -1,5 +1,5 @@
-define(['where/changes/changes', 'app-config', 'jquery', 'common/util'], function (changes, config, $, util) {
-  'use strict';
+define(["where/changes/changes", "app-config", "jquery", "common/util"], function (changes, config, $, util) {
+  "use strict";
   var my = {};
 
   my.update = function () {

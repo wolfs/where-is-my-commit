@@ -1,5 +1,5 @@
-define(['app-config', 'where/builds/nodesData', 'common/render', 'd3'], function (conf, nodesData, render, d3) {
-  'use strict';
+define(["app-config", "where/builds/nodesData", "common/render", "d3", "jquery"], function (conf, nodesData, render, d3, $) {
+  "use strict";
   var my = {};
 
   var cluster = d3.layout.tree().nodeSize([200, 200]);
@@ -140,7 +140,7 @@ define(['app-config', 'where/builds/nodesData', 'common/render', 'd3'], function
       });
 
     var downstreamNodes = node.selectAll(".downstream").data(function (coreNode) {
-      return coreNode.downstreamProjects.map(function (proj) { proj.num = coreNode.downstreamProjects.length; return proj });
+      return coreNode.downstreamProjects.map(function (proj) { proj.num = coreNode.downstreamProjects.length; return proj; });
     }, jobName);
 
     var downstreamContainer = downstreamNodes.enter()
@@ -156,12 +156,12 @@ define(['app-config', 'where/builds/nodesData', 'common/render', 'd3'], function
       .append("text")
       .text(function (d) {
         var parentData = d3.select(this.parentNode.parentNode).datum();
-        return d.jobName.replace(new RegExp(parentData.jobName + '(-|~~)*'), '')
-          .split('-')
+        return d.jobName.replace(new RegExp(parentData.jobName + "(-|~~)*"), "")
+          .split("-")
           .map(function (s) {
             return s[0];
           })
-          .join('');
+          .join("");
       })
       .attr("text-anchor", "end")
       .attr("dx", "-15")
@@ -180,12 +180,12 @@ define(['app-config', 'where/builds/nodesData', 'common/render', 'd3'], function
     node.selectAll("text.testcount")
       .text(function (d) {
         var newFailCount = d.getNewFailCount();
-        return newFailCount === 0 ? undefined : (newFailCount > 0 ? '+' + newFailCount : newFailCount);
+        return newFailCount === 0 ? undefined : (newFailCount > 0 ? "+" + newFailCount : newFailCount);
       })
-      .classed('worse', function (d) {
+      .classed("worse", function (d) {
         return d.getNewFailCount() > 0;
       })
-      .classed('better', function (d) {
+      .classed("better", function (d) {
         return d.getNewFailCount() < 0;
       });
 

@@ -1,4 +1,4 @@
-import { ADD_BUILD_DATA, ADD_TEST_RESULTS } from './actions';
+import { ADD_BUILD_DATA, ADD_TEST_RESULTS, SUITE_SELECTED } from "./actions";
 
 const initialState = {
   builds: [],
@@ -34,14 +34,8 @@ initialState.buildForId = function (id) {
   return findById(id, this.builds);
 };
 
-initialState.testCasesForSuite = function (url) {
-  return this.builds.map(function (build) {
-    return build.testResult.failedTests || [];
-  }).reduce(concat)
-    .filter(function (testSuite) {
-      return testSuite.url === url;
-    })
-    .pop().cases;
+initialState.testCasesForSuite = function (id) {
+  return this.testSuites[id].cases.map(testCaseId => this.testCases[testCaseId]);
 };
 
 
@@ -60,20 +54,36 @@ export function brokenApp(state = initialState, action) {
       return Object.assign({}, state, {
         builds: [
           ...state.builds.slice(0, index),
-          Object.assign({}, currentBuild, {
-            testResult: Object.assign({}, currentBuild.testResult, {
+          { ...currentBuild,
+            testResult: {
+              ...currentBuild.testResult,
               failedTests: failedTests.map(suite => suite.id)
-            })
-          }),
+            }
+          },
           ...state.builds.slice(index + 1)
         ],
         testSuites: Object.assign({}, state.testSuites, ...failedTests.map(suite => { return {
-          [suite.id]: Object.assign({}, suite, { cases: suite.cases.map(testCase => testCase.id) })
+          [suite.id]: Object.assign({}, suite, { cases: suite.cases.map(testCase => testCase.id), selected: false })
         }; })),
         testCases: Object.assign({}, state.testCases, ...failedTests.map(suite => suite.cases).reduce(concat).map(testCase => {
           "use strict";
           return {
-            [testCase.id]: testCase
+            [testCase.id]: Object.assign({}, testCase, { selected: false })
+          };
+        }))
+      });
+    case SUITE_SELECTED:
+      const { selected, suiteId } = action.payload;
+      const testSuite = state.testSuites[suiteId];
+      return Object.assign({}, state, {
+        testSuites: Object.assign({}, state.testSuites, {
+          [suiteId]: Object.assign({}, testSuite, {
+            selected
+          })
+        }),
+        testCases: Object.assign({}, state.testCases, ...testSuite.cases.map(testCaseId => {
+          return {
+            [testCaseId]: Object.assign({}, state.testCases[testCaseId], {selected})
           };
         }))
       });

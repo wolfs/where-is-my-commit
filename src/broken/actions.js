@@ -1,6 +1,7 @@
-export const ADD_BUILD_DATA = 'ADD_BUILD_DATA';
-export const ADD_TEST_RESULTS = 'ADD_TEST_RESULTS';
-export const FAILED_GETTING_TEST_RESULTS = 'FAILED_GETTING_TEST_RESULTS';
+export const ADD_BUILD_DATA = "ADD_BUILD_DATA";
+export const ADD_TEST_RESULTS = "ADD_TEST_RESULTS";
+export const FAILED_GETTING_TEST_RESULTS = "FAILED_GETTING_TEST_RESULTS";
+export const SUITE_SELECTED = "SUITE_SELECTED";
 
 export function addBuildData(buildData) {
   "use strict";
@@ -26,5 +27,16 @@ export function failedGettingTestResults(buildId) {
   return {
     type: FAILED_GETTING_TEST_RESULTS,
     payload: buildId
+  };
+}
+
+export function suiteSelected(suiteId, selected) {
+  "use strict";
+  return {
+    type: SUITE_SELECTED,
+    payload: {
+      suiteId,
+      selected
+    }
   };
 }

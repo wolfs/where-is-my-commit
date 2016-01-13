@@ -1,7 +1,7 @@
 define([], function () {
   var my = {
     builds: [],
-    event: 'change'
+    event: "change"
   };
 
   var concat = function (a, b) {

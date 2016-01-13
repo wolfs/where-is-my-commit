@@ -1,5 +1,5 @@
-define(['jquery', 'd3', 'where/changes/changes', 'common/util'], function ($, d3, changes, util) {
-  'use strict';
+define(["jquery", "d3", "where/changes/changes", "common/util"], function ($, d3, changes, util) {
+  "use strict";
   var my = {};
 
   my.render = function () {
