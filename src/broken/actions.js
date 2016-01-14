@@ -15,53 +15,53 @@ export function addBuildData(buildData) {
   };
 }
 
-export function addTestResults(buildId, failedTests) {
+export function addTestResults(id, failedTests) {
   "use strict";
   return {
     type: ADD_TEST_RESULTS,
     payload: {
-      buildId,
+      id,
       failedTests
     }
   };
 }
 
-export function failedGettingTestResults(buildId) {
+export function failedGettingTestResults(id) {
   "use strict";
   return {
     type: FAILED_GETTING_TEST_RESULTS,
-    payload: buildId
+    payload: id
   };
 }
 
-export function suiteSelected(suiteId, selected) {
+export function suiteSelected(id, selected) {
   "use strict";
   return {
     type: SUITE_SELECTED,
     payload: {
-      suiteId,
+      id,
       selected
     }
   };
 }
 
-export function buildSelected(buildId, selected) {
+export function buildSelected(id, selected) {
   "use strict";
   return {
     type: BUILD_SELECTED,
     payload: {
-      buildId,
+      id,
       selected
     }
   };
 }
 
-export function testCaseSelected(testCaseId, selected) {
+export function testCaseSelected(id, selected) {
   "use strict";
   return {
     type: TESTCASE_SELECTED,
     payload: {
-      testCaseId,
+      id,
       selected
     }
   };
@@ -71,23 +71,23 @@ export function claim(objectToClaim, claim) {
   return (objectToClaim.type === "BUILD" ? claimBuild : claimTest)(objectToClaim.id, claim);
 }
 
-function claimBuild(buildId, claim) {
+function claimBuild(id, claim) {
   "use strict";
   return {
     type: CLAIM_BUILD,
     payload: {
-      buildId,
+      id,
       claim
     }
   };
 }
 
-function claimTest(testCaseId, claim) {
+function claimTest(id, claim) {
   "use strict";
   return {
     type: CLAIM_TEST,
     payload: {
-      testCaseId,
+      id,
       claim
     }
   };

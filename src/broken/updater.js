@@ -1,4 +1,3 @@
-import data from "broken/builds";
 import * as buildInfo from "common/buildInfo";
 import $ from "jquery";
 import config from "app-config";
@@ -40,14 +39,10 @@ export const addForUrl = function (url, progressCallbackParm) {
       id: buildId++,
       hasFailedTests: status === "unstable" && testResult.totalCount > 0
     };
-    data.builds.push(buildData);
-    $(data).trigger(data.event);
     store.dispatch(addBuildData(buildData));
     progressCallback("build", buildData);
     if (buildData.hasFailedTests) {
       buildInfo.addFailedTests(buildData, function (failedTests) {
-        buildData.testResult.failedTests = failedTests;
-        $(data).trigger(data.event);
         store.dispatch(addTestResults(buildData.id, failedTests));
         progressCallback("testResult", failedTests);
       }, function() {

@@ -10,8 +10,8 @@ var buildName = function (build) {
 };
 
 export let renderFailedTests = function () {
-  const { builds, testSuites, testCases } = store.getState();
-  var unstableNodes = builds
+  const { result, builds, testSuites, testCases } = store.getState();
+  var unstableNodes = result.map(id => builds[id])
     .filter(function (build) {
       return (build.status === "failure" || build.status === "unstable");
     });
@@ -58,7 +58,7 @@ export let renderFailedTests = function () {
   d3.selectAll("#projects .loading").remove();
 
   function addCheckboxAction(dataName, action) {
-    const testCaseCheckboxes = $("[data-" + dataName + "]");
+    const testCaseCheckboxes = $(`[data-${dataName}]`);
     testCaseCheckboxes.off("change");
     testCaseCheckboxes.change((event) => {
       "use strict";

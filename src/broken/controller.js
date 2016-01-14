@@ -9,15 +9,12 @@ import store from "./store";
 var throttler = util.newThrottler(config.bulkUpdateSize, config.coreUpdateInterval);
 
 var initFormSubmit = function () {
-  var selectedTestCases = function () {
-    const testCasesObj = store.getState().testCases;
-    const testCases = Object.keys(testCasesObj).map(key => testCasesObj[key]);
-    return testCases.filter(testCase => testCase.selected);
+  var selectedObjects = function (objs) {
+    const values = Object.keys(objs).map(key => objs[key]);
+    return values.filter(value => value.selected);
   };
-
-  var selectedBuilds = function () {
-    return store.getState().builds.filter(build => build.selected);
-  };
+  var selectedTestCases = () => selectedObjects(store.getState().testCases);
+  var selectedBuilds = () => selectedObjects(store.getState().builds);
 
   var uncheckAllCheckboxes = function () {
     //$("input.testCaseSelect:checked,input.buildSelect:checked").each(function () {
