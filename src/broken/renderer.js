@@ -3,7 +3,7 @@ import $ from "jquery";
 import render from "common/render";
 import util from "common/util";
 import store from "./store";
-import { suiteSelected } from "./actions";
+import { suiteSelected, testCaseSelected, buildSelected } from "./actions";
 
 var buildName = function (build) {
   return build.name;
@@ -57,16 +57,19 @@ export let renderFailedTests = function () {
 
   d3.selectAll("#projects .loading").remove();
 
-  var suiteSelector = function (event) {
-    var checkbox = event.target;
-    store.dispatch(suiteSelected($(checkbox).data("suitename"), checkbox.checked));
-  };
+  function addCheckboxAction(dataName, action) {
+    const testCaseCheckboxes = $("[data-" + dataName + "]");
+    testCaseCheckboxes.off("change");
+    testCaseCheckboxes.change((event) => {
+      "use strict";
+      const checkbox = event.target;
+      store.dispatch(action($(checkbox).data(dataName), checkbox.checked));
+    });
+  }
 
-  var suites = $("[data-suitename]");
-
-  suites.off("change");
-
-  suites.change(suiteSelector);
+  addCheckboxAction("suitename", suiteSelected);
+  addCheckboxAction("testcaseid", testCaseSelected);
+  addCheckboxAction("buildid", buildSelected);
 };
 
 export let addUsers = function (users) {

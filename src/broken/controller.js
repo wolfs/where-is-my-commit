@@ -1,38 +1,28 @@
-import data from "broken/builds";
 import util from "common/util";
 import $ from "jquery";
 import config from "app-config";
 import * as renderer from "broken/renderer";
 import Spinner from "spin.js";
 import * as updater from "broken/updater";
+import store from "./store";
 
 var throttler = util.newThrottler(config.bulkUpdateSize, config.coreUpdateInterval);
 
 var initFormSubmit = function () {
   var selectedTestCases = function () {
-    var selected = $("input.testCaseSelect:checked");
-    var ids = $.makeArray(selected.map(function () {
-      return $(this).data("testcaseid");
-    }));
-    return ids.map(function (id) {
-      return data.testCaseForId(id);
-    });
+    const testCasesObj = store.getState().testCases;
+    const testCases = Object.keys(testCasesObj).map(key => testCasesObj[key]);
+    return testCases.filter(testCase => testCase.selected);
   };
 
   var selectedBuilds = function () {
-    var selected = $("input.buildSelect:checked");
-    var ids = $.makeArray(selected.map(function () {
-      return $(this).data("buildid");
-    }));
-    return ids.map(function (id) {
-      return data.buildForId(id);
-    });
+    return store.getState().builds.filter(build => build.selected);
   };
 
   var uncheckAllCheckboxes = function () {
-    $("input.testCaseSelect:checked,input.buildSelect:checked").each(function () {
-      $(this).prop("checked", false);
-    });
+    //$("input.testCaseSelect:checked,input.buildSelect:checked").each(function () {
+    //  $(this).prop("checked", false);
+    //});
   };
 
   $("#claimForm").submit(function (event) {
@@ -44,7 +34,7 @@ var initFormSubmit = function () {
         claim[field.name] = field.value;
       });
       util.sequentially(testCases.concat(builds), function (testCase) {
-        return updater.claim(testCase, claim);
+        return updater.claim(testCase, { ...claim });
       });
       uncheckAllCheckboxes();
     } catch (err) {

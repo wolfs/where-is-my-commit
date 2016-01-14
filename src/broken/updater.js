@@ -2,7 +2,7 @@ import data from "broken/builds";
 import * as buildInfo from "common/buildInfo";
 import $ from "jquery";
 import config from "app-config";
-import { addBuildData, addTestResults, failedGettingTestResults } from "./actions";
+import { addBuildData, addTestResults, failedGettingTestResults, claim as claimAction} from "./actions";
 
 import store from "./store";
 
@@ -29,6 +29,7 @@ export const addForUrl = function (url, progressCallbackParm) {
     const status = build.result.toLowerCase();
     const testResult = buildInfo.getTestResult(build);
     var buildData = {
+      type: "BUILD",
       name: build.fullDisplayName,
       url: build.url,
       date: new Date(build.timestamp),
@@ -73,8 +74,7 @@ export const claim = function (objectToClaim, claim) {
     claim.claimed = true;
     claim.claimDate = new Date().getTime();
     claim.claimedBy = claim.assignee;
-    objectToClaim.claim = claim;
-    $(data).trigger(data.event);
+    store.dispatch(claimAction(objectToClaim, claim));
   });
   return request;
 };
@@ -82,8 +82,7 @@ export const claim = function (objectToClaim, claim) {
 export const unclaim = function (objectToClaim) {
   var request = $.post(objectToClaim.url + "/claim/unclaim");
   request.then(function () {
-    objectToClaim.claim = {claimed: false};
-    $(data).trigger(data.event);
+    store.dispatch(claimAction(objectToClaim, {claimed: false}));
   });
   return request;
 };

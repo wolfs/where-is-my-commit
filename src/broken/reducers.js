@@ -1,4 +1,4 @@
-import { ADD_BUILD_DATA, ADD_TEST_RESULTS, SUITE_SELECTED } from "./actions";
+import { ADD_BUILD_DATA, ADD_TEST_RESULTS, SUITE_SELECTED, CLAIM_BUILD, CLAIM_TEST, TESTCASE_SELECTED, BUILD_SELECTED } from "./actions";
 
 const initialState = {
   builds: [],
@@ -38,7 +38,6 @@ initialState.testCasesForSuite = function (id) {
   return this.testSuites[id].cases.map(testCaseId => this.testCases[testCaseId]);
 };
 
-
 export function brokenApp(state = initialState, action) {
   switch (action.type) {
     case ADD_BUILD_DATA:
@@ -63,30 +62,103 @@ export function brokenApp(state = initialState, action) {
           ...state.builds.slice(index + 1)
         ],
         testSuites: Object.assign({}, state.testSuites, ...failedTests.map(suite => { return {
-          [suite.id]: Object.assign({}, suite, { cases: suite.cases.map(testCase => testCase.id), selected: false })
-        }; })),
+          [suite.id]: {
+            ...suite,
+            cases: suite.cases.map(testCase => testCase.id),
+            selected: false }
+        };
+        })),
         testCases: Object.assign({}, state.testCases, ...failedTests.map(suite => suite.cases).reduce(concat).map(testCase => {
           "use strict";
           return {
-            [testCase.id]: Object.assign({}, testCase, { selected: false })
+            [testCase.id]: {
+              ...testCase,
+              selected: false
+            }
           };
         }))
       });
     case SUITE_SELECTED:
       const { selected, suiteId } = action.payload;
       const testSuite = state.testSuites[suiteId];
-      return Object.assign({}, state, {
-        testSuites: Object.assign({}, state.testSuites, {
-          [suiteId]: Object.assign({}, testSuite, {
+      return {
+        ...state,
+        testSuites: {
+          ...state.testSuites,
+          [suiteId]: {
+            ...testSuite,
             selected
-          })
-        }),
+          }
+        },
         testCases: Object.assign({}, state.testCases, ...testSuite.cases.map(testCaseId => {
           return {
-            [testCaseId]: Object.assign({}, state.testCases[testCaseId], {selected})
+            [testCaseId]: {
+              ...state.testCases[testCaseId],
+              selected
+            }
           };
         }))
-      });
+      };
+    case CLAIM_BUILD:
+      return (() => {
+        const { buildId, claim } = action.payload;
+        const currentBuild = state.builds[buildId];
+        return {
+          ...state,
+          builds: [
+            ...state.builds.slice(0, buildId),
+            {
+              ...currentBuild,
+              claim
+            },
+            ...state.builds.slice(buildId + 1)
+          ]
+        };
+      })();
+    case CLAIM_TEST:
+      const { testCaseId, claim} = action.payload;
+      return {
+        ...state,
+        testCases: {
+          ...state.testCases,
+          [testCaseId]: {
+            ...state.testCases[testCaseId],
+            claim
+          }
+        }
+      };
+    case TESTCASE_SELECTED:
+      return (() => {
+        "use strict";
+        const { testCaseId, selected } = action.payload;
+        return {
+          ... state,
+          testCases: {
+            ...state.testCases,
+            [testCaseId]: {
+              ...state.testCases[testCaseId],
+              selected
+            }
+          }
+        };
+      })();
+    case BUILD_SELECTED:
+      return (() => {
+        "use strict";
+        const { buildId, selected } = action.payload;
+        const currentBuild = state.builds[buildId];
+        return {
+          ... state,
+          builds: [
+            ...state.builds.slice(0, buildId),
+            {
+              ...currentBuild,
+              selected
+            },
+            ...state.builds.slice(buildId + 1)
+          ]
+        };
+      })();
     default: return state;
   }
 }
