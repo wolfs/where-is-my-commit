@@ -1,7 +1,7 @@
 import d3 from "d3";
 import $ from "jquery";
 import render from "common/render";
-import util from "common/util";
+import * as util from "common/util";
 import store from "./store";
 import { suiteSelected, testCaseSelected, buildSelected } from "./actions";
 
@@ -50,6 +50,7 @@ export let renderFailedTests = function () {
   unstableProjects.order();
 
   unstableProjects.select(".claim").call(render.formatClaim);
+  unstableProjects.select("input[data-buildid]").property("checked", testCase => testCase.selected);
 
   unstableProjects.exit().remove();
 

@@ -6,6 +6,7 @@ export const TESTCASE_SELECTED = "TESTCASE_SELECTED";
 export const BUILD_SELECTED = "BUILD_SELECTED";
 export const CLAIM_BUILD = "CLAIM_BUILD";
 export const CLAIM_TEST = "CLAIM_TEST";
+export const DESELECT = "DESELECT";
 
 export function addBuildData(buildData) {
   "use strict";
@@ -64,6 +65,13 @@ export function testCaseSelected(id, selected) {
       id,
       selected
     }
+  };
+}
+
+export function deselect() {
+  "use strict";
+  return {
+    type: DESELECT
   };
 }
 

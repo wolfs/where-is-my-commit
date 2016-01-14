@@ -1,4 +1,14 @@
-import { ADD_BUILD_DATA, ADD_TEST_RESULTS, SUITE_SELECTED, CLAIM_BUILD, CLAIM_TEST, TESTCASE_SELECTED, BUILD_SELECTED } from "./actions";
+import {
+  ADD_BUILD_DATA,
+  ADD_TEST_RESULTS,
+  SUITE_SELECTED,
+  CLAIM_BUILD,
+  CLAIM_TEST,
+  TESTCASE_SELECTED,
+  BUILD_SELECTED,
+  DESELECT } from "./actions";
+
+import { mapValues } from "common/util";
 
 const initialState = {
   result: [],
@@ -138,6 +148,23 @@ const reducers = {
           selected
         }
       }
+    };
+  },
+  [DESELECT](state) {
+    "use strict";
+    function deselect(objs) {
+      return mapValues(objs, obj => {
+        return {
+          ...obj,
+          selected: false
+        };
+      });
+    }
+    return {
+      ...state,
+      builds: deselect(state.builds),
+      testSuites: deselect(state.testSuites),
+      testCases: deselect(state.testCases)
     };
   }
 };

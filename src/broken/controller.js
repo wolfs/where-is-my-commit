@@ -1,10 +1,11 @@
-import util from "common/util";
+import * as util from "common/util";
 import $ from "jquery";
 import config from "app-config";
 import * as renderer from "broken/renderer";
 import Spinner from "spin.js";
 import * as updater from "broken/updater";
 import store from "./store";
+import { deselect } from "./actions";
 
 var throttler = util.newThrottler(config.bulkUpdateSize, config.coreUpdateInterval);
 
@@ -16,12 +17,6 @@ var initFormSubmit = function () {
   var selectedTestCases = () => selectedObjects(store.getState().testCases);
   var selectedBuilds = () => selectedObjects(store.getState().builds);
 
-  var uncheckAllCheckboxes = function () {
-    //$("input.testCaseSelect:checked,input.buildSelect:checked").each(function () {
-    //  $(this).prop("checked", false);
-    //});
-  };
-
   $("#claimForm").submit(function (event) {
     try {
       var testCases = selectedTestCases();
@@ -31,9 +26,9 @@ var initFormSubmit = function () {
         claim[field.name] = field.value;
       });
       util.sequentially(testCases.concat(builds), function (testCase) {
-        return updater.claim(testCase, { ...claim });
+        return updater.claim(testCase, {...claim});
       });
-      uncheckAllCheckboxes();
+      store.dispatch(deselect());
     } catch (err) {
       console.log(err); // eslint-disable-line no-console
     }
@@ -45,7 +40,7 @@ var initFormSubmit = function () {
       var testCases = selectedTestCases();
       var builds = selectedBuilds();
       testCases.concat(builds).forEach(updater.unclaim);
-      uncheckAllCheckboxes();
+      store.dispatch(deselect());
     } catch (err) {
       console.log(err); // eslint-disable-line no-console
     }
