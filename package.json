@@ -34,7 +34,6 @@
     "karma-jasmine": "^0.3.6",
     "karma-jasmine-ajax": "^0.1.13",
     "karma-phantomjs-launcher": "^0.2.2",
-    "karma-requirejs": "^0.2.2",
     "karma-webpack": "^1.7.0",
     "less": "^2.5.3",
     "less-loader": "^2.2.2",
