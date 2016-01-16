@@ -1,5 +1,5 @@
-define(['jquery', 'where/builds/node', 'app-config', 'where/builds/nodesData', 'common/buildInfo'], function ($, node, config, nodes, buildInfo) {
-  'use strict';
+define(["jquery", "where/builds/node", "app-config", "where/builds/nodesData", "common/buildInfo"], function ($, node, config, nodes, buildInfo) {
+  "use strict";
   var my = {};
 
   my.updateFunction = function (scheduleWork, scheduleLowPrioWork) {
@@ -21,14 +21,14 @@ define(['jquery', 'where/builds/node', 'app-config', 'where/builds/nodesData', '
         return node.create(project.name, nodeToUpdate.revision, project.url);
       };
 
-      var buildKeys = buildInfo.buildKeys([], ['triggeredProjects[name,url,downstreamProjects[url,name]]']);
+      var buildKeys = buildInfo.buildKeys([], ["triggeredProjects[name,url,downstreamProjects[url,name]]"]);
 
       var jobRequest = $.getJSON(
         config.jenkinsUrl + "/job/" + jobName +
         "/api/json?tree=url,downstreamProjects[url,name],lastCompletedBuild[" + buildKeys + "]"
       ).then(function (job) {
-          return job;
-        });
+        return job;
+      });
 
       var buildDef = jobRequest.then(function (job) {
         if (nodeToUpdate.url === undefined) {
@@ -40,7 +40,7 @@ define(['jquery', 'where/builds/node', 'app-config', 'where/builds/nodesData', '
 
       var getEnvVars = function (build) {
         return build === undefined ? undefined : $.getJSON(build.url +
-        "injectedEnvVars/api/json?tree=envMap[REV]");
+          "injectedEnvVars/api/json?tree=envMap[REV]");
       };
       var getRevision = function (build) {
         if (build === undefined) {

@@ -1,5 +1,5 @@
-define(['jquery'], function ($) {
-  'use strict';
+define(["jquery"], function ($) {
+  "use strict";
   var globalConfig = (window && window.whereIsMyCommit) || {};
 
   var mergeWithDefault = function (globalConfig) {

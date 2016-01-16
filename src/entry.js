@@ -1,2 +1,2 @@
-require('entry-common');
-require('./where/init');
+require("entry-common");
+require("./where/init");

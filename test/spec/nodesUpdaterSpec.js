@@ -1,20 +1,20 @@
-var updater = require('where/builds/nodeUpdater');
-var node = require('where/builds/node');
-var config = require('app-config');
+var updater = require("where/builds/nodeUpdater");
+var node = require("where/builds/node");
+var config = require("app-config");
 
 var ajax = jasmine.Ajax,
   currentJobName,
   nodeToUpdate,
-  success = 'SUCCESS',
-  aborted = 'ABORTED',
-  buildKeys = 'number,url,result,timestamp,actions[failCount,skipCount,totalCount,urlName,name,result[warnings[message,fileName]],claimDate,claimed,claimedBy,reason,triggeredProjects[name,url,downstreamProjects[url,name]]]',
-  jobApiRequest = 'api/json?tree=url,downstreamProjects[url,name],lastCompletedBuild[' + buildKeys + ']',
-  buildApiRequest = 'api/json?tree=' + buildKeys;
+  success = "SUCCESS",
+  aborted = "ABORTED",
+  buildKeys = "number,url,result,timestamp,actions[failCount,skipCount,totalCount,urlName,name,result[warnings[message,fileName]],claimDate,claimed,claimedBy,reason,triggeredProjects[name,url,downstreamProjects[url,name]]]",
+  jobApiRequest = "api/json?tree=url,downstreamProjects[url,name],lastCompletedBuild[" + buildKeys + "]",
+  buildApiRequest = "api/json?tree=" + buildKeys;
 
 beforeEach(function () {
   jasmine.Ajax.install();
-  currentJobName = 'someJob';
-  nodeToUpdate = node.create(currentJobName, '1234');
+  currentJobName = "someJob";
+  nodeToUpdate = node.create(currentJobName, "1234");
 });
 
 afterEach(function () {
@@ -23,7 +23,7 @@ afterEach(function () {
 
 
 var jobUrl = function () {
-  return config.jenkinsUrl + '/job/' + currentJobName + '/';
+  return config.jenkinsUrl + "/job/" + currentJobName + "/";
 };
 
 var jobApiUrl = function () {
@@ -31,7 +31,7 @@ var jobApiUrl = function () {
 };
 
 var buildUrl = function (number) {
-  return config.jenkinsUrl + '/job/' + currentJobName + '/' + number + '/';
+  return config.jenkinsUrl + "/job/" + currentJobName + "/" + number + "/";
 };
 
 var buildApiUrl = function (number) {
@@ -55,7 +55,7 @@ var jobJson = function (lastCompletedBuild, downstreamProjects) {
   return {
     url: jobUrl(currentJobName),
     downstreamProjects: downstreamProjects || [],
-    //[{url: 'http://someOtherUrl', name: 'downstreamJob'}],
+    //[{url: "http://someOtherUrl", name: "downstreamJob"}],
     lastCompletedBuild: lastCompletedBuild
   };
 };
@@ -64,22 +64,13 @@ var buildJson = function (number, result, triggeredProjects, testAction) {
   return {
     number: number.toString(),
     url: buildUrl(number),
-    result: result || 'SUCCESS',
+    result: result || "SUCCESS",
     actions: [
       {
         triggeredProjects: triggeredProjects || []
       },
       testAction || {}
     ]
-  };
-};
-
-var testAction = function (failCount, totalCount, skipCount, urlName) {
-  return {
-    failCount: failCount,
-    skipCount: skipCount || "0",
-    totalCount: totalCount,
-    urlName: urlName || 'testReport'
   };
 };
 
@@ -135,17 +126,15 @@ describe("NodeUpdater", function () {
     expect(requests.count()).toBe(4);
     var envVarsApiRequest4 = requests.mostRecent();
     expect(envVarsApiRequest4.url).toBe(envVarsApiUrl(4));
-    envVarsApiRequest4.respondWith(jsonResponse(envVarsJson('1233')));
-    envVarsApiRequest5.respondWith(jsonResponse(envVarsJson('1235')));
+    envVarsApiRequest4.respondWith(jsonResponse(envVarsJson("1233")));
+    envVarsApiRequest5.respondWith(jsonResponse(envVarsJson("1235")));
 
     expect(nodeToUpdate.url).toBe(buildUrl(5));
     expect(nodeToUpdate.revision).toBe(1235);
   });
 
   var setupBuilds = function (results, givenRevisionFun) {
-    var revisionFun = givenRevisionFun || function (buildNumber) {
-        return buildNumber;
-      };
+    var revisionFun = givenRevisionFun || (num => num);
     var builds = results.map(function (result, idx) {
       var buildNumber = idx + 1;
       var build = buildJson(buildNumber, result);

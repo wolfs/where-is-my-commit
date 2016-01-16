@@ -1,12 +1,12 @@
 define({
   getQueryVariable: function (variable) {
-    'use strict';
+    "use strict";
     var search = window.location.search;
     return this.getQueryVariableFromSearch(variable, search);
   },
 
   getQueryVariableFromSearch: function (variable, search) {
-    'use strict';
+    "use strict";
     var query = search.substring(1);
     var params = this.queryVariablesFromQuery(query);
     return params[variable];
@@ -20,7 +20,7 @@ define({
           return el.split("=");
         })
         .forEach(function (args) {
-          params[decodeURIComponent(args[0])] = args[1] ? decodeURIComponent(args[1].replace(/\+/g, ' ')) : args[1];
+          params[decodeURIComponent(args[0])] = args[1] ? decodeURIComponent(args[1].replace(/\+/g, " ")) : args[1];
         });
     }
     return params;

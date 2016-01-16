@@ -1,2 +1,2 @@
-require('entry-common');
-require('./broken/init');
+require("entry-common");
+require("./broken/init");

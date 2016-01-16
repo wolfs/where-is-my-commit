@@ -1,24 +1,26 @@
-var ExtractTextPlugin = require("extract-text-webpack-plugin");
-var path = require('path');
-var node_modules = path.resolve(__dirname, 'node_modules');
+const ExtractTextPlugin = require("extract-text-webpack-plugin");
+const path = require("path");
 
-var webpack = require("webpack");
-var HtmlWebpackPlugin = require('html-webpack-plugin');
-var Clean = require('clean-webpack-plugin');
+const webpack = require("webpack");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+const Clean = require("clean-webpack-plugin");
 
 module.exports = {
   entry: {
-    where: './src/entry.js',
-    broken: './src/entry-broken.js'
+    where: "./src/entry.js",
+    broken: "./src/entry-broken.js"
   },
   resolve: {
-    modulesDirectories: ['node_modules', 'src']
+    modulesDirectories: ["node_modules", "src"]
   },
   output: {
-    path: path.resolve(__dirname, 'dist'),
-    filename: '[name].js'
+    path: path.resolve(__dirname, "dist"),
+    filename: "[name].js"
   },
   module: {
+    preLoaders: [
+      {test: /\.js$/, loader: "eslint-loader", exclude: /node_modules/}
+    ],
     loaders: [
       //// Extract css files
       {
@@ -44,22 +46,22 @@ module.exports = {
     new ExtractTextPlugin("[name].css"),
     new webpack.optimize.CommonsChunkPlugin("commons", "commons.js"),
     new HtmlWebpackPlugin({
-      template: 'src/index.html', // Load a custom template
-      inject: 'body', // Inject all scripts into the body
-      chunks: ['commons', 'where']
+      template: "src/index.html", // Load a custom template
+      inject: "body", // Inject all scripts into the body
+      chunks: ["commons", "where"]
     }),
     new HtmlWebpackPlugin({
-      filename: 'broken.html',
-      template: 'src/broken.html', // Load a custom template
-      inject: 'body', // Inject all scripts into the body
-      chunks: ['commons', 'broken']
+      filename: "broken.html",
+      template: "src/broken.html", // Load a custom template
+      inject: "body", // Inject all scripts into the body
+      chunks: ["commons", "broken"]
     }),
-    new Clean(['dist'])
+    new Clean(["dist"])
   ]
 };
 
 if (process.env.MOCK_COMMITS) {
-  module.exports.resolve.modulesDirectories.push('test');
-  module.exports.resolve.alias['where/changes/changes'] = 'mock-changes';
-  module.exports.resolve.alias['where/changes/changesUpdater'] = 'mock-changesUpdater';
+  module.exports.resolve.modulesDirectories.push("test");
+  module.exports.resolve.alias["where/changes/changes"] = "mock-changes";
+  module.exports.resolve.alias["where/changes/changesUpdater"] = "mock-changesUpdater";
 }

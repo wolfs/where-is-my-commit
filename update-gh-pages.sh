@@ -1,3 +1,5 @@
+#!/bin/bash
+
 set -e
 if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_BRANCH" == "master" ]; then
   echo -e "Starting to update gh-pages\n"
@@ -14,7 +16,7 @@ if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_BRANCH" == "master" ]; th
   git config --global user.name "Travis"
 
   #using token clone gh-pages branch
-  git clone --quiet --branch=gh-pages $FULL_REPO gh-pages > /dev/null
+  git clone --quiet --branch=gh-pages ${FULL_REPO} gh-pages > /dev/null
 
   #go into directory and copy data we're interested in to that directory
   cd gh-pages

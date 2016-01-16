@@ -1,18 +1,18 @@
-define(['jquery', 'bootstrap'], function ($) {
-  'use strict';
+define(["jquery", "bootstrap"], function ($) {
+  "use strict";
   var my = {};
 
-  my.dateTimeFormat = {year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric'};
+  my.dateTimeFormat = {year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "numeric"};
 
   my.formatClaim = function (el) {
     el.html(function (claimedObject) {
       var claim = claimedObject.claim;
       if (claim.claimed) {
-        return '<span class="glyphicon glyphicon-lock"> </span>' + (claim.reason ? (' <span>' + claim.reason + '</span><br /> ') : '') +
-          ' <span class="label label-default">' + claim.claimedBy + '</span>' +
-          ' <span>' + new Date(claim.claimDate).toLocaleString('de-DE', my.dateTimeFormat) + '</span>';
+        return "<span class='glyphicon glyphicon-lock'> </span>" + (claim.reason ? (" <span>" + claim.reason + "</span><br /> ") : "") +
+          " <span class='label label-default'>" + claim.claimedBy + "</span>" +
+          " <span>" + new Date(claim.claimDate).toLocaleString("de-DE", my.dateTimeFormat) + "</span>";
       } else {
-        return '';
+        return "";
       }
     });
   };
@@ -60,13 +60,15 @@ define(['jquery', 'bootstrap'], function ($) {
       .append("div")
       .attr("class", "input-group suite")
       .html(function (suite) {
-        return '<span class="input-group-addon"><input class="testCaseSelect" data-suitename="' + suite.url + '" type="checkbox"></span>'
+        return "<span class='input-group-addon'><input class='testCaseSelect' data-suitename='" + suite.id + "' type='checkbox'></span>";
       })
       .append("div")
       .attr("class", "list-group-item")
       .html(function (test) {
         return "<div class='h4'><a href='" + test.url + "'>" + test.name + "</a></div>";
       });
+
+    suiteResults.select("input[data-suitename]").property("checked", suite => suite.selected);
 
     var testResults = suiteResults.selectAll(".testResult").data(function (suite) {
       return suite.cases;
@@ -78,22 +80,22 @@ define(['jquery', 'bootstrap'], function ($) {
       .append("div")
       .attr("class", "input-group testResult")
       .html(function (testCase) {
-        return '<span class="input-group-addon"><input class="testCaseSelect" data-testCaseId="' + testCase.id + '" type="checkbox"></span>';
+        return "<span class='input-group-addon'><input class='testCaseSelect' data-testCaseId='" + testCase.id + "' type='checkbox'></span>";
       })
       .append("div")
       .attr("class", "list-group-item")
       .html(function (testCase) {
-        return '<div class="row">' +
+        return "<div class='row'>" +
           [
-            '<div class="h5 col-md-7">',
-            '<a href="', testCase.url, '">', testCase.name.substring(0, 400), '</a> ',
-            ' <span class="glyphicon glyphicon-time"></span>',
-            '<span class="badge" data-toggle="tooltip" title="age">', testCase.age, '</span>',
-            '</div>'].join("") +
-          '<div class="col-md-5 claim"/>' +
-          '</div>';
+            "<div class='h5 col-md-7'>",
+            "<a href='", testCase.url, "'>", testCase.name.substring(0, 400), "</a> ",
+            " <span class='glyphicon glyphicon-time'></span>",
+            "<span class='badge' data-toggle='tooltip' title='age'>", testCase.age, "</span>",
+            "</div>"].join("") +
+          "<div class='col-md-5 claim'/>" +
+          "</div>";
       })
-      .call(appendTestCaseDetails("details", 'Details',
+      .call(appendTestCaseDetails("details", "Details",
         function (testCase) {
           return testCase.errorDetails;
         },
@@ -104,7 +106,7 @@ define(['jquery', 'bootstrap'], function ($) {
           return testCase.errorDetails.replace(/<\[\d+, [0-9, -]+\]>/, "");
         }
       ))
-      .call(appendTestCaseDetails("stacktrace", 'Stacktrace',
+      .call(appendTestCaseDetails("stacktrace", "Stacktrace",
         function (testCase) {
           return testCase.errorStackTrace;
         },
@@ -116,7 +118,9 @@ define(['jquery', 'bootstrap'], function ($) {
         }
       ));
 
-    testResults.select('.claim').call(my.formatClaim);
+    testResults.select("input[data-testCaseId]").property("checked", testCase => testCase.selected);
+
+    testResults.select(".claim").call(my.formatClaim);
 
     var warnings = projectSelection.selectAll(".warning").data(function (node) {
       return node.warnings || [];
@@ -139,7 +143,7 @@ define(['jquery', 'bootstrap'], function ($) {
       }));
 
     $(function () {
-      $('[data-toggle="tooltip"]').tooltip();
+      $("[data-toggle='tooltip']").tooltip();
     });
   };
 

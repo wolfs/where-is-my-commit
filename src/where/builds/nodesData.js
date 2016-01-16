@@ -1,5 +1,5 @@
-define(['where/builds/node', 'app-config', 'common/util'], function (node, config, util) {
-  'use strict';
+define(["where/builds/node", "app-config", "common/util"], function (node, config, util) {
+  "use strict";
   var my = {};
 
   var revisionString = util.getQueryVariable("revision"),
