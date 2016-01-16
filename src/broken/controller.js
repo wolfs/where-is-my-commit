@@ -7,6 +7,10 @@ import * as updater from "broken/updater";
 import store from "./store";
 import { deselect } from "./actions";
 
+// TODO: Collapsed, Collapse-All, Progess into redux State
+// TODO: Render on load should all be done by the renderer and corresponding states
+// TODO: Views into state
+
 var throttler = util.newThrottler(config.bulkUpdateSize, config.coreUpdateInterval);
 
 var initFormSubmit = function () {
