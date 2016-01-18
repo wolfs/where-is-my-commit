@@ -1,39 +1,25 @@
-import data from "broken/builds";
-import util from "common/util";
+import * as util from "common/util";
 import $ from "jquery";
 import config from "app-config";
 import * as renderer from "broken/renderer";
 import Spinner from "spin.js";
 import * as updater from "broken/updater";
+import store from "./store";
+import { deselect } from "./actions";
+
+// TODO: Collapsed, Collapse-All, Progess into redux State
+// TODO: Render on load should all be done by the renderer and corresponding states
+// TODO: Views into state
 
 var throttler = util.newThrottler(config.bulkUpdateSize, config.coreUpdateInterval);
 
 var initFormSubmit = function () {
-  var selectedTestCases = function () {
-    var selected = $("input.testCaseSelect:checked");
-    var ids = $.makeArray(selected.map(function () {
-      return $(this).data("testcaseid");
-    }));
-    return ids.map(function (id) {
-      return data.testCaseForId(id);
-    });
+  var selectedObjects = function (objs) {
+    const values = Object.keys(objs).map(key => objs[key]);
+    return values.filter(value => value.selected);
   };
-
-  var selectedBuilds = function () {
-    var selected = $("input.buildSelect:checked");
-    var ids = $.makeArray(selected.map(function () {
-      return $(this).data("buildid");
-    }));
-    return ids.map(function (id) {
-      return data.buildForId(id);
-    });
-  };
-
-  var uncheckAllCheckboxes = function () {
-    $("input.testCaseSelect:checked,input.buildSelect:checked").each(function () {
-      $(this).prop("checked", false);
-    });
-  };
+  var selectedTestCases = () => selectedObjects(store.getState().testCases);
+  var selectedBuilds = () => selectedObjects(store.getState().builds);
 
   $("#claimForm").submit(function (event) {
     try {
@@ -44,9 +30,9 @@ var initFormSubmit = function () {
         claim[field.name] = field.value;
       });
       util.sequentially(testCases.concat(builds), function (testCase) {
-        return updater.claim(testCase, claim);
+        return updater.claim(testCase, {...claim});
       });
-      uncheckAllCheckboxes();
+      store.dispatch(deselect());
     } catch (err) {
       console.log(err); // eslint-disable-line no-console
     }
@@ -58,7 +44,7 @@ var initFormSubmit = function () {
       var testCases = selectedTestCases();
       var builds = selectedBuilds();
       testCases.concat(builds).forEach(updater.unclaim);
-      uncheckAllCheckboxes();
+      store.dispatch(deselect());
     } catch (err) {
       console.log(err); // eslint-disable-line no-console
     }

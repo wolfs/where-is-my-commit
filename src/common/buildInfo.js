@@ -78,6 +78,7 @@ export var addFailedTests = function (build, callback, failureCallbackArg) {
           var packageOfSuite = suite.name.substring(0, dotBeforeClass);
           var suiteUrl = (suite.url ? suite.url : build.url) + "testReport/" + (packageOfSuite ? packageOfSuite : "(root)") + "/" + suite.name.substring(dotBeforeClass + 1) + "/";
           return {
+            type: "TEST",
             name: suite.name,
             url: suiteUrl,
             id: suiteId++,

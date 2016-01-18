@@ -1,17 +1,17 @@
 import d3 from "d3";
 import $ from "jquery";
 import render from "common/render";
-import util from "common/util";
+import * as util from "common/util";
 import store from "./store";
-import { suiteSelected } from "./actions";
+import { suiteSelected, testCaseSelected, buildSelected } from "./actions";
 
 var buildName = function (build) {
   return build.name;
 };
 
 export let renderFailedTests = function () {
-  const { builds, testSuites, testCases } = store.getState();
-  var unstableNodes = builds
+  const { result, builds, testSuites, testCases } = store.getState();
+  var unstableNodes = result.map(id => builds[id])
     .filter(function (build) {
       return (build.status === "failure" || build.status === "unstable");
     });
@@ -50,6 +50,7 @@ export let renderFailedTests = function () {
   unstableProjects.order();
 
   unstableProjects.select(".claim").call(render.formatClaim);
+  unstableProjects.select("input[data-buildid]").property("checked", testCase => testCase.selected);
 
   unstableProjects.exit().remove();
 
@@ -57,16 +58,19 @@ export let renderFailedTests = function () {
 
   d3.selectAll("#projects .loading").remove();
 
-  var suiteSelector = function (event) {
-    var checkbox = event.target;
-    store.dispatch(suiteSelected($(checkbox).data("suitename"), checkbox.checked));
-  };
+  function addCheckboxAction(dataName, action) {
+    const testCaseCheckboxes = $(`[data-${dataName}]`);
+    testCaseCheckboxes.off("change");
+    testCaseCheckboxes.change((event) => {
+      "use strict";
+      const checkbox = event.target;
+      store.dispatch(action($(checkbox).data(dataName), checkbox.checked));
+    });
+  }
 
-  var suites = $("[data-suitename]");
-
-  suites.off("change");
-
-  suites.change(suiteSelector);
+  addCheckboxAction("suitename", suiteSelected);
+  addCheckboxAction("testcaseid", testCaseSelected);
+  addCheckboxAction("buildid", buildSelected);
 };
 
 export let addUsers = function (users) {
