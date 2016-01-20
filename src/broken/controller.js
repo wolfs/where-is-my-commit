@@ -5,9 +5,9 @@ import * as renderer from "broken/renderer";
 import Spinner from "spin.js";
 import * as updater from "broken/updater";
 import store from "./store";
-import { deselect } from "./actions";
+import { deselect, collapseAll } from "./actions";
 
-// TODO: Collapsed, Collapse-All, Progess into redux State
+// TODO: Progress into redux State
 // TODO: Render on load should all be done by the renderer and corresponding states
 // TODO: Views into state
 
@@ -121,10 +121,7 @@ export default function init(urlsDef) {
     }
   });
 
-  var collapsed = false;
-
   $("#collapseAll").click(() => {
-    $(".testResults").collapse(collapsed ? "show" : "hide");
-    collapsed = !collapsed;
+    store.dispatch(collapseAll(!store.getState().allCollapsed));
   });
 }

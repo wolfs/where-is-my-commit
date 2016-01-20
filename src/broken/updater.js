@@ -37,7 +37,8 @@ export const addForUrl = function (url, progressCallbackParm) {
       status,
       claim: claims.length === 1 ? claims[0] : {claimed: false},
       id: buildId++,
-      hasFailedTests: status === "unstable" && testResult.totalCount > 0
+      hasFailedTests: status === "unstable" && testResult.totalCount > 0,
+      collapsed: store.getState().allCollapsed || status === "failure"
     };
     store.dispatch(addBuildData(buildData));
     progressCallback("build", buildData);

@@ -6,7 +6,10 @@ import {
   CLAIM_TEST,
   TESTCASE_SELECTED,
   BUILD_SELECTED,
-  DESELECT } from "./actions";
+  DESELECT,
+  COLLAPSE,
+  COLLAPSE_ALL
+} from "./actions";
 
 import { mapValues } from "common/util";
 
@@ -14,7 +17,8 @@ const initialState = {
   result: [],
   builds: {},
   testSuites: {},
-  testCases: {}
+  testCases: {},
+  allCollapsed: false
 };
 
 const concat = function (a, b) {
@@ -165,6 +169,33 @@ const reducers = {
       builds: deselect(state.builds),
       testSuites: deselect(state.testSuites),
       testCases: deselect(state.testCases)
+    };
+  },
+  [COLLAPSE_ALL](state, action) {
+    "use strict";
+    return {
+      ...state,
+      builds: mapValues(state.builds, (build) => {
+        return {
+          ...build,
+          collapsed: action.payload || build.status === "failure"
+        };
+      }),
+      allCollapsed: action.payload
+    };
+  },
+  [COLLAPSE](state, action) {
+    "use strict";
+    const { id, collapsed } = action.payload;
+    return {
+      ...state,
+      builds: {
+        ...state.builds,
+        [id]: {
+          ...state.builds[id],
+          collapsed
+        }
+      }
     };
   }
 };

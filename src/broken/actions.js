@@ -7,6 +7,8 @@ export const BUILD_SELECTED = "BUILD_SELECTED";
 export const CLAIM_BUILD = "CLAIM_BUILD";
 export const CLAIM_TEST = "CLAIM_TEST";
 export const DESELECT = "DESELECT";
+export const COLLAPSE_ALL = "COLLAPSE_ALL";
+export const COLLAPSE = "COLLAPSE";
 
 export function addBuildData(buildData) {
   "use strict";
@@ -97,6 +99,25 @@ function claimTest(id, claim) {
     payload: {
       id,
       claim
+    }
+  };
+}
+
+export function collapseAll(collapsed) {
+  "use strict";
+  return {
+    type: COLLAPSE_ALL,
+    payload: collapsed
+  };
+}
+
+export function collapse(id, collapsed) {
+  "use strict";
+  return {
+    type: COLLAPSE,
+    payload: {
+      id,
+      collapsed
     }
   };
 }
