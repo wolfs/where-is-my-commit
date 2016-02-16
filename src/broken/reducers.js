@@ -63,7 +63,7 @@ const reducers = {
           }
         };
       })),
-      testCases: Object.assign({}, state.testCases, ...failedTests.map(suite => suite.cases).reduce(concat).map(testCase => {
+      testCases: Object.assign({}, state.testCases, ...failedTests.map(suite => suite.cases).reduce(concat, []).map(testCase => {
         "use strict";
         return {
           [testCase.id]: {
